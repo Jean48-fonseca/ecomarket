@@ -1,0 +1,1790 @@
+  <script>
+    // Insertar usuarios de ejemplo automáticamente si la base está vacía
+    (async function autoSeedUsers(){
+      if(!window.EcoDB) return;
+      const users = await EcoDB.listUsers().catch(()=>[]);
+      if(!users || users.length === 0){
+        await EcoDB.seedSample();
+        console.log('Usuarios de ejemplo creados:');
+        console.log('Cliente: usuario="cliente1" contraseña="passCliente1"');
+        console.log('Cliente: usuario="cliente2" contraseña="passCliente2"');
+        console.log('Empleado: usuario="trabajador1" contraseña="trabPass1" código="EMP-1001"');
+        console.log('Empleado: usuario="trabajador2" contraseña="trabPass2" código="EMP-1002"');
+      }
+    })();
+  </script>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EcoMarket</title>
+  <meta name="description" content="EcoMarket - Tu mercado, en un clic. Busca y filtra productos frescos con ayuda de EcoIA." />
+
+  <style>
+    :root{
+      --primary:#4ec8c2;
+      --accent:#d70606;
+      --text:#2d3436;
+      --bg1:#60e1f5;
+      --bg2:#e0eafc;
+      --heroTextLight:#ffffff;
+
+      --cardBg:#ffffff;
+      --muted:#6c757d;
+      --chip:#eef6f6;
+      --chipText:#276e6a;
+    }
+
+    .sr-only{
+      position:absolute!important;
+      width:1px;height:1px;
+      padding:0;margin:-1px;
+      overflow:hidden;clip:rect(0,0,0,0);
+      white-space:nowrap;border:0;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Helvetica Neue", "Noto Sans", "Liberation Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+      color:var(--text);
+      background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 100%);
+    }
+
+    /* Header */
+    header.header{
+      position:sticky; top:0; z-index:20;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 22px;
+      background:#fff;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    }
+    .header .brand{
+      display:flex; align-items:center; gap:10px;
+      font-weight:700; color:var(--primary);
+      letter-spacing:.5px;
+  cursor:pointer;
+    }
+    .header .brand .logo{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:28px; height:28px;
+      color:var(--primary);
+    }
+
+    .search-bar{
+      display:flex; align-items:center; gap:8px;
+    }
+    .search-bar input[type="search"],
+    .search-bar select{
+      padding:8px 12px; font-size:16px;
+      border:1px solid #b2bec3; border-radius:8px;
+      background:#fff; color:#2d3436;
+      outline:none; transition:border-color .2s, box-shadow .2s;
+    }
+    .search-bar input[type="search"]:focus,
+    .search-bar select:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 3px rgba(78,200,194,.15);
+    }
+
+    .icon-button{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:40px;height:40px;
+      border-radius:10px;
+      border:1px solid rgba(0,0,0,.08);
+      background:#fff;
+      color:var(--primary);
+      cursor:pointer;
+      transition:transform .15s, color .2s, box-shadow .2s, border-color .2s;
+      position:relative;
+    }
+    .icon-button:hover{
+      color:var(--accent);
+      transform:translateY(-1px);
+      box-shadow:0 6px 16px rgba(0,0,0,.10);
+      border-color:rgba(0,0,0,.12);
+    }
+    .icon-button:focus-visible{
+      outline:none;
+      box-shadow:0 0 0 3px rgba(78,200,194,.35);
+    }
+    .icon-button svg{ width:20px; height:20px; }
+
+    .session{
+      display:flex; align-items:center; gap:8px; margin-left:10px;
+      font-size:14px; color:#394046;
+    }
+    .link{
+      color:var(--primary); cursor:pointer; text-decoration:underline; text-underline-offset:2px;
+    }
+
+    /* Badge carrito */
+    .cart-badge{
+      position:absolute; top:-6px; right:-6px;
+      min-width:18px; height:18px; padding:0 4px;
+      border-radius:999px;
+      background:var(--accent); color:#fff;
+      font-size:12px; display:flex; align-items:center; justify-content:center;
+    }
+
+    /* Hero / Título */
+    .titulo-animado{
+      text-align:center;
+      font-family: "Arial Black", Arial, sans-serif;
+      color: var(--heroTextLight);
+      background-image: url('https://www.mesopinions.com/public/img/petition/petition-img-111999-fr.png');
+      background-size: cover;
+      background-position: center;
+      padding: 56px 12px 44px;
+      margin: 36px auto 10px;
+      width: min(90vw, 980px);
+      border-radius: 24px;
+      box-shadow: 0 10px 34px rgba(0,0,0,.12);
+      position: relative;
+      overflow: hidden;
+      animation: mover 1.6s infinite alternate ease-in-out;
+    }
+    .titulo-animado::before{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(0deg, rgba(0,0,0,.45), rgba(0,0,0,.25));
+      z-index:1;
+      border-radius:24px;
+    }
+    .titulo-animado span{
+      position:relative; z-index:2;
+      display:inline-block;
+    }
+    @keyframes mover{
+      from{
+        letter-spacing: 2px;
+        color: #4ec8c2;
+        transform: scale(1) rotate(-2deg);
+        text-shadow: 0 2px 8px rgba(0,0,0,.2);
+      }
+      to{
+        letter-spacing: 12px;
+        color: #fad961;
+        transform: scale(1.04) rotate(2deg);
+        text-shadow: 0 8px 22px rgba(0,0,0,.35);
+      }
+    }
+    @media (prefers-reduced-motion: reduce){
+      .titulo-animado{ animation:none }
+    }
+
+    .subtitulo{
+      text-align:center;
+      font-size: clamp(1rem, 2.5vw, 1.35rem);
+      font-weight:500;
+      color:#3d3d3d;
+      margin: 0 auto 24px;
+      letter-spacing:1.2px;
+      text-shadow:0 2px 12px #fff8;
+      width:min(90vw, 900px);
+    }
+
+    .container{ width:min(92vw, 1160px); margin:0 auto; padding-bottom:48px; }
+
+    /* EcoIA */
+    .ai-box{
+      background:#ffffffc7;
+      backdrop-filter: blur(4px);
+      border:1px solid rgba(0,0,0,.06);
+      box-shadow:0 6px 20px rgba(0,0,0,.10);
+      border-radius:16px;
+      padding:14px;
+      display:grid; gap:10px;
+      margin: 18px auto 10px;
+      width:min(92vw, 1160px);
+    }
+    .ai-box .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .ai-input{
+      flex:1;
+      padding:10px 12px; font-size:16px;
+      border:1px solid #b2bec3; border-radius:10px; outline:none;
+      transition:border-color .2s, box-shadow .2s;
+      background:#fff;
+    }
+    .ai-input:focus{ border-color:var(--primary); box-shadow:0 0 0 3px rgba(78,200,194,.15); }
+    .chip{
+      border:none; background:var(--chip); color:var(--chipText);
+      padding:8px 12px; border-radius:999px; cursor:pointer; font-size:14px;
+    }
+    .ai-meta{
+      font-size:13px; color:var(--muted);
+    }
+
+    /* Sugerencias EcoIA */
+    .ai-suggestions{ display:grid; gap:10px; margin-top:4px; }
+    .ai-suggestions .chips{ display:flex; gap:8px; flex-wrap:wrap; }
+    .ai-suggestions .preview{ display:grid; gap:8px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+    .ai-suggestions .suggest-item{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:8px 10px; border:1px solid #e9ecef; border-radius:10px; background:#fff; cursor:pointer;
+    }
+    .ai-suggestions .suggest-item:hover{ border-color:#d0d7de; box-shadow:0 2px 10px rgba(0,0,0,.06); }
+    .ai-suggestions .recipes{ display:grid; gap:10px; }
+    .ai-suggestions .recipe-item{ display:grid; grid-template-columns: 72px 1fr auto; gap:10px; align-items:center; border:1px solid #e9ecef; border-radius:12px; background:#fff; padding:8px; }
+    .ai-suggestions .recipe-thumb{ width:72px; height:54px; border-radius:8px; overflow:hidden; background:#eef2f7; }
+    .ai-suggestions .recipe-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .ai-suggestions .recipe-title{ font-weight:600; }
+    .ai-suggestions .recipe-meta{ font-size:12px; color:#6c757d; }
+    .ai-suggestions .recipe-badges{ display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+    .ai-suggestions .badge{ font-size:11px; padding:2px 6px; border-radius:999px; background:#f4f6f8; border:1px solid #e9ecef; }
+    .ai-suggestions .recipe-details{ grid-column: 1 / -1; font-size:13px; color:#394046; display:none; }
+    .ai-suggestions .recipe-actions .btn{ padding:6px 10px; }
+
+    /* Filtros rápidos */
+    .quick-filters{ display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 0; }
+    .quick-filters .chip{ background:#f3f6ff; color:#2a4b8d; }
+
+    /* Grid de productos */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap:16px;
+      margin-top:18px;
+    }
+    @media (min-width: 520px){ .grid{ grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 860px){ .grid{ grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 1140px){ .grid{ grid-template-columns: repeat(4, 1fr); } }
+
+    .card{
+      background:var(--cardBg);
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow:0 6px 18px rgba(0,0,0,.06);
+      display:flex; flex-direction:column;
+      transition: transform .15s ease, box-shadow .2s ease;
+    }
+    .card:hover{ transform: translateY(-2px); box-shadow:0 10px 24px rgba(0,0,0,.10); }
+
+    .thumb{
+      position:relative; width:100%;
+      aspect-ratio:16/11; background:#eef2f7;
+      overflow:hidden;
+    }
+    .thumb img{
+      width:100%; height:100%; object-fit:cover; display:block;
+    }
+    .pill{
+      position:absolute; left:10px; top:10px;
+      background:#00000080; color:#fff; font-size:12px; padding:4px 8px; border-radius:999px;
+      backdrop-filter: blur(2px);
+    }
+    .content{ padding:12px 12px 14px; display:grid; gap:8px; }
+    .name{ font-weight:700; }
+    .price{ color:#0f7b6c; font-weight:700; }
+    .tags{ display:flex; flex-wrap:wrap; gap:6px; }
+    .tag{
+      font-size:12px; background:#f4f6f8; color:#3b3b3b; padding:4px 8px; border-radius:999px;
+      border:1px solid #e9ecef;
+    }
+    .actions{
+      display:flex; align-items:center; justify-content:space-between; gap:8px; padding:0 12px 12px;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:10px 12px; border-radius:10px; border:1px solid rgba(0,0,0,.08);
+      background:#fff; color:var(--primary); cursor:pointer;
+      transition: transform .15s, box-shadow .15s, color .2s, border-color .2s;
+    }
+    .btn:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(0,0,0,.12); color:var(--accent); border-color:rgba(0,0,0,.12); }
+    .btn svg{ width:18px; height:18px; }
+
+    /* Resultados y estado */
+    .status-bar{
+      margin-top:10px; font-size:14px; color:var(--muted);
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    }
+
+    /* Recetas (sección independiente) */
+    .cook-recipes { --gap:1rem; --bg:#f9fafb; --card:#fff; --txt:#111827; --muted:#6b7280; --accent:#10b981; }
+    .cook-recipes { padding:2rem 1rem; background:var(--bg); color:var(--txt); font-family:inherit; }
+    .cook-recipes .toolbar { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; margin-bottom:1rem; }
+    .cook-recipes .filter-btn { border:1px solid #e5e7eb; background:#fff; color:#111827; padding:.5rem .75rem; border-radius:999px; cursor:pointer; transition:.15s; }
+    .cook-recipes .filter-btn:hover { transform:translateY(-1px); }
+    .cook-recipes .filter-btn.active { background:var(--accent); color:#fff; border-color:transparent; }
+    .cook-recipes .grid { display:grid; gap:var(--gap); grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); }
+    .cook-recipes .card { background:var(--card); border:1px solid #e5e7eb; border-radius:.75rem; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow .15s, transform .15s; }
+    .cook-recipes .card:hover { box-shadow:0 8px 20px rgba(0,0,0,.06); transform:translateY(-2px); }
+    .cook-recipes .thumb { aspect-ratio: 4/3; background:#e5e7eb; display:grid; place-items:center; font-size:2rem; }
+    .cook-recipes .content { padding:.75rem .9rem 1rem; display:flex; flex-direction:column; gap:.5rem; }
+    .cook-recipes .title { font-weight:600; line-height:1.3; }
+    .cook-recipes .desc { font-size:.95rem; color:#374151; }
+    .cook-recipes .meta { font-size:.85rem; color:var(--muted); display:flex; justify-content:space-between; align-items:center; }
+    .cook-recipes .badge { font-size:.75rem; padding:.2rem .5rem; border-radius:.5rem; background:#eef2ff; color:#3730a3; }
+    .cook-recipes .badge.peruanas { background:#fff7ed; color:#9a3412; }
+    .cook-recipes .badge.saludables { background:#ecfdf5; color:#065f46; }
+    .cook-recipes .badge.antojos { background:#fef2f2; color:#991b1b; }
+    .cook-recipes .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    .cook-recipes .view-btn { align-self:flex-start; border:1px solid #e5e7eb; background:#fff; color:#111827; padding:.45rem .7rem; border-radius:.5rem; cursor:pointer; transition:.15s; font-size:.9rem; }
+    .cook-recipes .view-btn:hover { transform:translateY(-1px); }
+    /* Modal simple para recetas */
+    .cook-recipes-modal { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:50; }
+    .cook-recipes-modal[aria-hidden="false"]{ display:flex; }
+    .cook-recipes-modal .box { width:min(92vw, 760px); max-height:80vh; overflow:auto; background:#fff; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 12px 28px rgba(0,0,0,.2); }
+    .cook-recipes-modal header { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #e5e7eb; }
+    .cook-recipes-modal .body { padding:12px 14px; display:grid; gap:10px; }
+    .cook-recipes-modal .close { border:none; background:#f3f4f6; padding:.4rem .6rem; border-radius:.5rem; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <script src="db.js"></script>
+  <!-- Header -->
+  <header class="header">
+    <div class="brand" id="brandLoginLink" role="link" tabindex="0" aria-label="Ir a iniciar sesión para comprar">
+      <span class="logo" aria-hidden="true">
+        <!-- Hoja como logo -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Logo hoja">
+          <path d="M3 21c9 0 18-9 18-18 0 0-9 0-18 9s-9 18 0 9Z"/>
+        </svg>
+      </span>
+      <span>EcoMarket</span>
+    </div>
+
+    <form class="search-bar" role="search" aria-label="Buscar productos" action="#" method="get" id="searchForm">
+      <label class="sr-only" for="q">Buscar</label>
+      <input id="q" name="q" type="search" placeholder="Buscar productos..." aria-label="Buscar productos" />
+
+      <label class="sr-only" for="cat">Categoría</label>
+      <select id="cat" name="categoria" aria-label="Filtrar por categoría">
+        <option value="all">Todas</option>
+        <option value="verduras">Verduras</option>
+        <option value="legumbres">Legumbres</option>
+        <option value="frutas">Frutas</option>
+        <option value="cereales">Cereales</option>
+        <option value="embutidos">Embutidos</option>
+        <option value="carnes">Carnes</option>
+        <option value="especias">Especias</option>
+        <option value="otros">Otros</option>
+      </select>
+
+      <!-- Botón buscar (lupa) -->
+      <button type="submit" class="icon-button" aria-label="Buscar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Lupa">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span class="sr-only">Buscar</span>
+      </button>
+    </form>
+
+  <!-- Carrito -->
+  <button class="icon-button" type="button" aria-label="Ver carrito" id="cartBtn" onclick="window.location.href='carrito.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Carrito">
+        <path d="M3 3h2l2.2 10.4a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 7H6"></path>
+        <circle cx="10" cy="20" r="1.5"></circle>
+        <circle cx="18" cy="20" r="1.5"></circle>
+      </svg>
+      <span class="cart-badge" id="cartBadge" aria-hidden="true" hidden>0</span>
+      <span class="sr-only" aria-live="polite" id="cartLive">Carrito vacío</span>
+    </button>
+  <div class="session" id="sessionInfo" aria-live="polite"></div>
+  </header>
+  <div style="text-align:center;margin:10px 0;">
+    <a href="libro-reclamaciones.html" style="color:#4ec8c2;text-decoration:underline;margin-right:16px;">Libro de Reclamaciones</a>
+    <a href="mis-pedidos.html" style="color:#4ec8c2;text-decoration:underline;">Mis pedidos</a>
+  </div>
+
+  <!-- Hero -->
+  <h1 class="titulo-animado" aria-label="EcoMarket, ofertas frescas y eco">
+    <span>EcoMarket</span>
+  </h1>
+  <p class="subtitulo">Tu mercado, en un clic</p>
+
+  <!-- EcoIA -->
+  <section class="ai-box" aria-label="Asistente EcoIA">
+    <div class="row">
+      <input class="ai-input" id="aiInput" type="text" placeholder="Pregúntale a EcoIA: 'fruta barata para jugo', 'lentejas orgánicas', 'menos de 3', 'enbutidos'..." aria-label="Pregunta a EcoIA" />
+      <button class="chip" id="aiAskBtn" aria-label="Consultar a EcoIA">Preguntar</button>
+    </div>
+    <div class="row quick-filters" aria-label="Sugerencias rápidas">
+      <button class="chip" data-q="fruta barata para jugo">Fruta barata</button>
+      <button class="chip" data-q="verduras para ensalada">Verduras p/ensalada</button>
+      <button class="chip" data-q="legumbres orgánicas">Legumbres orgánicas</button>
+      <button class="chip" data-q="cereales sin gluten">Cereales sin gluten</button>
+      <button class="chip" data-q="embutidos oferta">Embutidos en oferta</button>
+      <button class="chip" data-q="productos locales">Productos locales</button>
+    </div>
+    <div class="ai-meta" id="aiMeta">EcoIA entenderá tu intención y aplicará filtros automáticamente.</div>
+    <div class="ai-suggestions" id="aiSugs" aria-label="Sugerencias inteligentes" hidden>
+      <div class="chips" id="aiChips"></div>
+      <div class="preview" id="aiPreview"></div>
+      <div class="recipes" id="aiRecipes"></div>
+    </div>
+  </section>
+
+  <!-- Recetas destacadas -->
+  <section id="recetas" class="cook-recipes" aria-label="Recetas">
+    <div class="toolbar" role="toolbar" aria-label="Filtros de recetas">
+      <button class="filter-btn active" data-filter="todas" type="button">Todas</button>
+      <button class="filter-btn" data-filter="peruanas" type="button">Peruanas</button>
+      <button class="filter-btn" data-filter="saludables" type="button">Saludables</button>
+      <button class="filter-btn" data-filter="antojos" type="button">Poco saludables</button>
+    </div>
+
+    <div class="grid">
+      <!-- Peruanas -->
+      <article class="card" data-category="peruanas" data-recipe-id="r8">
+        <div class="thumb" style="background:linear-gradient(135deg,#fff7ed,#ffedd5)">🇵🇪</div>
+        <div class="content">
+          <div class="meta"><span class="badge peruanas">Peruanas</span><span>25 min</span></div>
+          <h3 class="title">Ceviche clásico</h3>
+          <p class="desc">Pescado fresco, limón, ají limo, cilantro y camote.</p>
+          <button class="view-btn" type="button">Ver receta</button>
+        </div>
+      </article>
+
+      <article class="card" data-category="peruanas" data-recipe-id="r6">
+        <div class="thumb" style="background:linear-gradient(135deg,#fff7ed,#fde68a)">🍟</div>
+        <div class="content">
+          <div class="meta"><span class="badge peruanas">Peruanas</span><span>35 min</span></div>
+          <h3 class="title">Lomo saltado</h3>
+          <p class="desc">Salteado de res con cebolla, tomate y papas fritas.</p>
+          <button class="view-btn" type="button">Ver receta</button>
+        </div>
+      </article>
+
+      <article class="card" data-category="peruanas" data-recipe-id="r5">
+        <div class="thumb" style="background:linear-gradient(135deg,#fff7ed,#fecaca)">🥘</div>
+        <div class="content">
+          <div class="meta"><span class="badge peruanas">Peruanas</span><span>40 min</span></div>
+          <h3 class="title">Ají de gallina</h3>
+          <p class="desc">Pollo deshilachado en cremosa salsa de ají amarillo.</p>
+          <button class="view-btn" type="button">Ver receta</button>
+        </div>
+      </article>
+
+      <article class="card" data-category="peruanas" data-recipe-id="r9">
+        <div class="thumb" style="background:linear-gradient(135deg,#fff7ed,#fde68a)">🥔</div>
+        <div class="content">
+          <div class="meta"><span class="badge peruanas">Peruanas</span><span>20 min</span></div>
+          <h3 class="title">Papa a la huancaína</h3>
+          <p class="desc">Rodajas de papa con salsa huancaína, huevo y aceitunas.</p>
+          <button class="view-btn" type="button">Ver receta</button>
+        </div>
+      </article>
+
+      <article class="card" data-category="peruanas" data-recipe-id="r10">
+        <div class="thumb" style="background:linear-gradient(135deg,#fff7ed,#fde68a)">🥗</div>
+        <div class="content">
+          <div class="meta"><span class="badge peruanas">Peruanas</span><span>30 min</span></div>
+          <h3 class="title">Causa limeña</h3>
+          <p class="desc">Capas de papa amarilla con relleno de atún o pollo.</p>
+          <button class="view-btn" type="button">Ver receta</button>
+        </div>
+      </article>
+
+      <!-- Saludables -->
+      <article class="card" data-category="saludables" data-recipe-id="r11">
+        <div class="thumb" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5)">🥑</div>
+        <div class="content">
+          <div class="meta"><span class="badge saludables">Saludables</span><span>20 min</span></div>
+          <h3 class="title">Bowl de quinoa y verduras</h3>
+          <p class="desc">Quinoa con brócoli, garbanzos, tomate y limón.</p>
+          <button class="view-btn" type="button">Ver receta</button>
+        </div>
+      </article>
+
+      <article class="card" data-category="saludables" data-recipe-id="r12">
+        <div class="thumb" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0)">🐟</div>
+        <div class="content">
+          <div class="meta"><span class="badge saludables">Saludables</span><span>25 min</span></div>
+          <h3 class="title">Salmón al horno con brócoli</h3>
+          <p class="desc">Salmón con limón, ajo y aceite de oliva.</p>
+          <button class="view-btn" type="button">Ver receta</button>
+        </div>
+      </article>
+
+      <article class="card" data-category="saludables" data-recipe-id="r13">
+        <div class="thumb" style="background:linear-gradient(135deg,#ecfccb,#d9f99d)">🥗</div>
+        <div class="content">
+          <div class="meta"><span class="badge saludables">Saludables</span><span>15 min</span></div>
+          <h3 class="title">Ensalada mediterránea</h3>
+          <p class="desc">Pepino, tomate, aceitunas, queso feta y orégano.</p>
+          <button class="view-btn" type="button">Ver receta</button>
+        </div>
+      </article>
+
+      <article class="card" data-category="saludables" data-recipe-id="r14">
+        <div class="thumb" style="background:linear-gradient(135deg,#e0f2fe,#bae6fd)">🌮</div>
+        <div class="content">
+          <div class="meta"><span class="badge saludables">Saludables</span><span>20 min</span></div>
+          <h3 class="title">Tacos de lechuga con pavo</h3>
+          <p class="desc">Pavo salteado con especias en hojas de lechuga.</p>
+          <button class="view-btn" type="button">Ver receta</button>
+        </div>
+      </article>
+
+      <article class="card" data-category="saludables" data-recipe-id="r15">
+        <div class="thumb" style="background:linear-gradient(135deg,#ccfbf1,#99f6e4)">🥬</div>
+        <div class="content">
+          <div class="meta"><span class="badge saludables">Saludables</span><span>5 min</span></div>
+          <h3 class="title">Smoothie verde detox</h3>
+          <p class="desc">Espinaca, piña, manzana y jengibre.</p>
+          <button class="view-btn" type="button">Ver receta</button>
+        </div>
+      </article>
+
+      <!-- Poco saludables / Antojos -->
+      <article class="card" data-category="antojos" data-recipe-id="r16">
+        <div class="thumb" style="background:linear-gradient(135deg,#fee2e2,#fecaca)">🍔</div>
+        <div class="content">
+          <div class="meta"><span class="badge antojos">Poco saludables</span><span>30 min</span></div>
+          <h3 class="title">Hamburguesa doble queso</h3>
+          <p class="desc">Doble carne, doble queso y salsa especial.</p>
+          <button class="view-btn" type="button">Ver receta</button>
+        </div>
+      </article>
+
+      <article class="card" data-category="antojos" data-recipe-id="r17">
+        <div class="thumb" style="background:linear-gradient(135deg,#ffe4e6,#fecdd3)">🍩</div>
+        <div class="content">
+          <div class="meta"><span class="badge antojos">Poco saludables</span><span>35 min</span></div>
+          <h3 class="title">Churros con chocolate</h3>
+          <p class="desc">Churros crujientes con salsa de chocolate caliente.</p>
+          <button class="view-btn" type="button">Ver receta</button>
+        </div>
+      </article>
+
+      <article class="card" data-category="antojos" data-recipe-id="r18">
+        <div class="thumb" style="background:linear-gradient(135deg,#fee2e2,#fecaca)">🌶️</div>
+        <div class="content">
+          <div class="meta"><span class="badge antojos">Poco saludables</span><span>40 min</span></div>
+          <h3 class="title">Alitas fritas picantes</h3>
+          <p class="desc">Alitas crujientes bañadas en salsa buffalo.</p>
+          <button class="view-btn" type="button">Ver receta</button>
+        </div>
+      </article>
+
+      <article class="card" data-category="antojos" data-recipe-id="r19">
+        <div class="thumb" style="background:linear-gradient(135deg,#ffe4e6,#fecdd3)">🍕</div>
+        <div class="content">
+          <div class="meta"><span class="badge antojos">Poco saludables</span><span>20 min</span></div>
+          <h3 class="title">Pizza de pepperoni</h3>
+          <p class="desc">Base crujiente con pepperoni y queso fundido.</p>
+          <button class="view-btn" type="button">Ver receta</button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Modal para ver recetas -->
+  <div class="cook-recipes-modal" id="recipeModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Detalle de receta">
+    <div class="box">
+      <header>
+        <strong id="recipeModalTitle">Receta</strong>
+        <button class="close" type="button" id="recipeModalClose">Cerrar</button>
+      </header>
+      <div class="body" id="recipeModalBody"></div>
+    </div>
+  </div>
+
+  <main class="container" aria-label="Contenido principal">
+    <div class="status-bar">
+      <div id="resultCount">Mostrando 0 productos</div>
+      <div id="activeFilters"></div>
+    </div>
+
+    <!-- Grid -->
+    <section id="grid" class="grid" aria-live="polite"></section>
+  </main>
+
+  <!-- Template tarjeta -->
+  <template id="cardTmpl">
+    <article class="card">
+      <div class="thumb">
+        <img loading="lazy" decoding="async" alt="" />
+        <span class="pill"></span>
+      </div>
+      <div class="content">
+        <div class="name"></div>
+        <div class="price"></div>
+        <div class="tags"></div>
+      </div>
+      <div class="actions">
+        <button class="btn addBtn" type="button" aria-label="Agregar al carrito">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="16"></line>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
+          </svg>
+          Agregar
+        </button>
+        <div class="unit"></div>
+      </div>
+    </article>
+  </template>
+
+  <script>
+  // Filtro para la sección de recetas
+  (function initRecipeFilter(){
+    const root = document.querySelector('#recetas.cook-recipes');
+    if(!root) return;
+    const buttons = root.querySelectorAll('[data-filter]');
+    const cards = root.querySelectorAll('.card');
+
+    function update(filter){
+      cards.forEach(card=>{
+        card.style.display = (filter==='todas' || card.dataset.category===filter) ? '' : 'none';
+      });
+      let live = document.getElementById('recetas-live');
+      if(!live){
+        live = document.createElement('div');
+        live.id = 'recetas-live';
+        live.className = 'sr-only';
+        live.setAttribute('aria-live','polite');
+        root.appendChild(live);
+      }
+      const visible = Array.from(cards).filter(c=>c.style.display!=='none').length;
+      live.textContent = `${visible} recetas mostradas`;
+    }
+
+    buttons.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        buttons.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        update(btn.dataset.filter);
+      });
+    });
+
+    update('todas');
+  })();
+  // --- fin filtro recetas ---
+
+  // Modal para ver recetas desde la sección de tarjetas
+  (function attachRecipeModal(){
+    const root = document.querySelector('#recetas.cook-recipes');
+    const modal = document.getElementById('recipeModal');
+    if(!root || !modal) return;
+    const titleEl = document.getElementById('recipeModalTitle');
+    const bodyEl = document.getElementById('recipeModalBody');
+    const btnClose = document.getElementById('recipeModalClose');
+
+    function openModal(){ modal.setAttribute('aria-hidden','false'); }
+    function closeModal(){ modal.setAttribute('aria-hidden','true'); }
+    btnClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
+
+    root.querySelectorAll('.card .view-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const card = btn.closest('.card');
+        const id = card?.getAttribute('data-recipe-id');
+        const r = (window.recipes || recipes).find(x=>x.id===id);
+        if(!r){ closeModal(); return; }
+        titleEl.textContent = r.title;
+        const ingList = r.ingredients.map(x=>`<li>${x}</li>`).join('');
+        const stepsList = r.steps.map((x,i)=>`<li><strong>Paso ${i+1}:</strong> ${x}</li>`).join('');
+        bodyEl.innerHTML = `
+          <img src="${r.img||''}" alt="${r.title}" style="width:100%;max-height:280px;object-fit:cover;border-radius:8px" referrerpolicy="no-referrer" onerror="this.src='${FALLBACK_IMG}'" />
+          <div style="display:flex;gap:8px;color:#6b7280"><span>${r.minutes} min</span>·<span>${r.level}</span></div>
+          <div>
+            <h4 style="margin:8px 0 6px;">Ingredientes</h4>
+            <ul style="margin:0 0 10px 18px;">${ingList}</ul>
+            <h4 style="margin:8px 0 6px;">Pasos</h4>
+            <ol style="margin:0 0 10px 18px;">${stepsList}</ol>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn" id="modalAddMissing">Agregar faltantes</button>
+            <button type="button" class="btn" id="modalClose">Cerrar</button>
+          </div>
+        `;
+        bodyEl.querySelector('#modalAddMissing')?.addEventListener('click', ()=> addMissingToCart(r));
+        bodyEl.querySelector('#modalClose')?.addEventListener('click', closeModal);
+        openModal();
+      });
+    });
+  })();
+
+    // Utilidades
+    const normalize = (s='') =>
+      s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+
+  const FALLBACK_IMG = 'https://placehold.co/800x550?text=Sin+imagen';
+
+    // Overrides de imágenes por producto (id -> url)
+    const IMG_OV_KEY = 'ecomarket_img_overrides';
+    function getImgOverrides(){ try{ return JSON.parse(localStorage.getItem(IMG_OV_KEY)||'{}'); }catch{ return {}; } }
+    function setImgOverrides(map){ try{ localStorage.setItem(IMG_OV_KEY, JSON.stringify(map||{})); }catch{} }
+    function imgForProduct(p){ const o = getImgOverrides(); return (o && o[p.id]) ? o[p.id] : p.img; }
+
+    // Catálogo de productos con imágenes
+    const IMG = (q) => `https://source.unsplash.com/featured/800x550?${encodeURIComponent(q)}`;
+
+    const products = [
+      // Verduras
+      {id:'v1', name:'Lechuga Romana', category:'verduras', price:1.6, unit:'pieza', img:IMG('lettuce, green'), tags:['fresco','ensalada','verde','local']},
+      {id:'v2', name:'Tomate', category:'verduras', price:1.9, unit:'kg', img:IMG('tomato, fresh'), tags:['ensalada','rojo','jugoso','oferta']},
+      {id:'v3', name:'Zanahoria', category:'verduras', price:1.5, unit:'kg', img:IMG('carrot, vegetables'), tags:['dulce','crujiente','ensalada']},
+      {id:'v4', name:'Pepino', category:'verduras', price:1.4, unit:'kg', img:IMG('cucumber'), tags:['refrescante','ensalada']},
+      {id:'v5', name:'Pimiento Verde', category:'verduras', price:2.2, unit:'kg', img:IMG('green bell pepper'), tags:['ensalada','vitamina-c']},
+      {id:'v6', name:'Cebolla Morada', category:'verduras', price:1.8, unit:'kg', img:IMG('red onion'), tags:['ensalada','aroma']},
+
+      // Legumbres
+      {id:'l1', name:'Lentejas', category:'legumbres', price:2.6, unit:'kg', img:IMG('lentils'), tags:['proteina','fibra','organico']},
+      {id:'l2', name:'Garbanzos', category:'legumbres', price:2.8, unit:'kg', img:IMG('chickpeas'), tags:['hummus','proteina','fibra']},
+      {id:'l3', name:'Frijoles Negros', category:'legumbres', price:2.4, unit:'kg', img:IMG('black beans'), tags:['proteina','guiso']},
+
+      // Frutas
+      {id:'f1', name:'Manzana Roja', category:'frutas', price:2.3, unit:'kg', img:IMG('red apple fruit'), tags:['dulce','snack','jugo']},
+      {id:'f2', name:'Plátano', category:'frutas', price:1.7, unit:'kg', img:IMG('banana bunch'), tags:['desayuno','energia']},
+      {id:'f3', name:'Naranja', category:'frutas', price:2.0, unit:'kg', img:IMG('orange fruit'), tags:['jugo','vitamina-c','citricos']},
+      {id:'f4', name:'Fresa', category:'frutas', price:3.1, unit:'kg', img:IMG('strawberries'), tags:['postre','dulce']},
+
+      // Cereales
+      {id:'c1', name:'Arroz Integral', category:'cereales', price:2.2, unit:'kg', img:IMG('brown rice'), tags:['sin-gluten','fibra','acompanante']},
+      {id:'c2', name:'Avena', category:'cereales', price:2.1, unit:'kg', img:IMG('oats'), tags:['desayuno','fibra']},
+      {id:'c3', name:'Quinoa', category:'cereales', price:4.5, unit:'kg', img:IMG('quinoa seeds'), tags:['sin-gluten','proteina','premium']},
+
+      // Embutidos
+      {id:'e1', name:'Jamón Cocido', category:'embutidos', price:3.8, unit:'250g', img:IMG('ham slices'), tags:['sandwich','oferta']},
+      {id:'e2', name:'Chorizo', category:'embutidos', price:4.2, unit:'250g', img:IMG('chorizo sausage'), tags:['fuerte','guiso']},
+      {id:'e3', name:'Salchicha de Pavo', category:'embutidos', price:3.4, unit:'300g', img:IMG('turkey sausage'), tags:['sandwich','light']},
+
+      // Otros
+      {id:'o1', name:'Huevos (docena)', category:'otros', price:2.7, unit:'12u', img:IMG('eggs carton'), tags:['proteina','desayuno','local']},
+      {id:'o2', name:'Leche Entera', category:'otros', price:1.3, unit:'1L', img:IMG('milk bottle'), tags:['lacteos','desayuno']},
+      {id:'o3', name:'Aceite de Oliva', category:'otros', price:6.9, unit:'500ml', img:IMG('olive oil bottle'), tags:['cocina','premium']},
+      {id:'o4', name:'Yogur Natural', category:'otros', price:0.9, unit:'200g', img:IMG('yogurt cup'), tags:['lacteos','desayuno','light']}
+      // Productos adicionales
+      ,{id:'v7', name:'Ajo', category:'verduras', price:3.0, unit:'kg', img:IMG('garlic'), tags:['condimento','fresco']}
+      ,{id:'v8', name:'Berenjena', category:'verduras', price:2.0, unit:'kg', img:IMG('eggplant'), tags:['verdura','guiso']}
+      ,{id:'v9', name:'Espárragos', category:'verduras', price:5.5, unit:'kg', img:IMG('asparagus'), tags:['premium','verdura']}
+
+      ,{id:'l4', name:'Soja', category:'legumbres', price:3.2, unit:'kg', img:IMG('soybeans'), tags:['proteina','vegetariano']}
+      ,{id:'l5', name:'Alubias Blancas', category:'legumbres', price:2.9, unit:'kg', img:IMG('white beans'), tags:['guiso','proteina']}
+
+      ,{id:'f5', name:'Mango', category:'frutas', price:2.9, unit:'kg', img:IMG('mango fruit'), tags:['dulce','jugo','tropical']}
+      ,{id:'f6', name:'Piña', category:'frutas', price:3.5, unit:'kg', img:IMG('pineapple'), tags:['tropical','jugo']}
+      ,{id:'f7', name:'Kiwis', category:'frutas', price:2.7, unit:'kg', img:IMG('kiwi fruit'), tags:['vitamina-c','snack']}
+
+      ,{id:'c4', name:'Harina de Trigo', category:'cereales', price:1.9, unit:'kg', img:IMG('wheat flour'), tags:['hornear','cocina']}
+      ,{id:'c5', name:'Semillas de Chía', category:'cereales', price:4.8, unit:'200g', img:IMG('chia seeds'), tags:['superfood','fibra']}
+
+      ,{id:'e4', name:'Pavo Ahumado', category:'embutidos', price:5.0, unit:'200g', img:IMG('smoked turkey'), tags:['premium','sandwich']}
+      ,{id:'e5', name:'Salami', category:'embutidos', price:4.6, unit:'200g', img:IMG('salami slices'), tags:['sandwich','picante']}
+
+      ,{id:'o5', name:'Miel Natural', category:'otros', price:6.2, unit:'250g', img:IMG('honey jar'), tags:['dulce','natural']}
+      ,{id:'o6', name:'Café Molido', category:'otros', price:5.9, unit:'250g', img:IMG('ground coffee'), tags:['desayuno','energia']}
+      ,{id:'o7', name:'Té Verde', category:'otros', price:3.4, unit:'20 bolsitas', img:IMG('green tea'), tags:['infusion','salud']}
+      
+  // Carnes
+  ,{id:'m1', name:'Pechuga de Pollo', category:'carnes', price:8.9, unit:'kg', img:IMG('chicken breast raw'), tags:['proteina','magro']}
+  ,{id:'m2', name:'Carne de Res (Lomo)', category:'carnes', price:18.5, unit:'kg', img:IMG('beef sirloin raw'), tags:['filete','premium']}
+  ,{id:'m3', name:'Carne de Cerdo (Chuleta)', category:'carnes', price:12.7, unit:'kg', img:IMG('pork chop raw'), tags:['jugoso']}
+  ,{id:'m4', name:'Filete de Pescado', category:'carnes', price:14.2, unit:'kg', img:IMG('white fish fillet raw'), tags:['pescado','ligero']}
+  ,{id:'m5', name:'Atún en Lata', category:'carnes', price:2.3, unit:'170g', img:IMG('canned tuna'), tags:['atun','practico','ensalada']}
+
+  // Especias
+  ,{id:'s1', name:'Sal de Mesa', category:'especias', price:0.9, unit:'500g', img:IMG('salt'), tags:['basico','condimento']}
+  ,{id:'s2', name:'Pimienta Negra Molida', category:'especias', price:2.2, unit:'100g', img:IMG('black pepper ground'), tags:['condimento','aroma']}
+  ,{id:'s3', name:'Comino Molido', category:'especias', price:1.6, unit:'100g', img:IMG('cumin powder'), tags:['condimento','guiso']}
+  ,{id:'s4', name:'Orégano Seco', category:'especias', price:1.2, unit:'25g', img:IMG('oregano dried'), tags:['hierbas','pizza','ensalada']}
+  ,{id:'s5', name:'Paprika (Pimentón Dulce)', category:'especias', price:1.8, unit:'75g', img:IMG('paprika powder'), tags:['color','sabor']}
+  ,{id:'s6', name:'Cúrcuma en Polvo', category:'especias', price:2.0, unit:'75g', img:IMG('turmeric powder'), tags:['salud','color']}
+  ,{id:'s7', name:'Hojas de Laurel', category:'especias', price:1.1, unit:'20g', img:IMG('bay leaves'), tags:['guiso','caldo']}
+
+  // Lácteos/Despensa extra
+  ,{id:'o8', name:'Queso Fresco', category:'otros', price:4.0, unit:'250g', img:IMG('fresh cheese'), tags:['lacteos']}
+  ,{id:'o9', name:'Mantequilla', category:'otros', price:3.5, unit:'200g', img:IMG('butter'), tags:['lacteos','cocina']}
+  ,{id:'o10', name:'Salsa de Soya', category:'otros', price:2.2, unit:'150ml', img:IMG('soy sauce bottle'), tags:['soja','condimento']}
+  ,{id:'o11', name:'Leche Evaporada', category:'otros', price:1.7, unit:'400ml', img:IMG('evaporated milk can'), tags:['lacteos','cocina']}
+  ,{id:'o12', name:'Leche Condensada', category:'otros', price:2.1, unit:'400ml', img:IMG('condensed milk can'), tags:['postres','dulce']}
+  ,{id:'o13', name:'Crema de Leche', category:'otros', price:2.5, unit:'200ml', img:IMG('heavy cream carton'), tags:['salsa','lacteos']}
+  ,{id:'o14', name:'Yogur Griego', category:'otros', price:2.3, unit:'200g', img:IMG('greek yogurt plain'), tags:['proteina','lacteos']}
+  ,{id:'o15', name:'Queso Parmesano', category:'otros', price:4.4, unit:'150g', img:IMG('parmesan cheese block'), tags:['pasta','lacteos']}
+  ,{id:'o16', name:'Spaghetti', category:'cereales', price:2.0, unit:'500g', img:IMG('spaghetti pasta'), tags:['pasta']}
+  ,{id:'o17', name:'Azúcar Blanca', category:'otros', price:1.3, unit:'1kg', img:IMG('white sugar'), tags:['postres']}
+  ,{id:'s8', name:'Canela en Rama', category:'especias', price:1.5, unit:'50g', img:IMG('cinnamon sticks'), tags:['postres','aroma']}
+  ,{id:'s9', name:'Romero Seco', category:'especias', price:1.4, unit:'25g', img:IMG('dried rosemary'), tags:['hierbas','aroma']}
+  ,{id:'s10', name:'Tomillo Seco', category:'especias', price:1.4, unit:'25g', img:IMG('dried thyme'), tags:['hierbas']}
+  ,{id:'s11', name:'Curry en Polvo', category:'especias', price:2.3, unit:'75g', img:IMG('curry powder'), tags:['color','sabor']}
+  ,{id:'m6', name:'Camarones', category:'carnes', price:22.0, unit:'kg', img:IMG('raw shrimp'), tags:['mariscos','pasta']}
+  ,{id:'v10', name:'Brócoli', category:'verduras', price:3.0, unit:'kg', img:IMG('broccoli'), tags:['verde','salud']}
+  ,{id:'v11', name:'Cilantro (Culantro)', category:'verduras', price:0.8, unit:'manojo', img:IMG('cilantro bunch'), tags:['hierbas','peruano']}
+  ,{id:'v12', name:'Papa Blanca', category:'verduras', price:1.4, unit:'kg', img:IMG('potatoes'), tags:['guiso','peruano']}
+  ,{id:'o18', name:'Vinagre Blanco', category:'otros', price:1.5, unit:'500ml', img:IMG('white vinegar bottle'), tags:['ensalada','cocina']}
+  ,{id:'o19', name:'Galletas de Soda', category:'otros', price:1.2, unit:'6u', img:IMG('soda crackers'), tags:['acompanante']}
+  ,{id:'s12', name:'Pasta de Ají Amarillo', category:'especias', price:2.6, unit:'200g', img:IMG('aji amarillo paste'), tags:['peruano','picante']}
+    ];
+
+    // Recetario básico (no exhaustivo, pensado para sugerencias rápidas)
+    const recipes = [
+      {id:'r1', title:'Arroz con tomate y atún', img:IMG('tuna rice tomato dish'), minutes:20, level:'fácil',
+       ingredients:['arroz','tomate','atun','aceite','sal','ajo'],
+       steps:['Cocer el arroz.','Saltear ajo y tomate.','Agregar atún, mezclar con el arroz.'],
+       tags:['rápida','económica']},
+      {id:'r2', title:'Pescado al horno con verduras', img:IMG('baked fish vegetables'), minutes:30, level:'fácil',
+       ingredients:['pescado','zanahoria','pimiento','cebolla','aceite','sal','limon'],
+       steps:['Cortar verduras.','Disponer pescado con verduras, aceite y limón.','Hornear 20-25 min.'],
+       tags:['saludable','ligero']},
+      {id:'r3', title:'Arroz frito con verduras', img:IMG('fried rice vegetables'), minutes:18, level:'media',
+       ingredients:['arroz','zanahoria','cebolla','huevo','aceite','soja'],
+       steps:['Saltear verduras.','Agregar arroz cocido y salsa de soja.','Añadir huevo y mezclar.'],
+       tags:['rápida']},
+      {id:'r4', title:'Ensalada de atún y quinoa', img:IMG('quinoa tuna salad'), minutes:15, level:'fácil',
+       ingredients:['quinoa','atun','lechuga','tomate','aceite','sal','limon'],
+       steps:['Cocer quinoa.','Mezclar con atún y verduras.','Aliñar con aceite y limón.'],
+     tags:['ensalada','sin-gluten']},
+    {id:'r5', title:'Ají de Gallina', img:IMG('aji de gallina peruvian'), minutes:45, level:'media',
+     ingredients:['pollo','papa','leche evaporada','pan','aji amarillo','ajo','cebolla','aceite','sal','queso parmesano','huevo'],
+     steps:['Hervir pollo y deshilachar.','Hacer aderezo con ajo, cebolla y pasta de ají amarillo.','Agregar pan remojado en leche evaporada y licuar.','Unir con pollo y espesar; servir con papa sancochada y huevo.'],
+     tags:['peruano']},
+    {id:'r6', title:'Lomo Saltado', img:IMG('lomo saltado peruvian'), minutes:30, level:'media',
+     ingredients:['res','cebolla','tomate','aji amarillo','vinagre','soja','ajo','papa','sal'],
+     steps:['Sellar lomo de res.','Saltear cebolla, tomate y ají amarillo.','Desglasar con vinagre y salsa de soja (sillao).','Mezclar con la carne y acompañar con papas fritas y arroz.'],
+     tags:['peruano','salteado']},
+    {id:'r7', title:'Seco de Res', img:IMG('seco de res peruvian'), minutes:80, level:'media',
+     ingredients:['res','cilantro','cebolla','ajo','comino','pimiento','papa','arroz','sal'],
+     steps:['Licuar cilantro con agua.','Hacer aderezo con ajo, cebolla, comino y pimiento.','Sellar carne y agregar licuado de cilantro.','Cocinar a fuego lento; servir con papa y arroz.'],
+     tags:['peruano','guiso']}
+    ,{id:'r8', title:'Ceviche clásico', img:IMG('peruvian ceviche'), minutes:25, level:'media',
+      ingredients:['pescado','limon','cebolla','aji amarillo','cilantro','sal'],
+      steps:['Cortar pescado en cubos.','Exprimir limón y mezclar con sal y ají.','Agregar cebolla y cilantro; reposar 5 min.'], tags:['peruano','sin-gluten']}
+    ,{id:'r9', title:'Papa a la huancaína', img:IMG('papa a la huancaina'), minutes:20, level:'fácil',
+      ingredients:['papa','aji amarillo','queso parmesano','leche','galletas','huevo','sal'],
+      steps:['Licuar ají, queso, leche y galletas.','Cocer papa y huevo.','Servir con salsa y decorar.'], tags:['peruano','entrada']}
+    ,{id:'r10', title:'Causa limeña', img:IMG('causa limena'), minutes:30, level:'media',
+      ingredients:['papa','atun','limon','aji amarillo','sal','aceite'],
+      steps:['Prensar papa con limón, ají y sal.','Rellenar con atún y verduras a gusto.','Montar en capas.'], tags:['peruano','frio']}
+    ,{id:'r11', title:'Bowl de quinoa y verduras', img:IMG('quinoa bowl'), minutes:20, level:'fácil',
+      ingredients:['quinoa','brocoli','garbanzos','tomate','limon','aceite','sal'],
+      steps:['Cocer quinoa.','Saltear brócoli y garbanzos.','Servir con tomate y aliño de limón.'], tags:['saludable','veg']}
+    ,{id:'r12', title:'Salmón al horno con brócoli', img:IMG('salmon broccoli'), minutes:25, level:'fácil',
+      ingredients:['pescado','brocoli','ajo','limon','aceite','sal','pimienta'],
+      steps:['Disponer salmón y brócoli.','Agregar ajo, limón, sal y aceite.','Hornear 15-18 min.'], tags:['saludable']}
+    ,{id:'r13', title:'Ensalada mediterránea', img:IMG('greek salad'), minutes:15, level:'fácil',
+      ingredients:['tomate','pepino','oregano','aceite','sal'],
+      steps:['Cortar tomate y pepino.','Aliñar con sal, orégano y aceite.'], tags:['saludable','rápida']}
+    ,{id:'r14', title:'Tacos de lechuga con pavo', img:IMG('lettuce tacos turkey'), minutes:20, level:'fácil',
+      ingredients:['pavo','lechuga','ajo','comino','limon','sal'],
+      steps:['Saltear pavo con ajo y comino.','Servir en hojas de lechuga con limón.'], tags:['saludable','bajo-carb']}
+    ,{id:'r15', title:'Smoothie verde detox', img:IMG('green smoothie'), minutes:5, level:'fácil',
+      ingredients:['espinaca','manzana','pina','jengibre','agua'],
+      steps:['Licuar todos los ingredientes hasta homogeneizar.'], tags:['saludable','bebida']}
+    ,{id:'r16', title:'Hamburguesa doble queso', img:IMG('double cheeseburger'), minutes:30, level:'media',
+      ingredients:['res','queso','pan','tomate','lechuga','sal'],
+      steps:['Formar hamburguesas y dorar.','Montar con queso y vegetales.'], tags:['antojo']}
+    ,{id:'r17', title:'Churros con chocolate', img:IMG('churros chocolate'), minutes:35, level:'media',
+      ingredients:['harina','azucar','canela','aceite','chocolate'],
+      steps:['Hacer masa choux sencilla.','Freír en aceite.','Rebozar en azúcar y canela. Servir con chocolate.'], tags:['antojo','postre']}
+    ,{id:'r18', title:'Alitas fritas picantes', img:IMG('spicy wings'), minutes:40, level:'media',
+      ingredients:['pollo','harina','paprika','aceite','sal','aji'],
+      steps:['Mezclar alitas con harina y especias.','Freír hasta dorar.','Bañar en salsa picante.'], tags:['antojo']}
+    ,{id:'r19', title:'Pizza de pepperoni', img:IMG('pepperoni pizza'), minutes:20, level:'fácil',
+      ingredients:['harina','sal','aceite','tomate','queso'],
+      steps:['Extender masa.','Cubrir con salsa y queso.','Hornear hasta derretir.'], tags:['antojo']}
+    ];
+
+    // Sinónimos e intención para EcoIA
+    const categorySynonyms = new Map([
+      ['verduras',['verdura','hortaliza','hortalizas','greens','vegetales','vegetal']],
+      ['legumbres',['legumbre','frijol','frijoles','poroto','porotos','garbanzo','garbanzos','lenteja','lentejas']],
+      ['frutas',['fruta','frutal','frutales']],
+      ['cereales',['cereal','granos','grano','quinoa','avena','arroz']],
+      ['embutidos',['embutido','fiambre','jamon','chorizo','salchicha','enbutidos','enbutido']], // incluye variante con b
+      ['carnes',['carne','pollo','res','vacuno','cerdo','pescado','atun','atún','mariscos','filete','lomo','pechuga']],
+      ['especias',['especia','condimento','condimentos','spices','sazonadores','hierbas','hierba','herbs']],
+      ['otros',['otro','varios','miscelaneo','miscelaneos','variedad','lacteos','huevos','aceite']]
+    ]);
+
+    const tagSynonyms = new Map([
+      ['organico',['organico','ecologico','eco','bio']],
+      ['oferta',['oferta','promo','descuento','barato','barata','economico','económico','low cost','baratita']],
+      ['sin-gluten',['sin gluten','gluten free','sg']],
+      ['ensalada',['ensalada','ensaladas','fresh','crudites']],
+      ['jugo',['jugo','zumo','licuado']],
+      ['local',['local','kilometro cero','km0','km 0']],
+      ['dulce',['dulce','sweet']],
+      ['desayuno',['desayuno','breakfast']],
+      ['premium',['premium','gourmet','caro','alta']],
+      ['light',['light','ligero','bajo en grasa','bajo-grasa']],
+      ['vegetariano',['vegano','vegan','plant based','plant-based','vegetariano']]
+    ]);
+
+    // Estado UI
+    const state = {
+      q: '',
+      category: 'all',
+      ai: {
+        priceCap: null,
+        priceMin: null,
+        inferredCategory: null,
+        tags: new Set()
+      },
+      cartCount: 0
+    };
+
+    // Referencias (única definición)
+    const gridEl = document.getElementById('grid');
+    const countEl = document.getElementById('resultCount');
+    const activeFiltersEl = document.getElementById('activeFilters');
+    const formEl = document.getElementById('searchForm');
+    const qEl = document.getElementById('q');
+    const catEl = document.getElementById('cat');
+    const aiInput = document.getElementById('aiInput');
+    const aiBtn = document.getElementById('aiAskBtn');
+    const aiMeta = document.getElementById('aiMeta');
+    const cartBadge = document.getElementById('cartBadge');
+    const cartLive = document.getElementById('cartLive');
+  const brandLoginLink = document.getElementById('brandLoginLink');
+    const sessionInfo = document.getElementById('sessionInfo');
+    let reclamosBadgeTimer = null;
+
+    function getSession(){
+      try{ return JSON.parse(localStorage.getItem('ecomarket_session')||'null'); }catch{ return null; }
+    }
+    function clearSession(){
+      localStorage.removeItem('ecomarket_session');
+      state.cartCount = 0;
+      if(cartBadge){ cartBadge.hidden = true; cartBadge.textContent = '0'; }
+      if(cartLive){ cartLive.textContent = 'Carrito vacío'; }
+    }
+    function getCartKey(){
+      const s = getSession();
+      if(!s) return null;
+      const uid = s.userId || s.username || 'anon';
+      return 'ecomarket_cart_'+ encodeURIComponent(uid);
+    }
+    function migrateLegacyCartIfNeeded(){
+      const key = getCartKey();
+      if(!key) return;
+      const legacy = localStorage.getItem('ecomarket_cart');
+      if(legacy && !localStorage.getItem(key)){
+        try{ localStorage.setItem(key, legacy); localStorage.removeItem('ecomarket_cart'); }catch{}
+      }
+    }
+    function updateCartBadge(){
+      const key = getCartKey();
+      let cart = [];
+      if(key){
+        try{ cart = JSON.parse(localStorage.getItem(key)||'[]'); }catch{ cart = []; }
+      }
+      const totalQty = cart.reduce((sum, item)=> sum + (item.qty||1), 0);
+      state.cartCount = key ? totalQty : 0;
+      cartBadge.hidden = !key || totalQty === 0;
+      cartBadge.textContent = String(state.cartCount);
+      cartLive.textContent = (!key || totalQty === 0) ? 'Carrito vacío' : `Carrito: ${state.cartCount} producto${state.cartCount>1?'s':''}`;
+    }
+    async function renderSession(){
+      const s = getSession();
+      if(!s){ sessionInfo.innerHTML = '<span>No has iniciado sesión</span>'; return; }
+      let nombre = s.username;
+      if (window.EcoDB && s.userId) {
+        const user = await EcoDB.findUserByUsername(s.username);
+        if(user && user.first_name && user.last_name){
+          nombre = user.first_name + ' ' + user.last_name;
+        }
+      }
+      let adminLink = '';
+      if(window.EcoDB && s.userId){
+        try{
+          const worker = await EcoDB.findWorkerByUserId(s.userId);
+          if(worker && worker.is_admin===1){
+            let pendingBadge = '';
+            try{
+              const reclamos = await EcoDB.listarReclamos();
+              const pending = (reclamos||[]).filter(r=> !r.estado || String(r.estado).toLowerCase()!=='respondido').length;
+              const hide = pending>0 ? '' : 'display:none;';
+              pendingBadge = ` <span id="reclamosPendingBadge" style="background:#d70606;color:#fff;border-radius:999px;padding:1px 6px;font-size:12px;${hide}">${pending}</span>`;
+            }catch{}
+            adminLink = ` · <a class="link" href="admin-pedidos.html">Admin Pedidos</a> · <a class="link" id="adminReclamosLink" href="admin-reclamos.html">Admin Reclamos${pendingBadge}</a>`;
+          }
+        }catch{}
+      }
+      sessionInfo.innerHTML = `<span>Hola, ${nombre}</span>${adminLink} · <span id="logoutLink" class="link" role="button" tabindex="0">Cerrar sesión</span>`;
+      const logout = ()=>{ clearSession(); location.reload(); };
+      const el = document.getElementById('logoutLink');
+      if(el){ el.addEventListener('click', logout); el.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); logout(); } }); }
+    }
+
+    async function refreshReclamosPendingBadge(){
+      try{
+        if(!window.EcoDB) return;
+        const link = document.getElementById('adminReclamosLink');
+        if(!link) return;
+        const s = getSession();
+        if(!s || !s.userId) return;
+        const worker = await EcoDB.findWorkerByUserId(s.userId);
+        if(!worker || worker.is_admin!==1) return;
+        const reclamos = await EcoDB.listarReclamos();
+        const pending = (reclamos||[]).filter(r=> !r.estado || String(r.estado).toLowerCase()!=='respondido').length;
+        let badge = document.getElementById('reclamosPendingBadge');
+        if(!badge){
+          badge = document.createElement('span');
+          badge.id = 'reclamosPendingBadge';
+          badge.style.cssText = 'background:#d70606;color:#fff;border-radius:999px;padding:1px 6px;font-size:12px;';
+          link.appendChild(document.createTextNode(' '));
+          link.appendChild(badge);
+        }
+        badge.textContent = String(pending);
+        badge.style.display = pending>0 ? 'inline-block' : 'none';
+      }catch{}
+    }
+
+    function startReclamosBadgeAutoUpdate(){
+      refreshReclamosPendingBadge();
+      if(reclamosBadgeTimer) clearInterval(reclamosBadgeTimer);
+      reclamosBadgeTimer = setInterval(refreshReclamosPendingBadge, 20000);
+      document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refreshReclamosPendingBadge(); });
+    }
+
+    // Render tarjetas
+    function render(productsList){
+      gridEl.innerHTML = '';
+      const tmpl = document.getElementById('cardTmpl');
+
+      for(const p of productsList){
+        const node = tmpl.content.cloneNode(true);
+        const pill = node.querySelector('.pill');
+        const imgEl = node.querySelector('.thumb img');
+        const name = node.querySelector('.name');
+        const price = node.querySelector('.price');
+        const tags = node.querySelector('.tags');
+        const unit = node.querySelector('.unit');
+        const addBtn = node.querySelector('.addBtn');
+
+        // Imagen del producto con fallback, referrerPolicy y overrides
+        imgEl.referrerPolicy = 'no-referrer';
+        const imgSrc = imgForProduct(p);
+        imgEl.src = imgSrc;
+        imgEl.alt = p.name;
+        imgEl.onerror = () => {
+          const txt = encodeURIComponent(p.name || 'Sin imagen');
+          const ph = `https://placehold.co/800x550?text=${txt}`;
+          if (imgEl.src !== ph) imgEl.src = ph;
+        };
+
+        pill.textContent = capitalize(p.category);
+  const qNorm = normalize(state.q);
+  const nameHighlighted = highlightMatch(p.name, qNorm);
+  name.innerHTML = nameHighlighted;
+        price.textContent = formatPrice(p.price);
+        unit.textContent = p.unit ? `Unidad: ${p.unit}` : '';
+
+        // Tags
+        tags.innerHTML = '';
+        const tagList = [...(p.tags||[])].slice(0,4);
+        for(const t of tagList){
+          const span = document.createElement('span');
+          span.className = 'tag';
+          span.innerHTML = highlightMatch(t, qNorm);
+          tags.appendChild(span);
+        }
+
+        addBtn.addEventListener('click', ()=>{
+          const sess = getSession();
+          if(!sess){
+            const ret = encodeURIComponent(location.href);
+            alert('Debes iniciar sesión para agregar productos. Te llevaremos al login.');
+            location.href = `login.html?return=${ret}`;
+            return;
+          }
+          // Leer carrito actual por usuario
+          const cartKey = getCartKey();
+          let cart = [];
+          try { cart = JSON.parse(localStorage.getItem(cartKey)||'[]'); } catch { cart = []; }
+          // Buscar si ya existe el producto
+          const idx = cart.findIndex(item => item.id === p.id);
+          if(idx >= 0){
+            cart[idx].qty = (cart[idx].qty||1) + 1;
+          } else {
+            const imgToStore = imgForProduct(p);
+            cart.push({id: p.id, name: p.name, price: p.price, qty: 1, img: imgToStore});
+          }
+          localStorage.setItem(cartKey, JSON.stringify(cart));
+          // Actualizar badge
+          const totalQty = cart.reduce((sum, item) => sum + (item.qty||1), 0);
+          state.cartCount = totalQty;
+          cartBadge.hidden = false;
+          cartBadge.textContent = String(state.cartCount);
+          cartLive.textContent = `Carrito: ${state.cartCount} producto${state.cartCount>1?'s':''}`;
+        });
+
+        gridEl.appendChild(node);
+      }
+
+      countEl.textContent = `Mostrando ${productsList.length} producto${productsList.length!==1?'s':''}`;
+      renderActiveFilters();
+    }
+
+    function escapeHtml(s){
+      return s.replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    }
+    function highlightMatch(text, qNorm){
+      if(!qNorm) return escapeHtml(text);
+      const norm = normalize(text);
+      const idx = norm.indexOf(qNorm);
+      if(idx === -1) return escapeHtml(text);
+      const before = escapeHtml(text.slice(0, idx));
+      const match = escapeHtml(text.slice(idx, idx + qNorm.length));
+      const after = escapeHtml(text.slice(idx + qNorm.length));
+      return `${before}<mark>${match}</mark>${after}`;
+    }
+
+    function renderActiveFilters(){
+      const chips = [];
+      if(state.category !== 'all') chips.push(`Categoría: ${capitalize(state.category)}`);
+      if(state.q) chips.push(`Búsqueda: "${state.q}"`);
+      if(state.ai.inferredCategory) chips.push(`EcoIA → ${capitalize(state.ai.inferredCategory)}`);
+      if(state.ai.priceCap != null) chips.push(`Máx: ${formatPrice(state.ai.priceCap)}`);
+      if(state.ai.priceMin != null) chips.push(`Mín: ${formatPrice(state.ai.priceMin)}`);
+      if(state.ai.tags.size) chips.push(`Etiquetas: ${[...state.ai.tags].join(', ')}`);
+      activeFiltersEl.textContent = chips.join(' · ');
+    }
+
+    const capitalize = s => s ? s[0].toUpperCase()+s.slice(1) : s;
+    const formatPrice = n => 'S/ ' + n.toFixed(2);
+
+    // Búsqueda + ranking (reutilizable con overrides)
+    function computeRanked(opts={}){
+      const q = normalize(opts.q != null ? opts.q : state.q);
+      const terms = q.split(/\s+/).filter(Boolean);
+      const ai = opts.ai || state.ai;
+      const categorySel = opts.category || state.category;
+      const hasPriceBias = ai.priceCap != null || ai.priceMin != null;
+
+      const catFilter = (prod) => {
+        if(categorySel === 'all') return true;
+        return prod.category === categorySel;
+      };
+
+      const aiCatFilter = (prod) => {
+        if(!ai.inferredCategory) return true;
+        return prod.category === ai.inferredCategory;
+      };
+
+      const aiTagFilter = (prod) => {
+        if(!ai.tags.size) return true;
+        const nTags = new Set((prod.tags||[]).map(t=>normalize(t)));
+        for(const t of ai.tags) if(!nTags.has(t)) return false;
+        return true;
+      };
+
+      let list = products.filter(p => catFilter(p) && aiCatFilter(p) && aiTagFilter(p));
+
+      const scored = list.map(p=>{
+        const nName = normalize(p.name);
+        const nTags = (p.tags||[]).map(t=>normalize(t));
+        let score = 0;
+
+        for(const t of terms){
+          if(!t) continue;
+          if(nName.startsWith(t)) score += 8;
+          else if(nName.includes(t)) score += 5;
+          if(nTags.some(x=>x.startsWith(t))) score += 4;
+          else if(nTags.some(x=>x.includes(t))) score += 2;
+        }
+
+        if(ai.inferredCategory && p.category === ai.inferredCategory) score += 6;
+        for(const t of ai.tags) if(nTags.includes(t)) score += 3;
+
+        if(ai.priceCap != null){
+          if(p.price <= ai.priceCap) score += 5; else score -= 5;
+        }
+        if(ai.priceMin != null){
+          if(p.price >= ai.priceMin) score += 3; else score -= 4;
+        }
+
+        if(nTags.includes('oferta')) score += 2;
+        if(nTags.includes('premium')) score += 1;
+
+        return {p, score};
+      });
+
+      scored.sort((a,b)=>{
+        if(b.score !== a.score) return b.score - a.score;
+        if(hasPriceBias) return a.p.price - b.p.price;
+        return a.p.price - b.p.price;
+      });
+
+      return scored.map(x=>x.p);
+    }
+
+    function searchAndRank(){
+      return computeRanked();
+    }
+
+    // Parseo de intención EcoIA
+    function parseAI(textRaw){
+      const text = normalize(textRaw);
+      state.ai = { priceCap:null, priceMin:null, inferredCategory:null, tags:new Set() };
+
+      // Categoría
+      for(const [cat, syns] of categorySynonyms.entries()){
+        if(text.includes(cat) || syns.some(s=>text.includes(normalize(s)))){
+          state.ai.inferredCategory = cat;
+          break;
+        }
+      }
+
+      // Etiquetas
+      for(const [tag, syns] of tagSynonyms.entries()){
+        if(text.includes(tag) || syns.some(s=>text.includes(normalize(s)))){
+          state.ai.tags.add(tag);
+        }
+      }
+
+      // Precio: "menos de 3", "< 4", "hasta 2.5", "máximo 3"
+      const menosDe = text.match(/(menos de|hasta|<|maximo|max)\s*\$?\s*([\d]+([.,]\d+)?)/);
+      if(menosDe){
+        state.ai.priceCap = parseFloat(menosDe[2].replace(',','.'));
+      }else if(text.includes('barato') || text.includes('barata') || text.includes('oferta')){
+        state.ai.priceCap = 3.0;
+      }
+
+      // Mínimo: "desde 3", "> 2.5", "min 2"
+      const desde = text.match(/(desde|>|minimo|min)\s*\$?\s*([\d]+([.,]\d+)?)/);
+      if(desde){
+        state.ai.priceMin = parseFloat(desde[2].replace(',','.'));
+      }else if(text.includes('caro') || text.includes('premium')){
+        state.ai.priceMin = 3.5;
+      }
+
+      if(!qEl.value){
+        state.q = text;
+        qEl.value = textRaw;
+      }
+
+      const parts = [];
+      if(state.ai.inferredCategory) parts.push(`Categoría: ${capitalize(state.ai.inferredCategory)}`);
+      if(state.ai.priceCap != null) parts.push(`Máx: ${formatPrice(state.ai.priceCap)}`);
+      if(state.ai.priceMin != null) parts.push(`Mín: ${formatPrice(state.ai.priceMin)}`);
+      if(state.ai.tags.size) parts.push(`Etiquetas: ${[...state.ai.tags].join(', ')}`);
+      aiMeta.textContent = parts.length ? `EcoIA aplicó → ${parts.join(' · ')}` : 'EcoIA no detectó filtros específicos; usando búsqueda libre.';
+    }
+
+    // Debounce helper
+    function debounce(fn, wait){
+      let t; return function(...args){ clearTimeout(t); t = setTimeout(()=>fn.apply(this,args), wait); };
+    }
+
+    // Generar sugerencias a partir del texto (sin mutar estado hasta aplicar)
+    function parseAIToSuggestion(textRaw){
+      const text = normalize(textRaw);
+      const ai = { priceCap:null, priceMin:null, inferredCategory:null, tags:new Set() };
+
+      for(const [cat, syns] of categorySynonyms.entries()){
+        if(text.includes(cat) || syns.some(s=>text.includes(normalize(s)))){ ai.inferredCategory = cat; break; }
+      }
+      for(const [tag, syns] of tagSynonyms.entries()){
+        if(text.includes(tag) || syns.some(s=>text.includes(normalize(s)))){ ai.tags.add(tag); }
+      }
+      const menosDe = text.match(/(menos de|hasta|<|maximo|max)\s*\$?\s*([\d]+([.,]\d+)?)/);
+      if(menosDe){ ai.priceCap = parseFloat(menosDe[2].replace(',','.')); }
+      else if(text.includes('barato') || text.includes('barata') || text.includes('oferta')){ ai.priceCap = 3.0; }
+      const desde = text.match(/(desde|>|minimo|min)\s*\$?\s*([\d]+([.,]\d+)?)/);
+      if(desde){ ai.priceMin = parseFloat(desde[2].replace(',','.')); }
+      else if(text.includes('caro') || text.includes('premium')){ ai.priceMin = 3.5; }
+
+      return ai;
+    }
+
+    // Render sugerencias (chips + previsualización)
+    const aiSugsEl = document.getElementById('aiSugs');
+    const aiChipsEl = document.getElementById('aiChips');
+    const aiPreviewEl = document.getElementById('aiPreview');
+  const aiRecipesEl = document.getElementById('aiRecipes');
+
+    function renderAISuggestions(textRaw){
+      const trimmed = (textRaw||'').trim();
+      if(!trimmed){ aiSugsEl.hidden = true; aiChipsEl.innerHTML = ''; aiPreviewEl.innerHTML=''; return; }
+
+  const ai = parseAIToSuggestion(trimmed);
+      const chips = [];
+      if(ai.inferredCategory) chips.push({type:'cat', label:`Cat: ${capitalize(ai.inferredCategory)}`, apply:()=>{ state.category='all'; state.q=trimmed; state.ai=ai; qEl.value=trimmed; render(computeRanked({q:trimmed, ai})); }});
+      if(ai.priceCap != null) chips.push({type:'cap', label:`Máx ${formatPrice(ai.priceCap)}`, apply:()=>{ state.ai.priceCap=ai.priceCap; render(searchAndRank()); }});
+      if(ai.priceMin != null) chips.push({type:'min', label:`Mín ${formatPrice(ai.priceMin)}`, apply:()=>{ state.ai.priceMin=ai.priceMin; render(searchAndRank()); }});
+      if(ai.tags.size){ for(const t of ai.tags) chips.push({type:'tag', label:`#${t}`, apply:()=>{ state.ai.tags.add(t); render(searchAndRank()); }}); }
+
+      aiChipsEl.innerHTML = '';
+      for(const c of chips){
+        const b = document.createElement('button'); b.className='chip'; b.textContent=c.label; b.type='button'; b.addEventListener('click', c.apply);
+        aiChipsEl.appendChild(b);
+      }
+
+      const preview = computeRanked({ q: trimmed, ai });
+      aiPreviewEl.innerHTML = '';
+      for(const p of preview.slice(0,4)){
+        const div = document.createElement('div');
+        div.className = 'suggest-item';
+        div.innerHTML = `<span>${p.name}</span><span style="color:#0f7b6c;font-weight:600;">${formatPrice(p.price)}</span>`;
+        div.addEventListener('click', ()=>{
+          state.q = p.name; qEl.value = p.name; state.ai = ai; render(searchAndRank()); aiSugsEl.hidden = true;
+        });
+        aiPreviewEl.appendChild(div);
+      }
+
+  // Sugerencias de recetas
+      aiRecipesEl.innerHTML = '';
+      const ingFromText = extractIngredients(trimmed);
+      const topRecipes = rankRecipes(ingFromText).slice(0,3);
+  const shownIds = new Set();
+  for(const r of topRecipes){ aiRecipesEl.appendChild(renderRecipeItem(r, ingFromText)); shownIds.add(r.id); }
+
+  // Match por nombre de receta (e.g., "aji de gallina", "lomo saltado")
+  const byName = matchRecipesByName(trimmed);
+  for(const r of byName){ if(!shownIds.has(r.id)) { aiRecipesEl.appendChild(renderRecipeItem(r, ingFromText)); shownIds.add(r.id); } }
+
+      // Ideas dinámicas basadas en ingredientes
+      const ideas = generateRecipeIdeas(ingFromText);
+      for(const idea of ideas.slice(0,2)){
+        aiRecipesEl.appendChild(renderRecipeIdea(idea));
+      }
+
+      aiSugsEl.hidden = chips.length===0 && aiPreviewEl.children.length===0 && aiRecipesEl.children.length===0;
+    }
+
+    const recipeSynonyms = new Map([
+      ['aji de gallina','r5'], ['ají de gallina','r5'], ['lomo saltado','r6'], ['seco de res','r7'],
+      ['arroz con tomate','r1'], ['ensalada de atun','r4'], ['ensalada de atún','r4'], ['arroz frito','r3'], ['pescado al horno','r2']
+    ]);
+
+    function matchRecipesByName(text){
+      const n = normalize(text);
+      const wantRecipe = n.includes('receta') || n.includes('recetas') || n.includes('preparar') || n.includes('como hacer') || n.includes('cómo hacer');
+      const matched = [];
+      for(const [key, id] of recipeSynonyms.entries()){
+        if(n.includes(normalize(key))){
+          const r = recipes.find(x=>x.id===id);
+          if(r) matched.push(r);
+        }
+      }
+      if(matched.length) return matched;
+      // fallback fuzzy: incluye por título
+      if(wantRecipe){
+        const arr = recipes.map(r=>{
+          const t = normalize(r.title);
+          let score = 0;
+          if(n.includes(t)) score += 5;
+          const tokens = t.split(/\s+/);
+          for(const tok of tokens){ if(tok && n.includes(tok)) score += 1; }
+          return {r, score};
+        }).filter(x=>x.score>0);
+        arr.sort((a,b)=> b.score - a.score);
+        return arr.slice(0,2).map(x=>x.r);
+      }
+      return [];
+    }
+
+    function generateRecipeIdeas(ings){
+      const ideas = [];
+      const has = (x)=> ings.has(x);
+      // Idea: Pasta con camarones en crema
+      if(has('camarones') && (has('spaghetti') || has('pasta')) && (has('crema') || has('leche')) && has('ajo')){
+        ideas.push({
+          title:'Spaghetti con camarones en crema', minutes:25, level:'media',
+          ingredients:['spaghetti','camarones','crema de leche','ajo','sal','pimienta','parmesano'],
+          steps:[
+            'Cocer spaghetti al dente.',
+            'Saltear ajo, agregar camarones hasta rosados.',
+            'Añadir crema, salpimentar y espesar.',
+            'Mezclar con la pasta y coronar con parmesano.'
+          ]
+        });
+      }
+      // Idea: Arroz con pollo y verduras
+      if(has('arroz') && has('pollo') && (has('zanahoria') || has('pimiento') || has('cebolla'))){
+        ideas.push({
+          title:'Arroz con pollo sencillo', minutes:35, level:'media',
+          ingredients:['arroz','pollo','zanahoria','cebolla','pimiento','ajo','comino','sal'],
+          steps:[
+            'Saltear pollo en trozos y reservar.',
+            'Sofreír ajo, cebolla, zanahoria y pimiento; añadir comino.',
+            'Agregar arroz y cubrir con agua; salar.',
+            'Incorporar el pollo y cocer hasta secar.'
+          ]
+        });
+      }
+      // Idea: Brócoli al curry con arroz
+      if(has('brocoli') && (has('curry') || has('curcuma')) && has('arroz')){
+        ideas.push({
+          title:'Brócoli al curry con arroz', minutes:22, level:'fácil',
+          ingredients:['brocoli','curry','ajo','arroz','sal','aceite'],
+          steps:[
+            'Cocer arroz.',
+            'Saltear ajo, añadir brócoli y curry.',
+            'Salpimentar y servir sobre el arroz.'
+          ]
+        });
+      }
+      // Idea: Ensalada de tomate con atún y orégano
+      if(has('tomate') && (has('atun') || has('pescado')) && has('oregano')){
+        ideas.push({
+          title:'Ensalada de tomate con atún', minutes:10, level:'fácil',
+          ingredients:['tomate','atun','oregano','sal','aceite','limon'],
+          steps:[
+            'Cortar tomate.',
+            'Mezclar con atún, orégano, aceite, sal y limón.'
+          ]
+        });
+      }
+      return ideas;
+    }
+
+    function renderRecipeIdea(idea){
+      const wrap = document.createElement('div');
+      wrap.className = 'recipe-item';
+      const thumb = document.createElement('div'); thumb.className='recipe-thumb';
+      const img = document.createElement('img'); img.loading='lazy'; img.decoding='async'; img.referrerPolicy='no-referrer'; img.src = IMG(idea.title); img.alt = idea.title; img.onerror=()=>{ if(img.src!==FALLBACK_IMG) img.src=FALLBACK_IMG; };
+      thumb.appendChild(img);
+      const info = document.createElement('div');
+      const title = document.createElement('div'); title.className='recipe-title'; title.textContent = idea.title;
+      const meta = document.createElement('div'); meta.className='recipe-meta'; meta.textContent = `${idea.minutes} min · ${idea.level}`;
+      const details = document.createElement('div'); details.className='recipe-details'; details.innerHTML = `<strong>Ingredientes:</strong> ${idea.ingredients.join(', ')}<br/><strong>Pasos:</strong> ${idea.steps.join(' ')}`;
+      const actions = document.createElement('div'); actions.className='recipe-actions';
+      const btn = document.createElement('button'); btn.className='btn'; btn.type='button'; btn.textContent='Ver receta';
+      const addBtn = document.createElement('button'); addBtn.className='btn'; addBtn.type='button'; addBtn.textContent='Agregar faltantes';
+      btn.addEventListener('click', ()=>{ details.style.display = details.style.display==='block' ? 'none':'block'; });
+      addBtn.addEventListener('click', ()=> addMissingToCart({ingredients: idea.ingredients}));
+      actions.appendChild(btn);
+      actions.appendChild(addBtn);
+      wrap.appendChild(thumb); wrap.appendChild(info); wrap.appendChild(actions); wrap.appendChild(details);
+      info.appendChild(title); info.appendChild(meta);
+      return wrap;
+    }
+
+    // Detectar ingredientes a partir de texto
+    function extractIngredients(text){
+      const n = normalize(text);
+      const ingredients = new Set();
+      const dict = [
+        // verduras/frutas/cereales
+        ['tomate','tomates'], ['arroz','arroz integral','arrocito'], ['quinoa','quinua'], ['zanahoria','zanahorias'],
+        ['pimiento','pimientos'], ['cebolla','cebollas'], ['lechuga','romana'], ['ajo'], ['limon','limón'], ['huevo','huevos'],
+        // carnes y pescados
+        ['pescado','pescados','filete de pescado'], ['atun','atún'], ['pollo','pechuga'], ['res','vacuno','carne de res','lomo'], ['cerdo','chuleta'],
+        // especias y condimentos
+        ['sal'], ['pimienta','pimienta negra'], ['comino'], ['oregano','orégano'], ['paprika','pimenton','pimentón'], ['curcuma','cúrcuma'], ['laurel'],
+        // salsas y lácteos/pasta/otros
+  ['soja','soya','salsa de soja','salsa de soya','sillao'],
+  ['leche','leche evaporada','leche condensada','crema de leche','crema'],
+        ['yogur','yogurt'], ['parmesano','queso parmesano'],
+        ['spaghetti','pasta','fideos'], ['azucar','azúcar'], ['canela'],
+  ['aji amarillo','ají amarillo','pasta de aji amarillo','pasta de ají amarillo'],
+  ['cilantro','culantro'], ['papa','papas'], ['vinagre'], ['galletas','galletas de soda'],
+        // hierbas especias extra
+        ['romero'], ['tomillo'], ['curry'],
+        // verduras extra
+        ['brocoli','brócoli'],
+        // mariscos
+        ['camarones','camaron']
+      ];
+      for(const group of dict){ if(group.some(w=>n.includes(normalize(w)))) ingredients.add(normalize(group[0])); }
+      return ingredients;
+    }
+
+    // Ranking de recetas por match de ingredientes + bonus por tiempo y tags
+    function rankRecipes(ings){
+      const arr = recipes.map(r=>{
+        const rIngs = new Set(r.ingredients.map(normalize));
+        let score = 0;
+        let matched = 0;
+        for(const i of ings){ if(rIngs.has(i)) { score += 8; matched++; } }
+        if(matched >= 3) score += 6; else if(matched === 2) score += 3;
+        if(r.minutes <= 20) score += 2; // rápidas first
+        if((r.tags||[]).includes('económica')) score += 1;
+        return {r, score, matched};
+      });
+      arr.sort((a,b)=> b.score - a.score);
+      return arr.filter(x=>x.matched>0).map(x=>x.r);
+    }
+
+    function renderRecipeItem(r, ings){
+      const wrap = document.createElement('div');
+      wrap.className = 'recipe-item';
+      const m = document.createElement('div'); m.className='recipe-thumb';
+      const img = document.createElement('img'); img.loading='lazy'; img.decoding='async'; img.referrerPolicy='no-referrer'; img.src = r.img || FALLBACK_IMG; img.alt = r.title; img.onerror=()=>{ if(img.src!==FALLBACK_IMG) img.src=FALLBACK_IMG; };
+      m.appendChild(img);
+      const info = document.createElement('div');
+      const title = document.createElement('div'); title.className='recipe-title'; title.textContent = r.title;
+      const meta = document.createElement('div'); meta.className='recipe-meta'; meta.textContent = `${r.minutes} min · ${r.level}`;
+      const badges = document.createElement('div'); badges.className='recipe-badges';
+      const matched = r.ingredients.filter(x=>ings.has(normalize(x))).slice(0,5);
+      for(const b of matched){ const s=document.createElement('span'); s.className='badge'; s.textContent=b; badges.appendChild(s); }
+      info.appendChild(title); info.appendChild(meta); info.appendChild(badges);
+      const actions = document.createElement('div'); actions.className='recipe-actions';
+      const btn = document.createElement('button'); btn.className='btn'; btn.type='button'; btn.textContent='Ver receta';
+      const addBtn = document.createElement('button'); addBtn.className='btn'; addBtn.type='button'; addBtn.textContent='Agregar faltantes';
+      const details = document.createElement('div'); details.className='recipe-details'; details.innerHTML = `<strong>Ingredientes:</strong> ${r.ingredients.join(', ')}<br/><strong>Pasos:</strong> ${r.steps.join(' ')}`;
+      btn.addEventListener('click', ()=>{ details.style.display = details.style.display==='block' ? 'none':'block'; });
+      addBtn.addEventListener('click', ()=> addMissingToCart(r));
+      actions.appendChild(btn);
+      actions.appendChild(addBtn);
+      wrap.appendChild(m); wrap.appendChild(info); wrap.appendChild(actions); wrap.appendChild(details);
+      return wrap;
+    }
+
+    // Mapa ingrediente normalizado -> id de producto preferido
+    const ingredientToProduct = new Map([
+      ['tomate','v2'], ['arroz','c1'], ['quinoa','c3'], ['zanahoria','v3'], ['pimiento','v5'], ['cebolla','v6'], ['lechuga','v1'],
+      ['ajo','v7'], ['limon','f3'], ['huevo','o1'], ['sal','s1'], ['pimienta','s2'], ['comino','s3'], ['oregano','s4'], ['paprika','s5'], ['curcuma','s6'], ['laurel','s7'],
+      ['pescado','m4'], ['atun','m5'], ['pollo','m1'], ['res','m2'], ['cerdo','m3'], ['soja','o10'],
+      ['leche','o11'], ['crema','o13'], ['yogur','o14'], ['parmesano','o15'], ['spaghetti','o16'], ['azucar','o17'], ['canela','s8'],
+      ['romero','s9'], ['tomillo','s10'], ['curry','s11'], ['brocoli','v10'], ['camarones','m6'],
+      ['cilantro','v11'], ['papa','v12'], ['vinagre','o18'], ['galletas','o19'], ['aji amarillo','s12']
+    ]);
+
+    function addMissingToCart(recipe){
+      const sess = getSession();
+      if(!sess){
+        const ret = encodeURIComponent(location.href);
+        alert('Inicia sesión para agregar ingredientes al carrito. Te llevaremos al login.');
+        location.href = `login.html?return=${ret}`;
+        return;
+      }
+      const have = new Set();
+      const key = getCartKey();
+      let cart = [];
+      try { cart = JSON.parse(localStorage.getItem(key)||'[]'); } catch { cart = []; }
+      for(const item of cart){ have.add(item.id); }
+
+      let added = 0;
+      for(const ing of recipe.ingredients){
+        const norm = normalize(ing);
+        let base = norm;
+        if(base.includes('limon')) base = 'limon';
+        if(base.includes('huevo')) base = 'huevo';
+        if(base.includes('pimienta')) base = 'pimienta';
+        if(base.includes('oregano')) base = 'oregano';
+        if(base.includes('curcuma')) base = 'curcuma';
+        if(base.includes('paprika') || base.includes('pimenton')) base = 'paprika';
+        if(base.includes('atun')) base = 'atun';
+        if(base.includes('crema')) base = 'crema';
+        if(base.includes('parmesano')) base = 'parmesano';
+        if(base.includes('spaghetti') || base.includes('pasta') || base.includes('fideo')) base = 'spaghetti';
+        if(base.includes('azucar')) base = 'azucar';
+        if(base.includes('canela')) base = 'canela';
+        if(base.includes('romero')) base = 'romero';
+        if(base.includes('tomillo')) base = 'tomillo';
+        if(base.includes('curry')) base = 'curry';
+        if(base.includes('brocoli')) base = 'brocoli';
+        if(base.includes('camaron')) base = 'camarones';
+  if(base.includes('cilantro') || base.includes('culantro')) base = 'cilantro';
+  if(base.includes('papa')) base = 'papa';
+  if(base.includes('vinagre')) base = 'vinagre';
+  if(base.includes('galleta')) base = 'galletas';
+  if(base.includes('aji amarillo') || base.includes('aji') && base.includes('amarillo')) base = 'aji amarillo';
+
+        const pid = ingredientToProduct.get(base);
+        if(!pid) continue;
+        if(have.has(pid)) continue;
+        const p = products.find(x=>x.id===pid);
+        if(!p) continue;
+        cart.push({id:p.id, name:p.name, price:p.price, qty:1, img: imgForProduct(p)});
+        have.add(pid);
+        added++;
+      }
+      localStorage.setItem(key, JSON.stringify(cart));
+      updateCartBadge();
+      alert(added>0 ? `Se agregaron ${added} ingrediente(s) al carrito.` : 'Ya tienes todos los ingredientes en el carrito.');
+    }
+
+    const debouncedSuggest = debounce((v)=>{ renderAISuggestions(v); }, 180);
+
+    // Controladores
+    formEl.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      state.q = qEl.value.trim();
+      state.category = catEl.value;
+      const results = searchAndRank();
+      render(results);
+    });
+
+    qEl.addEventListener('input', ()=>{
+      state.q = qEl.value.trim();
+      const results = searchAndRank();
+      render(results);
+    });
+
+    catEl.addEventListener('change', ()=>{
+      state.category = catEl.value;
+      const results = searchAndRank();
+      render(results);
+    });
+
+    aiBtn.addEventListener('click', ()=>{
+      parseAI(aiInput.value);
+      const results = searchAndRank();
+      render(results);
+      renderAISuggestions(aiInput.value);
+    });
+
+    aiInput.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        parseAI(aiInput.value);
+        const results = searchAndRank();
+        render(results);
+        renderAISuggestions(aiInput.value);
+      }
+    });
+
+    aiInput.addEventListener('input', (e)=>{
+      debouncedSuggest(e.target.value);
+    });
+    aiInput.addEventListener('focus', (e)=>{
+      if((e.target.value||'').trim()) renderAISuggestions(e.target.value);
+    });
+    // No ocultamos sugerencias en blur para que el usuario las vea tras consultar
+
+    document.querySelectorAll('.quick-filters .chip').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        aiInput.value = btn.dataset.q;
+        parseAI(btn.dataset.q);
+        const results = searchAndRank();
+        render(results);
+        qEl.value = btn.dataset.q;
+        state.q = qEl.value.trim();
+        renderAISuggestions(btn.dataset.q);
+      });
+    });
+
+  // Inicial
+  // Al cargar, migrar carrito antiguo a uno por usuario y restaurar badge
+  migrateLegacyCartIfNeeded();
+  updateCartBadge();
+  window.addEventListener('storage', (e)=>{
+    const key = getCartKey();
+    if(!key) return;
+    if(e.key === key){
+      updateCartBadge();
+    }
+    if(e.key === 'ecomarket_reclamos_last_update'){
+      refreshReclamosPendingBadge();
+    }
+  });
+  render(products);
+  renderSession();
+  // Si es gerente, iniciar refresco periódico del badge de reclamos
+  startReclamosBadgeAutoUpdate();
+
+    // Navegación a Login: al hacer clic en "EcoMarket" junto al buscador
+    if(brandLoginLink){
+      const goLogin = ()=>{
+        const ret = encodeURIComponent(location.href);
+        location.href = `login.html?return=${ret}`;
+      };
+      brandLoginLink.addEventListener('click', goLogin);
+      brandLoginLink.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter' || e.key === ' '){
+          e.preventDefault();
+          goLogin();
+        }
+      });
+      brandLoginLink.title = 'Haz clic para iniciar sesión o registrarte';
+    }
+
+    // --- Panel administrativo: IndexedDB para usuarios y trabajadores ---
+    // UI mínima añadida dinámicamente
+    (function addAdminPanel(){
+      const adminHtml = `
+      <section aria-label="Panel admin" style="max-width:980px;margin:18px auto;padding:12px;background:#ffffffc7;border-radius:12px;">
+        <h3 style="margin:0 0 8px;">Panel administrativo (DB en el navegador)</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+          <button id="createDbBtn" class="btn" type="button">Crear DB</button>
+          <button id="seedDbBtn" class="btn" type="button">Insertar ejemplos</button>
+          <button id="listUsersBtn" class="btn" type="button">Listar usuarios</button>
+          <button id="listWorkersBtn" class="btn" type="button">Listar trabajadores</button>
+        </div>
+        <div id="adminOutput" style="background:#f8f9fa;border:1px solid #e9ecef;padding:10px;border-radius:8px;max-height:260px;overflow:auto;font-family:monospace;font-size:13px;">
+          Estado del panel admin.
+        </div>
+        <hr style="margin:12px 0;border:none;border-top:1px solid #e9ecef" />
+        <h4 style="margin:0 0 8px;">Imágenes de productos (id → URL)</h4>
+        <div class="row" style="display:grid;gap:8px;grid-template-columns:1fr;">
+          <textarea id="imgOverrides" placeholder='{"c3":"https://.../quinoa.jpg","v2":"https://.../tomate.jpg","v1":"https://.../lechuga-romana.jpg","v3":"https://.../zanahoria.jpg"}' style="min-height:120px;border:1px solid #e9ecef;border-radius:8px;padding:8px"></textarea>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button id="btnLoadOverrides" class="btn" type="button">Cargar overrides</button>
+            <button id="btnSaveOverrides" class="btn" type="button">Guardar overrides</button>
+            <button id="btnApplyOverrides" class="btn" type="button">Aplicar al catálogo</button>
+          </div>
+        </div>
+      </section>
+      `;
+      const container = document.createElement('div');
+      container.innerHTML = adminHtml;
+      document.querySelector('.container').insertAdjacentElement('afterend', container);
+
+      document.getElementById('createDbBtn').addEventListener('click', async ()=>{
+        await EcoDB.dbOpen();
+        adminLog('IndexedDB creada/abierta.');
+      });
+      document.getElementById('seedDbBtn').addEventListener('click', async ()=>{
+        await EcoDB.seedSample();
+        adminLog('Datos de ejemplo insertados (si no existían).');
+      });
+      document.getElementById('listUsersBtn').addEventListener('click', async ()=>{
+        const u = await EcoDB.listUsers();
+        adminLog(JSON.stringify(u, null, 2));
+      });
+      document.getElementById('listWorkersBtn').addEventListener('click', async ()=>{
+        const w = await EcoDB.listWorkers();
+        adminLog(JSON.stringify(w, null, 2));
+      });
+
+      // Overrides UI
+      const loadOverridesUI = ()=>{
+        const map = getImgOverrides();
+        document.getElementById('imgOverrides').value = JSON.stringify(map, null, 2);
+      };
+      document.getElementById('btnLoadOverrides').addEventListener('click', loadOverridesUI);
+      document.getElementById('btnSaveOverrides').addEventListener('click', ()=>{
+        try{
+          const txt = document.getElementById('imgOverrides').value;
+          const obj = JSON.parse(txt || '{}');
+          setImgOverrides(obj);
+          adminLog('Overrides guardados.');
+        }catch(e){ alert('JSON inválido: '+e.message); }
+      });
+      document.getElementById('btnApplyOverrides').addEventListener('click', ()=>{
+        render(searchAndRank());
+        adminLog('Overrides aplicados al catálogo.');
+      });
+
+      loadOverridesUI();
+    })();
+
+    function adminLog(msg){
+      const el = document.getElementById('adminOutput');
+      const now = new Date().toISOString();
+      el.textContent = `${now} - ${msg}\n` + el.textContent;
+    }
+    // Los helpers de DB/crypto fueron centralizados en db.js (EcoDB)
+
+    // Seed/merge de overrides: aplica claves faltantes sin sobrescribir las existentes
+    (function seedImageOverrides(){
+      const cur = getImgOverrides();
+      const seed = {
+        c3: 'https://www.rockrecipes.com/wp-content/uploads/2014/02/Quinoa-700-Depositphotos_21434411_xl-2015-1.jpg',
+        v2: 'https://img.freepik.com/foto-gratis/vista-lateral-cercana-tomates-apetitosos-tomates-tallos-sobre-fondo-negro_140725-122963.jpg',
+        // Lechuga Romana
+        v1: 'https://thumbs.dreamstime.com/b/lechuga-fresca-aislada-en-el-fondo-blanco-66236095.jpg',
+        // Zanahoria
+        v3: 'https://i.pinimg.com/originals/c7/01/0d/c7010d69c044a2e0037f0bf560987ed6.jpg'
+      };
+      let changed = false;
+      for(const k in seed){
+        if(Object.prototype.hasOwnProperty.call(seed, k)){
+          if(!cur[k]){ cur[k] = seed[k]; changed = true; }
+        }
+      }
+      if(changed){
+        setImgOverrides(cur);
+        console.log('Overrides de imagen actualizados (se agregaron claves faltantes).');
+      }
+    })();
+
+  </script>
+</body>
+</html>

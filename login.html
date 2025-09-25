@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Iniciar sesión - EcoMarket</title>
+  <meta name="description" content="Login de EcoMarket para clientes y empleados." />
+  <style>
+    :root{
+      --primary:#4ec8c2; --accent:#d70606; --text:#2d3436; --bg:#f4f9fb;
+      --panel:#ffffff; --muted:#6c757d; --border:#e9ecef;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(135deg,#60e1f5,#e0eafc)}
+    .wrap{min-height:100%;display:grid;place-items:center;padding:24px}
+    .card{width:min(92vw,980px);background:var(--panel);border:1px solid rgba(0,0,0,.06);border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.08);overflow:hidden}
+    header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--primary)}
+    .brand svg{width:26px;height:26px}
+    .tabs{display:flex;gap:6px}
+    .tab{border:1px solid var(--border);background:#fff;padding:8px 12px;border-radius:999px;cursor:pointer}
+    .tab[aria-selected="true"]{background:var(--primary);color:#fff;border-color:transparent}
+    .grid{display:grid;grid-template-columns:1fr 1fr;align-items:center}
+    .img-col{display:flex;align-items:center;justify-content:center;padding:18px;}
+    .img-col img{max-width:100%;height:auto;border-radius:14px;box-shadow:0 2px 12px #0001;max-height:420px;}
+    @media (max-width:900px){
+      .grid{grid-template-columns:1fr!important;}
+      .img-col img{max-height:220px;}
+    }
+    @media (max-width:780px){.grid{grid-template-columns:1fr}}
+    .col{padding:18px}
+    h2{margin:0 0 10px}
+    form{display:grid;gap:10px}
+    .row{display:grid;gap:6px}
+    label{font-size:14px;color:#394046}
+    input{padding:10px 12px;border:1px solid #b2bec3;border-radius:10px;font-size:16px}
+    input:focus{outline:none;box-shadow:0 0 0 3px rgba(78,200,194,.15);border-color:var(--primary)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.08);background:#fff;color:var(--primary);cursor:pointer}
+    button.primary{background:var(--primary);color:#fff;border-color:transparent}
+    .muted{color:var(--muted);font-size:13px}
+    .notice{background:#f8f9fa;border:1px solid var(--border);padding:10px;border-radius:8px;font-size:13px;color:#394046}
+    .error{color:#b00020}
+  </style>
+</head>
+<body>
+  <script src="db.js"></script>
+  <div class="wrap">
+    <div class="card" role="dialog" aria-labelledby="title" aria-modal="true">
+      <header>
+        <div class="brand">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21c9 0 18-9 18-18 0 0-9 0-18 9s-9 18 0 9Z"/></svg>
+          <span>EcoMarket</span>
+        </div>
+        <nav class="tabs" role="tablist" aria-label="Tipo de usuario">
+          <button class="tab" id="tabCliente" role="tab" aria-selected="true" aria-controls="panelCliente">Cliente</button>
+          <button class="tab" id="tabEmpleado" role="tab" aria-selected="false" aria-controls="panelEmpleado">Empleado</button>
+        </nav>
+      </header>
+      <div class="grid">
+        <div class="img-col">
+          <img src="Gemini_Generated_Image_s2xc0ks2xc0ks2xc.png" alt="Familia en Ecomarket" />
+        </div>
+        <section class="col" id="panelCliente" role="tabpanel" aria-labelledby="tabCliente">
+          <h2 id="title">Cliente</h2>
+          <p class="muted">Inicia sesión o regístrate como cliente.</p>
+          <form id="loginClienteForm">
+            <div class="row">
+              <label for="cUser">Usuario</label>
+              <input id="cUser" autocomplete="username" required />
+            </div>
+            <div class="row">
+              <label for="cPass">Contraseña</label>
+              <input id="cPass" type="password" autocomplete="current-password" required />
+            </div>
+            <div class="actions">
+              <button type="submit" class="primary">Iniciar sesión</button>
+              <button type="button" id="goRegisterCliente">Registrarme</button>
+            </div>
+            <div id="cError" class="error" role="alert" aria-live="polite"></div>
+          </form>
+          <form id="registerClienteForm" hidden>
+            <div class="row"><label for="rcUser">Usuario</label><input id="rcUser" required /></div>
+            <div class="row"><label for="rcEmail">Email</label><input id="rcEmail" type="email" required /></div>
+            <div class="row"><label for="rcPass">Contraseña</label><input id="rcPass" type="password" required /></div>
+            <div class="row"><label for="rcName">Nombre</label><input id="rcName" required /></div>
+            <div class="row"><label for="rcLast">Apellido</label><input id="rcLast" required /></div>
+            <div class="actions">
+              <button type="submit" class="primary">Crear cuenta</button>
+              <button type="button" id="cancelRegCli">Cancelar</button>
+            </div>
+            <div id="rcError" class="error" role="alert" aria-live="polite"></div>
+          </form>
+        </section>
+        <section class="col" id="panelEmpleado" role="tabpanel" aria-labelledby="tabEmpleado" hidden>
+          <h2>Empleado</h2>
+          <p class="muted">Usa tu código de empleado para ingresar.</p>
+          <form id="loginEmpleadoForm">
+            <div class="row"><label for="eUser">Usuario</label><input id="eUser" required /></div>
+            <div class="row"><label for="ePass">Contraseña</label><input id="ePass" type="password" required /></div>
+            <div class="row"><label for="eCode">Código de empleado</label><input id="eCode" required /></div>
+            <div class="actions">
+              <button type="submit" class="primary">Ingresar</button>
+            </div>
+            <div id="eError" class="error" role="alert" aria-live="polite"></div>
+          </form>
+        </section>
+      </div>
+      <div style="padding:0 18px 18px">
+        <p class="notice">Consejo: si vienes desde la página principal, al completar el inicio de sesión serás devuelto automáticamente para comprar.</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Verificar EcoDB antes de cualquier acción
+    async function checkEcoDB(){
+      if(!window.EcoDB || typeof EcoDB.findUserByUsername!=='function'){
+        document.body.innerHTML = '<div style="max-width:500px;margin:60px auto;padding:32px 18px;background:#fff;border-radius:14px;box-shadow:0 8px 32px #0002;text-align:center;font-size:1.2em;color:#d70606;">'+
+        '<b>Error crítico:</b><br> No se pudo cargar la base de datos del sistema (EcoDB).<br><br>'+ 
+        'Por favor, recarga la página con <b>Ctrl+F5</b> o borra la caché del navegador.<br><br>'+ 
+        'Si el problema persiste, contacta soporte técnico.'+
+        '</div>';
+        throw new Error('EcoDB no está disponible');
+      }
+      // Forzar seed de usuarios de prueba si la base está vacía
+      if(typeof EcoDB.listUsers==='function' && typeof EcoDB.seedSample==='function'){
+        const users = await EcoDB.listUsers().catch(()=>[]);
+        if(!users || users.length===0){
+          await EcoDB.seedSample();
+          console.log('Usuarios de prueba insertados.');
+        }
+      }
+    }
+    checkEcoDB();
+    function getParam(name){
+      const url = new URL(location.href);
+      return url.searchParams.get(name);
+    }
+    function goBack(){
+      const ret = getParam('return');
+      const target = ret ? decodeURIComponent(ret) : 'Untitled-1.html';
+      location.href = target;
+    }
+    const saveSession = EcoDB.saveSession;
+
+    // Tabs
+    const tabCliente = document.getElementById('tabCliente');
+    const tabEmpleado = document.getElementById('tabEmpleado');
+    const panelCliente = document.getElementById('panelCliente');
+    const panelEmpleado = document.getElementById('panelEmpleado');
+
+    function selectTab(which){
+      const isCli = which==='cli';
+      tabCliente.setAttribute('aria-selected', isCli? 'true':'false');
+      tabEmpleado.setAttribute('aria-selected', !isCli? 'true':'false');
+      panelCliente.hidden = !isCli;
+      panelEmpleado.hidden = isCli;
+    }
+    tabCliente.addEventListener('click',()=>selectTab('cli'));
+    tabEmpleado.addEventListener('click',()=>selectTab('emp'));
+
+    // Formularios cliente
+    const loginClienteForm = document.getElementById('loginClienteForm');
+    const cUser = document.getElementById('cUser');
+    const cPass = document.getElementById('cPass');
+    const cError = document.getElementById('cError');
+    const goRegisterCliente = document.getElementById('goRegisterCliente');
+    const registerClienteForm = document.getElementById('registerClienteForm');
+    const rcUser = document.getElementById('rcUser');
+    const rcPass = document.getElementById('rcPass');
+    const rcEmail = document.getElementById('rcEmail');
+    const rcName = document.getElementById('rcName');
+    const rcLast = document.getElementById('rcLast');
+    const rcError = document.getElementById('rcError');
+    const cancelRegCli = document.getElementById('cancelRegCli');
+
+    goRegisterCliente.addEventListener('click', ()=>{
+      loginClienteForm.hidden = true; registerClienteForm.hidden = false; rcUser.focus();
+    });
+    cancelRegCli.addEventListener('click', ()=>{
+      registerClienteForm.hidden = true; loginClienteForm.hidden = false; cUser.focus();
+    });
+
+    loginClienteForm.addEventListener('submit', async (e)=>{
+      e.preventDefault(); cError.textContent='';
+      const user = await EcoDB.findUserByUsername(cUser.value.trim());
+      if(!user){ cError.textContent='Usuario no encontrado.'; return; }
+      const {hash} = await EcoDB.hashPasswordPBKDF2(cPass.value, user.password_salt);
+      if(hash !== user.password_hash){ cError.textContent='Contraseña incorrecta.'; return; }
+      saveSession({type:'client', userId:user.id, username:user.username});
+      goBack();
+    });
+
+  registerClienteForm.addEventListener('submit', async (e)=>{
+      e.preventDefault(); rcError.textContent='';
+      try{
+        const id = await EcoDB.addUser({username:rcUser.value.trim(), password:rcPass.value, firstName:rcName.value.trim(), lastName:rcLast.value.trim(), email:rcEmail.value.trim()});
+        saveSession({type:'client', userId:id, username:rcUser.value.trim()});
+        rcError.style.color = '#0f7b6c';
+        rcError.textContent = '¡Cuenta creada exitosamente! Ahora puedes comprar.';
+        setTimeout(goBack, 1200);
+      }catch(err){ rcError.style.color = '#b00020'; rcError.textContent = 'No se pudo registrar: ' + (err && err.message ? err.message : 'Error'); }
+    });
+
+    // Empleado
+    const loginEmpleadoForm = document.getElementById('loginEmpleadoForm');
+    const eUser = document.getElementById('eUser');
+    const ePass = document.getElementById('ePass');
+    const eCode = document.getElementById('eCode');
+    const eError = document.getElementById('eError');
+
+    loginEmpleadoForm.addEventListener('submit', async (e)=>{
+      e.preventDefault(); eError.textContent='';
+      const user = await EcoDB.findUserByUsername(eUser.value.trim());
+      if(!user){ eError.textContent='Usuario no encontrado.'; return; }
+      const {hash} = await EcoDB.hashPasswordPBKDF2(ePass.value, user.password_salt);
+      if(hash !== user.password_hash){ eError.textContent='Contraseña incorrecta.'; return; }
+      const worker = await EcoDB.findWorkerByUserId(user.id);
+      if(!worker){ eError.textContent='Este usuario no es empleado.'; return; }
+      if(worker.employeeCode !== eCode.value.trim()){ eError.textContent='Código de empleado inválido.'; return; }
+      saveSession({type:'employee', userId:user.id, username:user.username, employeeCode:worker.employeeCode, isAdmin: !!worker.is_admin});
+      goBack();
+    });
+
+    // Autofocus
+    cUser.focus();
+  </script>
+</body>
+</html>

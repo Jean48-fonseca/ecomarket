@@ -1,0 +1,26 @@
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Node modules (si usas Node en el futuro)
+node_modules/
+package-lock.json
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Archivos de VS Code específicos del usuario
+.vscode/settings.json
+.vscode/extensions.json
+
+# Archivos de backup
+*.bak
+*~
+
+# Archivos de Windows
+desktop.ini

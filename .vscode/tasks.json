@@ -1,0 +1,64 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Abrir principal (Edge sin depurar)",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"start",
+				"msedge",
+				"\"${workspaceFolder}\\Untitled-1.html\""
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "none"
+		},
+		{
+			"label": "Abrir login (Edge sin depurar)",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"start",
+				"msedge",
+				"\"${workspaceFolder}\\login.html\""
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "none"
+		},
+		{
+			"label": "serve-5500",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"serve",
+				"-l",
+				"5500"
+			],
+			"isBackground": true,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "serve-5500",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-NonInteractive",
+				"-Command",
+				"npm -v; if($LASTEXITCODE -ne 0){ Write-Host 'npm no encontrado. Usa Live Server o instala Node.js'; exit 1 }; npx serve -l 5500"
+			],
+			"isBackground": true,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		}
+	]
+}
