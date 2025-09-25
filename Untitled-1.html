@@ -129,6 +129,109 @@
       font-size:12px; display:flex; align-items:center; justify-content:center;
     }
 
+    /* RESPONSIVE DESIGN - MOBILE FIRST */
+    
+    /* Mobile styles (default) */
+    @media (max-width: 768px) {
+      /* Header responsive */
+      header.header {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 16px;
+      }
+      
+      .header .brand {
+        font-size: 18px;
+      }
+      
+      .search-bar {
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+      }
+      
+      .search-bar input[type="search"],
+      .search-bar select {
+        width: 100%;
+        font-size: 16px; /* Evita zoom en iOS */
+      }
+      
+      .session {
+        font-size: 13px;
+        text-align: center;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      
+      /* Título hero responsive */
+      .titulo-animado {
+        padding: 32px 16px 24px;
+        margin: 20px auto 10px;
+        width: 95vw;
+        border-radius: 16px;
+      }
+      
+      .titulo-animado h1 {
+        font-size: 24px !important;
+        line-height: 1.2 !important;
+      }
+      
+      .titulo-animado .subtitulo {
+        font-size: 14px !important;
+        margin-top: 8px !important;
+      }
+    }
+    
+    /* Small mobile */
+    @media (max-width: 480px) {
+      header.header {
+        padding: 10px 12px;
+      }
+      
+      .header .brand {
+        font-size: 16px;
+      }
+      
+      .titulo-animado {
+        padding: 24px 12px 20px;
+        margin: 16px auto 8px;
+        width: 98vw;
+        border-radius: 12px;
+      }
+      
+      .titulo-animado h1 {
+        font-size: 20px !important;
+      }
+      
+      .titulo-animado .subtitulo {
+        font-size: 13px !important;
+      }
+    }
+    
+    /* Tablet */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      header.header {
+        padding: 16px 20px;
+      }
+      
+      .search-bar {
+        flex-direction: row;
+        gap: 12px;
+      }
+      
+      .titulo-animado {
+        width: 85vw;
+        padding: 48px 20px 36px;
+      }
+    }
+    
+    /* Desktop */
+    @media (min-width: 1025px) {
+      .titulo-animado {
+        width: min(90vw, 980px);
+      }
+    }
+
     /* Hero / Título */
     .titulo-animado{
       text-align:center;
@@ -217,7 +320,7 @@
       font-size:13px; color:var(--muted);
     }
 
-    /* Sugerencias EcoIA */
+    /* Sugerencias EcoIA - Responsive */
     .ai-suggestions{ display:grid; gap:10px; margin-top:4px; }
     .ai-suggestions .chips{ display:flex; gap:8px; flex-wrap:wrap; }
     .ai-suggestions .preview{ display:grid; gap:8px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
@@ -237,20 +340,131 @@
     .ai-suggestions .recipe-details{ grid-column: 1 / -1; font-size:13px; color:#394046; display:none; }
     .ai-suggestions .recipe-actions .btn{ padding:6px 10px; }
 
+    /* EcoIA Box responsive */
+    @media (max-width: 768px) {
+      .ai-box {
+        width: 95vw;
+        padding: 12px;
+        margin: 12px auto 8px;
+        border-radius: 12px;
+      }
+      
+      .ai-box .row {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+      }
+      
+      .ai-input {
+        width: 100%;
+        font-size: 16px;
+      }
+      
+      .ai-suggestions .preview {
+        grid-template-columns: 1fr;
+      }
+      
+      .ai-suggestions .recipe-item {
+        grid-template-columns: 60px 1fr auto;
+        gap: 8px;
+        padding: 10px;
+      }
+      
+      .ai-suggestions .recipe-thumb {
+        width: 60px;
+        height: 45px;
+      }
+      
+      .ai-suggestions .recipe-title {
+        font-size: 14px;
+      }
+      
+      .ai-suggestions .recipe-meta {
+        font-size: 11px;
+      }
+      
+      .ai-suggestions .recipe-badges {
+        gap: 4px;
+      }
+      
+      .ai-suggestions .badge {
+        font-size: 10px;
+        padding: 1px 4px;
+      }
+      
+      .quick-filters .chip {
+        font-size: 13px;
+        padding: 6px 10px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .ai-suggestions .recipe-item {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 6px;
+      }
+      
+      .ai-suggestions .recipe-thumb {
+        width: 80px;
+        height: 60px;
+        margin: 0 auto;
+      }
+    }
+
     /* Filtros rápidos */
     .quick-filters{ display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 0; }
     .quick-filters .chip{ background:#f3f6ff; color:#2a4b8d; }
 
-    /* Grid de productos */
+    /* Grid de productos - Responsive */
     .grid{
       display:grid;
       grid-template-columns: repeat(1, 1fr);
-      gap:16px;
+      gap:12px;
       margin-top:18px;
+      padding: 0 8px;
     }
-    @media (min-width: 520px){ .grid{ grid-template-columns: repeat(2, 1fr); } }
-    @media (min-width: 860px){ .grid{ grid-template-columns: repeat(3, 1fr); } }
-    @media (min-width: 1140px){ .grid{ grid-template-columns: repeat(4, 1fr); } }
+    
+    /* Mobile pequeño */
+    @media (max-width: 480px) {
+      .grid {
+        gap: 10px;
+        padding: 0 4px;
+      }
+    }
+    
+    /* Mobile grande */
+    @media (min-width: 481px) and (max-width: 640px) {
+      .grid { 
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+    }
+    
+    /* Tablet pequeña */
+    @media (min-width: 641px) and (max-width: 860px) {
+      .grid { 
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+      }
+    }
+    
+    /* Tablet grande */
+    @media (min-width: 861px) and (max-width: 1140px) {
+      .grid { 
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+    }
+    
+    /* Desktop */
+    @media (min-width: 1141px) {
+      .grid { 
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        padding: 0;
+      }
+    }
 
     .card{
       background:var(--cardBg);
@@ -262,6 +476,92 @@
       transition: transform .15s ease, box-shadow .2s ease;
     }
     .card:hover{ transform: translateY(-2px); box-shadow:0 10px 24px rgba(0,0,0,.10); }
+
+    /* Cards responsive */
+    @media (max-width: 768px) {
+      .card {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,.08);
+      }
+      
+      .card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0,0,0,.12);
+      }
+      
+      .content {
+        padding: 10px;
+        gap: 6px;
+      }
+      
+      .name {
+        font-size: 14px;
+        line-height: 1.3;
+      }
+      
+      .price {
+        font-size: 16px;
+      }
+      
+      .tags {
+        gap: 4px;
+      }
+      
+      .tag {
+        font-size: 11px;
+        padding: 3px 6px;
+      }
+      
+      .actions {
+        padding: 0 10px 10px;
+        gap: 6px;
+      }
+      
+      .btn {
+        padding: 8px 10px;
+        font-size: 14px;
+      }
+      
+      .btn svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .card {
+        border-radius: 10px;
+      }
+      
+      .content {
+        padding: 8px;
+        gap: 5px;
+      }
+      
+      .name {
+        font-size: 13px;
+      }
+      
+      .price {
+        font-size: 15px;
+      }
+      
+      .actions {
+        padding: 0 8px 8px;
+        flex-direction: column;
+        gap: 6px;
+      }
+      
+      .btn {
+        width: 100%;
+        padding: 10px;
+        justify-content: center;
+      }
+      
+      .unit {
+        font-size: 12px;
+      }
+    }
 
     .thumb{
       position:relative; width:100%;
@@ -301,36 +601,6 @@
       margin-top:10px; font-size:14px; color:var(--muted);
       display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
     }
-
-    /* Recetas (sección independiente) */
-    .cook-recipes { --gap:1rem; --bg:#f9fafb; --card:#fff; --txt:#111827; --muted:#6b7280; --accent:#10b981; }
-    .cook-recipes { padding:2rem 1rem; background:var(--bg); color:var(--txt); font-family:inherit; }
-    .cook-recipes .toolbar { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; margin-bottom:1rem; }
-    .cook-recipes .filter-btn { border:1px solid #e5e7eb; background:#fff; color:#111827; padding:.5rem .75rem; border-radius:999px; cursor:pointer; transition:.15s; }
-    .cook-recipes .filter-btn:hover { transform:translateY(-1px); }
-    .cook-recipes .filter-btn.active { background:var(--accent); color:#fff; border-color:transparent; }
-    .cook-recipes .grid { display:grid; gap:var(--gap); grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); }
-    .cook-recipes .card { background:var(--card); border:1px solid #e5e7eb; border-radius:.75rem; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow .15s, transform .15s; }
-    .cook-recipes .card:hover { box-shadow:0 8px 20px rgba(0,0,0,.06); transform:translateY(-2px); }
-    .cook-recipes .thumb { aspect-ratio: 4/3; background:#e5e7eb; display:grid; place-items:center; font-size:2rem; }
-    .cook-recipes .content { padding:.75rem .9rem 1rem; display:flex; flex-direction:column; gap:.5rem; }
-    .cook-recipes .title { font-weight:600; line-height:1.3; }
-    .cook-recipes .desc { font-size:.95rem; color:#374151; }
-    .cook-recipes .meta { font-size:.85rem; color:var(--muted); display:flex; justify-content:space-between; align-items:center; }
-    .cook-recipes .badge { font-size:.75rem; padding:.2rem .5rem; border-radius:.5rem; background:#eef2ff; color:#3730a3; }
-    .cook-recipes .badge.peruanas { background:#fff7ed; color:#9a3412; }
-    .cook-recipes .badge.saludables { background:#ecfdf5; color:#065f46; }
-    .cook-recipes .badge.antojos { background:#fef2f2; color:#991b1b; }
-    .cook-recipes .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-    .cook-recipes .view-btn { align-self:flex-start; border:1px solid #e5e7eb; background:#fff; color:#111827; padding:.45rem .7rem; border-radius:.5rem; cursor:pointer; transition:.15s; font-size:.9rem; }
-    .cook-recipes .view-btn:hover { transform:translateY(-1px); }
-    /* Modal simple para recetas */
-    .cook-recipes-modal { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:50; }
-    .cook-recipes-modal[aria-hidden="false"]{ display:flex; }
-    .cook-recipes-modal .box { width:min(92vw, 760px); max-height:80vh; overflow:auto; background:#fff; border-radius:12px; border:1px solid #e5e7eb; box-shadow:0 12px 28px rgba(0,0,0,.2); }
-    .cook-recipes-modal header { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #e5e7eb; }
-    .cook-recipes-modal .body { padding:12px 14px; display:grid; gap:10px; }
-    .cook-recipes-modal .close { border:none; background:#f3f4f6; padding:.4rem .6rem; border-radius:.5rem; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -422,172 +692,6 @@
     </div>
   </section>
 
-  <!-- Recetas destacadas -->
-  <section id="recetas" class="cook-recipes" aria-label="Recetas">
-    <div class="toolbar" role="toolbar" aria-label="Filtros de recetas">
-      <button class="filter-btn active" data-filter="todas" type="button">Todas</button>
-      <button class="filter-btn" data-filter="peruanas" type="button">Peruanas</button>
-      <button class="filter-btn" data-filter="saludables" type="button">Saludables</button>
-      <button class="filter-btn" data-filter="antojos" type="button">Poco saludables</button>
-    </div>
-
-    <div class="grid">
-      <!-- Peruanas -->
-      <article class="card" data-category="peruanas" data-recipe-id="r8">
-        <div class="thumb" style="background:linear-gradient(135deg,#fff7ed,#ffedd5)">🇵🇪</div>
-        <div class="content">
-          <div class="meta"><span class="badge peruanas">Peruanas</span><span>25 min</span></div>
-          <h3 class="title">Ceviche clásico</h3>
-          <p class="desc">Pescado fresco, limón, ají limo, cilantro y camote.</p>
-          <button class="view-btn" type="button">Ver receta</button>
-        </div>
-      </article>
-
-      <article class="card" data-category="peruanas" data-recipe-id="r6">
-        <div class="thumb" style="background:linear-gradient(135deg,#fff7ed,#fde68a)">🍟</div>
-        <div class="content">
-          <div class="meta"><span class="badge peruanas">Peruanas</span><span>35 min</span></div>
-          <h3 class="title">Lomo saltado</h3>
-          <p class="desc">Salteado de res con cebolla, tomate y papas fritas.</p>
-          <button class="view-btn" type="button">Ver receta</button>
-        </div>
-      </article>
-
-      <article class="card" data-category="peruanas" data-recipe-id="r5">
-        <div class="thumb" style="background:linear-gradient(135deg,#fff7ed,#fecaca)">🥘</div>
-        <div class="content">
-          <div class="meta"><span class="badge peruanas">Peruanas</span><span>40 min</span></div>
-          <h3 class="title">Ají de gallina</h3>
-          <p class="desc">Pollo deshilachado en cremosa salsa de ají amarillo.</p>
-          <button class="view-btn" type="button">Ver receta</button>
-        </div>
-      </article>
-
-      <article class="card" data-category="peruanas" data-recipe-id="r9">
-        <div class="thumb" style="background:linear-gradient(135deg,#fff7ed,#fde68a)">🥔</div>
-        <div class="content">
-          <div class="meta"><span class="badge peruanas">Peruanas</span><span>20 min</span></div>
-          <h3 class="title">Papa a la huancaína</h3>
-          <p class="desc">Rodajas de papa con salsa huancaína, huevo y aceitunas.</p>
-          <button class="view-btn" type="button">Ver receta</button>
-        </div>
-      </article>
-
-      <article class="card" data-category="peruanas" data-recipe-id="r10">
-        <div class="thumb" style="background:linear-gradient(135deg,#fff7ed,#fde68a)">🥗</div>
-        <div class="content">
-          <div class="meta"><span class="badge peruanas">Peruanas</span><span>30 min</span></div>
-          <h3 class="title">Causa limeña</h3>
-          <p class="desc">Capas de papa amarilla con relleno de atún o pollo.</p>
-          <button class="view-btn" type="button">Ver receta</button>
-        </div>
-      </article>
-
-      <!-- Saludables -->
-      <article class="card" data-category="saludables" data-recipe-id="r11">
-        <div class="thumb" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5)">🥑</div>
-        <div class="content">
-          <div class="meta"><span class="badge saludables">Saludables</span><span>20 min</span></div>
-          <h3 class="title">Bowl de quinoa y verduras</h3>
-          <p class="desc">Quinoa con brócoli, garbanzos, tomate y limón.</p>
-          <button class="view-btn" type="button">Ver receta</button>
-        </div>
-      </article>
-
-      <article class="card" data-category="saludables" data-recipe-id="r12">
-        <div class="thumb" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0)">🐟</div>
-        <div class="content">
-          <div class="meta"><span class="badge saludables">Saludables</span><span>25 min</span></div>
-          <h3 class="title">Salmón al horno con brócoli</h3>
-          <p class="desc">Salmón con limón, ajo y aceite de oliva.</p>
-          <button class="view-btn" type="button">Ver receta</button>
-        </div>
-      </article>
-
-      <article class="card" data-category="saludables" data-recipe-id="r13">
-        <div class="thumb" style="background:linear-gradient(135deg,#ecfccb,#d9f99d)">🥗</div>
-        <div class="content">
-          <div class="meta"><span class="badge saludables">Saludables</span><span>15 min</span></div>
-          <h3 class="title">Ensalada mediterránea</h3>
-          <p class="desc">Pepino, tomate, aceitunas, queso feta y orégano.</p>
-          <button class="view-btn" type="button">Ver receta</button>
-        </div>
-      </article>
-
-      <article class="card" data-category="saludables" data-recipe-id="r14">
-        <div class="thumb" style="background:linear-gradient(135deg,#e0f2fe,#bae6fd)">🌮</div>
-        <div class="content">
-          <div class="meta"><span class="badge saludables">Saludables</span><span>20 min</span></div>
-          <h3 class="title">Tacos de lechuga con pavo</h3>
-          <p class="desc">Pavo salteado con especias en hojas de lechuga.</p>
-          <button class="view-btn" type="button">Ver receta</button>
-        </div>
-      </article>
-
-      <article class="card" data-category="saludables" data-recipe-id="r15">
-        <div class="thumb" style="background:linear-gradient(135deg,#ccfbf1,#99f6e4)">🥬</div>
-        <div class="content">
-          <div class="meta"><span class="badge saludables">Saludables</span><span>5 min</span></div>
-          <h3 class="title">Smoothie verde detox</h3>
-          <p class="desc">Espinaca, piña, manzana y jengibre.</p>
-          <button class="view-btn" type="button">Ver receta</button>
-        </div>
-      </article>
-
-      <!-- Poco saludables / Antojos -->
-      <article class="card" data-category="antojos" data-recipe-id="r16">
-        <div class="thumb" style="background:linear-gradient(135deg,#fee2e2,#fecaca)">🍔</div>
-        <div class="content">
-          <div class="meta"><span class="badge antojos">Poco saludables</span><span>30 min</span></div>
-          <h3 class="title">Hamburguesa doble queso</h3>
-          <p class="desc">Doble carne, doble queso y salsa especial.</p>
-          <button class="view-btn" type="button">Ver receta</button>
-        </div>
-      </article>
-
-      <article class="card" data-category="antojos" data-recipe-id="r17">
-        <div class="thumb" style="background:linear-gradient(135deg,#ffe4e6,#fecdd3)">🍩</div>
-        <div class="content">
-          <div class="meta"><span class="badge antojos">Poco saludables</span><span>35 min</span></div>
-          <h3 class="title">Churros con chocolate</h3>
-          <p class="desc">Churros crujientes con salsa de chocolate caliente.</p>
-          <button class="view-btn" type="button">Ver receta</button>
-        </div>
-      </article>
-
-      <article class="card" data-category="antojos" data-recipe-id="r18">
-        <div class="thumb" style="background:linear-gradient(135deg,#fee2e2,#fecaca)">🌶️</div>
-        <div class="content">
-          <div class="meta"><span class="badge antojos">Poco saludables</span><span>40 min</span></div>
-          <h3 class="title">Alitas fritas picantes</h3>
-          <p class="desc">Alitas crujientes bañadas en salsa buffalo.</p>
-          <button class="view-btn" type="button">Ver receta</button>
-        </div>
-      </article>
-
-      <article class="card" data-category="antojos" data-recipe-id="r19">
-        <div class="thumb" style="background:linear-gradient(135deg,#ffe4e6,#fecdd3)">🍕</div>
-        <div class="content">
-          <div class="meta"><span class="badge antojos">Poco saludables</span><span>20 min</span></div>
-          <h3 class="title">Pizza de pepperoni</h3>
-          <p class="desc">Base crujiente con pepperoni y queso fundido.</p>
-          <button class="view-btn" type="button">Ver receta</button>
-        </div>
-      </article>
-    </div>
-  </section>
-
-  <!-- Modal para ver recetas -->
-  <div class="cook-recipes-modal" id="recipeModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Detalle de receta">
-    <div class="box">
-      <header>
-        <strong id="recipeModalTitle">Receta</strong>
-        <button class="close" type="button" id="recipeModalClose">Cerrar</button>
-      </header>
-      <div class="body" id="recipeModalBody"></div>
-    </div>
-  </div>
-
   <main class="container" aria-label="Contenido principal">
     <div class="status-bar">
       <div id="resultCount">Mostrando 0 productos</div>
@@ -626,86 +730,6 @@
   </template>
 
   <script>
-  // Filtro para la sección de recetas
-  (function initRecipeFilter(){
-    const root = document.querySelector('#recetas.cook-recipes');
-    if(!root) return;
-    const buttons = root.querySelectorAll('[data-filter]');
-    const cards = root.querySelectorAll('.card');
-
-    function update(filter){
-      cards.forEach(card=>{
-        card.style.display = (filter==='todas' || card.dataset.category===filter) ? '' : 'none';
-      });
-      let live = document.getElementById('recetas-live');
-      if(!live){
-        live = document.createElement('div');
-        live.id = 'recetas-live';
-        live.className = 'sr-only';
-        live.setAttribute('aria-live','polite');
-        root.appendChild(live);
-      }
-      const visible = Array.from(cards).filter(c=>c.style.display!=='none').length;
-      live.textContent = `${visible} recetas mostradas`;
-    }
-
-    buttons.forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        buttons.forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        update(btn.dataset.filter);
-      });
-    });
-
-    update('todas');
-  })();
-  // --- fin filtro recetas ---
-
-  // Modal para ver recetas desde la sección de tarjetas
-  (function attachRecipeModal(){
-    const root = document.querySelector('#recetas.cook-recipes');
-    const modal = document.getElementById('recipeModal');
-    if(!root || !modal) return;
-    const titleEl = document.getElementById('recipeModalTitle');
-    const bodyEl = document.getElementById('recipeModalBody');
-    const btnClose = document.getElementById('recipeModalClose');
-
-    function openModal(){ modal.setAttribute('aria-hidden','false'); }
-    function closeModal(){ modal.setAttribute('aria-hidden','true'); }
-    btnClose.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
-    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
-
-    root.querySelectorAll('.card .view-btn').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const card = btn.closest('.card');
-        const id = card?.getAttribute('data-recipe-id');
-        const r = (window.recipes || recipes).find(x=>x.id===id);
-        if(!r){ closeModal(); return; }
-        titleEl.textContent = r.title;
-        const ingList = r.ingredients.map(x=>`<li>${x}</li>`).join('');
-        const stepsList = r.steps.map((x,i)=>`<li><strong>Paso ${i+1}:</strong> ${x}</li>`).join('');
-        bodyEl.innerHTML = `
-          <img src="${r.img||''}" alt="${r.title}" style="width:100%;max-height:280px;object-fit:cover;border-radius:8px" referrerpolicy="no-referrer" onerror="this.src='${FALLBACK_IMG}'" />
-          <div style="display:flex;gap:8px;color:#6b7280"><span>${r.minutes} min</span>·<span>${r.level}</span></div>
-          <div>
-            <h4 style="margin:8px 0 6px;">Ingredientes</h4>
-            <ul style="margin:0 0 10px 18px;">${ingList}</ul>
-            <h4 style="margin:8px 0 6px;">Pasos</h4>
-            <ol style="margin:0 0 10px 18px;">${stepsList}</ol>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button type="button" class="btn" id="modalAddMissing">Agregar faltantes</button>
-            <button type="button" class="btn" id="modalClose">Cerrar</button>
-          </div>
-        `;
-        bodyEl.querySelector('#modalAddMissing')?.addEventListener('click', ()=> addMissingToCart(r));
-        bodyEl.querySelector('#modalClose')?.addEventListener('click', closeModal);
-        openModal();
-      });
-    });
-  })();
-
     // Utilidades
     const normalize = (s='') =>
       s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
@@ -848,42 +872,6 @@
      ingredients:['res','cilantro','cebolla','ajo','comino','pimiento','papa','arroz','sal'],
      steps:['Licuar cilantro con agua.','Hacer aderezo con ajo, cebolla, comino y pimiento.','Sellar carne y agregar licuado de cilantro.','Cocinar a fuego lento; servir con papa y arroz.'],
      tags:['peruano','guiso']}
-    ,{id:'r8', title:'Ceviche clásico', img:IMG('peruvian ceviche'), minutes:25, level:'media',
-      ingredients:['pescado','limon','cebolla','aji amarillo','cilantro','sal'],
-      steps:['Cortar pescado en cubos.','Exprimir limón y mezclar con sal y ají.','Agregar cebolla y cilantro; reposar 5 min.'], tags:['peruano','sin-gluten']}
-    ,{id:'r9', title:'Papa a la huancaína', img:IMG('papa a la huancaina'), minutes:20, level:'fácil',
-      ingredients:['papa','aji amarillo','queso parmesano','leche','galletas','huevo','sal'],
-      steps:['Licuar ají, queso, leche y galletas.','Cocer papa y huevo.','Servir con salsa y decorar.'], tags:['peruano','entrada']}
-    ,{id:'r10', title:'Causa limeña', img:IMG('causa limena'), minutes:30, level:'media',
-      ingredients:['papa','atun','limon','aji amarillo','sal','aceite'],
-      steps:['Prensar papa con limón, ají y sal.','Rellenar con atún y verduras a gusto.','Montar en capas.'], tags:['peruano','frio']}
-    ,{id:'r11', title:'Bowl de quinoa y verduras', img:IMG('quinoa bowl'), minutes:20, level:'fácil',
-      ingredients:['quinoa','brocoli','garbanzos','tomate','limon','aceite','sal'],
-      steps:['Cocer quinoa.','Saltear brócoli y garbanzos.','Servir con tomate y aliño de limón.'], tags:['saludable','veg']}
-    ,{id:'r12', title:'Salmón al horno con brócoli', img:IMG('salmon broccoli'), minutes:25, level:'fácil',
-      ingredients:['pescado','brocoli','ajo','limon','aceite','sal','pimienta'],
-      steps:['Disponer salmón y brócoli.','Agregar ajo, limón, sal y aceite.','Hornear 15-18 min.'], tags:['saludable']}
-    ,{id:'r13', title:'Ensalada mediterránea', img:IMG('greek salad'), minutes:15, level:'fácil',
-      ingredients:['tomate','pepino','oregano','aceite','sal'],
-      steps:['Cortar tomate y pepino.','Aliñar con sal, orégano y aceite.'], tags:['saludable','rápida']}
-    ,{id:'r14', title:'Tacos de lechuga con pavo', img:IMG('lettuce tacos turkey'), minutes:20, level:'fácil',
-      ingredients:['pavo','lechuga','ajo','comino','limon','sal'],
-      steps:['Saltear pavo con ajo y comino.','Servir en hojas de lechuga con limón.'], tags:['saludable','bajo-carb']}
-    ,{id:'r15', title:'Smoothie verde detox', img:IMG('green smoothie'), minutes:5, level:'fácil',
-      ingredients:['espinaca','manzana','pina','jengibre','agua'],
-      steps:['Licuar todos los ingredientes hasta homogeneizar.'], tags:['saludable','bebida']}
-    ,{id:'r16', title:'Hamburguesa doble queso', img:IMG('double cheeseburger'), minutes:30, level:'media',
-      ingredients:['res','queso','pan','tomate','lechuga','sal'],
-      steps:['Formar hamburguesas y dorar.','Montar con queso y vegetales.'], tags:['antojo']}
-    ,{id:'r17', title:'Churros con chocolate', img:IMG('churros chocolate'), minutes:35, level:'media',
-      ingredients:['harina','azucar','canela','aceite','chocolate'],
-      steps:['Hacer masa choux sencilla.','Freír en aceite.','Rebozar en azúcar y canela. Servir con chocolate.'], tags:['antojo','postre']}
-    ,{id:'r18', title:'Alitas fritas picantes', img:IMG('spicy wings'), minutes:40, level:'media',
-      ingredients:['pollo','harina','paprika','aceite','sal','aji'],
-      steps:['Mezclar alitas con harina y especias.','Freír hasta dorar.','Bañar en salsa picante.'], tags:['antojo']}
-    ,{id:'r19', title:'Pizza de pepperoni', img:IMG('pepperoni pizza'), minutes:20, level:'fácil',
-      ingredients:['harina','sal','aceite','tomate','queso'],
-      steps:['Extender masa.','Cubrir con salsa y queso.','Hornear hasta derretir.'], tags:['antojo']}
     ];
 
     // Sinónimos e intención para EcoIA
