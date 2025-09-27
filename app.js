@@ -1,16 +1,20 @@
 const express = require('express');
-const fetch = require('node-fetch'); // Si usas Node 18+ puedes usar fetch nativo, si no, instala node-fetch
+const fetch = require('node-fetch'); // Si usas Node 18+, puedes quitar esta línea y usar fetch nativo
+const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// Endpoint raíz (ya lo tienes)
+// Servir archivos estáticos desde la raíz (para imágenes, .js, etc.)
+app.use(express.static(__dirname));
+
+// Mostrar la página principal al entrar al root
 app.get('/', (req, res) => {
-  res.send('¡EcoIA backend funcionando en Render!');
+  res.sendFile(path.join(__dirname, 'Untitled-1.html'));
 });
 
-// Endpoint para responder preguntas usando Hugging Face
+// Endpoint para preguntas a la IA (EcoIA)
 app.post('/ecoia', async (req, res) => {
   const { pregunta } = req.body;
   if (!pregunta) {
@@ -39,13 +43,11 @@ async function consultaHuggingFace(pregunta) {
   });
 
   const data = await response.json();
-  // Ajusta el acceso según la respuesta de Hugging Face
   if (data && Array.isArray(data) && data[0]?.generated_text) {
     return data[0].generated_text;
   } else if (data.generated_text) {
     return data.generated_text;
   }
-  // Si no hay respuesta, devuelve mensaje genérico
   return "No se pudo obtener respuesta de EcoIA.";
 }
 
