@@ -1772,7 +1772,36 @@
         console.log('Overrides de imagen actualizados (se agregaron claves faltantes).');
       }
     })();
+<!-- ...todo el contenido actual de tu archivo... -->
 
-  </script>
+<!-- EcoIA Widget -->
+<div style="margin: 32px auto; max-width: 400px; background: #fff; border-radius: 14px; box-shadow: 0 2px 12px #0002; padding: 18px;">
+  <h2 style="text-align:center; color:#4ec8c2; margin-bottom:12px;">Pregúntale a EcoIA</h2>
+  <input type="text" id="ecoia-pregunta" placeholder="Escribe tu pregunta..." style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid #b2bec3;">
+  <button onclick="consultarEcoIA()" style="margin-top:8px; width:100%;padding:10px 0;border-radius:8px;background:#4ec8c2;color:#fff;border:none;font-size:16px;cursor:pointer;">Preguntar</button>
+  <div id="ecoia-respuesta" style="margin-top:14px; min-height:32px; color:#276e6a;"></div>
+</div>
+<script>
+async function consultarEcoIA() {
+  const pregunta = document.getElementById('ecoia-pregunta').value;
+  const respuestaDiv = document.getElementById('ecoia-respuesta');
+  if (!pregunta.trim()) {
+    respuestaDiv.innerText = "Por favor, escribe tu pregunta.";
+    return;
+  }
+  respuestaDiv.innerText = "Consultando EcoIA...";
+  try {
+    const response = await fetch('https://ecomarket-4520.onrender.com/ecoia', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pregunta })
+    });
+    const data = await response.json();
+    respuestaDiv.innerText = data.respuesta || "Ocurrió un error.";
+  } catch (e) {
+    respuestaDiv.innerText = "No se pudo conectar con EcoIA.";
+  }
+}
+</script>
 </body>
 </html>
