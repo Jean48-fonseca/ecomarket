@@ -32,30 +32,35 @@ aplicacion.use(express.static(path.join(__dirname), {
 // Trust proxy para Render
 aplicacion.set('trust proxy', 1);
 
-// ✅ CONTEXTO ECOLÓGICO MEJORADO PARA ECOIA
+// ✅ CONTEXTO ECOLÓGICO + CHEF PARA ECOIA
 const CONTEXTO_ECOLOGICO = `
-Eres EcoIA, un asistente experto en sostenibilidad y productos ecológicos para EcoMarket.
+Eres EcoIA, chef ecológico experto y asistente inteligente de EcoMarket.
 
-PRODUCTOS DISPONIBLES:
-🥬 Verduras: Lechuga romana, tomates frescos, zanahorias, pepinos, pimientos verdes, cebollas
-🍎 Frutas: Manzanas rojas, plátanos maduros, naranjas jugosas, fresas dulces, uvas frescas  
-🫘 Legumbres: Lentejas orgánicas, garbanzos, frijoles negros, quinoa
-🌾 Cereales: Avena integral, arroz integral, pasta de trigo
-🥛 Lácteos: Leche orgánica, quesos naturales, yogurt probiótico
+🛒 PRODUCTOS ECOMARKET (con ID para carrito):
+🥬 Verduras: lechuga-romana(S/1.60), tomate(S/1.90), zanahoria(S/1.50), pepino(S/1.40), pimiento(S/2.20), cebolla(S/1.30)
+🍎 Frutas: manzana(S/2.10), plátano(S/1.80), naranja(S/2.00), fresa(S/2.80), uva(S/2.50)
+🫘 Legumbres: lentejas(S/2.40), garbanzos(S/2.60), frijoles-negros(S/2.40), quinoa(S/4.20)
+🌾 Cereales: avena(S/2.60), arroz-integral(S/2.80), pasta(S/2.20)
+🥛 Lácteos: leche(S/3.20), queso(S/4.50), yogurt(S/2.90)
 
-ESPECIALIDADES:
-- Todos nuestros productos son 100% orgánicos y de origen local
-- Precios justos desde S/1.40 hasta S/2.80
-- Empaques biodegradables y eco-amigables
-- Certificación de comercio justo
+🍽️ ESPECIALIDADES CULINARIAS:
+✅ Recetas Peruanas: ceviche, ají de gallina, lomo saltado, causa, anticuchos, papa rellena, tacu tacu, arroz chaufa
+✅ Recetas Internacionales: sushi, pasta italiana, curry indio, pad thai, tacos mexicanos, paella, ramen
+✅ Recetas Saludables: ensaladas, smoothies, bowls, sopas nutritivas
 
-INSTRUCCIONES:
-- Responde SIEMPRE en español con emojis 🌱
-- Sé creativo y varía tus respuestas  
-- Incluye beneficios nutricionales específicos
-- Menciona precios cuando sea relevante
-- Máximo 120 palabras por respuesta
-- Usa un tono amigable y experto
+🛒 FUNCIÓN AUTO-CARRITO:
+- Cuando des una receta, SIEMPRE incluye: [AGREGAR AL CARRITO: producto1, producto2, producto3]
+- Usa los ID exactos de productos de EcoMarket
+- Calcula el costo total de ingredientes
+
+📋 INSTRUCCIONES:
+- Responde en español con emojis 🌱
+- Incluye receta paso a paso
+- Lista ingredientes con precios de EcoMarket
+- Agrega automáticamente productos al carrito
+- Menciona tips ecológicos
+- Máximo 200 palabras por respuesta
+- Sé creativo y amigable
 `;
 
 // ✅ RUTA PRINCIPAL
@@ -103,6 +108,31 @@ aplicacion.get('/ready', (req, res) => {
   }
 });
 
+// ✅ ENDPOINT PARA AGREGAR PRODUCTOS AL CARRITO (desde EcoIA)
+aplicacion.post('/ecoia/agregar-carrito', async (req, res) => {
+  try {
+    const { productos } = req.body;
+    console.log('🛒 EcoIA agregando al carrito:', productos);
+    
+    // Simular agregado al carrito (aquí conectarías con tu sistema de carrito real)
+    const productosAgregados = productos.map(producto => ({
+      id: producto,
+      agregado: true,
+      timestamp: new Date().toISOString()
+    }));
+    
+    res.json({ 
+      success: true, 
+      mensaje: `${productos.length} productos agregados al carrito`,
+      productos: productosAgregados 
+    });
+    
+  } catch (error) {
+    console.error('❌ Error agregando al carrito:', error);
+    res.status(500).json({ error: 'Error al agregar productos al carrito' });
+  }
+});
+
 // ✅ ENDPOINT PRINCIPAL DE ECOIA
 aplicacion.post('/ecoia', async (req, res) => {
   const { pregunta } = req.body;
@@ -119,15 +149,26 @@ aplicacion.post('/ecoia', async (req, res) => {
     // Intentar con Hugging Face primero
     const respuesta = await consultaHuggingFace(pregunta);
     
+    // Detectar si la respuesta incluye productos para el carrito
+    const productosParaCarrito = extraerProductosCarrito(respuesta);
+    
     console.log('✅ EcoIA respondió:', respuesta.substring(0, 100) + '...');
-    res.json({ respuesta });
+    
+    // Respuesta completa con productos para carrito
+    const respuestaCompleta = {
+      respuesta: respuesta,
+      productos_carrito: productosParaCarrito,
+      tiene_receta: productosParaCarrito.length > 0
+    };
+    
+    res.json(respuestaCompleta);
     
   } catch (error) {
     console.error('❌ Error en EcoIA:', error.message);
     
     // Fallback a respuestas predefinidas si Hugging Face falla
     const respuestaFallback = generarRespuestaFallback(pregunta);
-    res.json({ respuesta: respuestaFallback });
+    res.json({ respuesta: respuestaFallback, productos_carrito: [], tiene_receta: false });
   }
 });
 
@@ -317,3 +358,50 @@ aplicacion.listen(puerto, () => {
     console.log('✅ Token de Hugging Face configurado');
   }
 });
+
+// ✅ FUNCIÓN PARA EXTRAER PRODUCTOS DEL CARRITO
+function extraerProductosCarrito(respuesta) {
+  const productos = [];
+  
+  // Buscar patrón [AGREGAR AL CARRITO: producto1, producto2, producto3]
+  const patronCarrito = /\[AGREGAR AL CARRITO:\s*([^\]]+)\]/i;
+  const match = respuesta.match(patronCarrito);
+  
+  if (match) {
+    // Extraer productos del texto
+    const productosTexto = match[1];
+    const productosArray = productosTexto.split(',').map(p => p.trim());
+    
+    // Mapear a productos reales de EcoMarket
+    const mapaProductos = {
+      'lechuga': 'lechuga-romana',
+      'tomate': 'tomate', 
+      'zanahoria': 'zanahoria',
+      'pepino': 'pepino',
+      'cebolla': 'cebolla',
+      'manzana': 'manzana',
+      'platano': 'plátano',
+      'arroz': 'arroz-integral',
+      'quinoa': 'quinoa',
+      'lentejas': 'lentejas',
+      'garbanzos': 'garbanzos',
+      'avena': 'avena',
+      'leche': 'leche',
+      'queso': 'queso'
+    };
+    
+    // Convertir a IDs válidos
+    productosArray.forEach(producto => {
+      const productoLimpio = producto.toLowerCase().replace(/[^a-záéíóúñ]/g, '');
+      if (mapaProductos[productoLimpio]) {
+        productos.push({
+          id: mapaProductos[productoLimpio],
+          nombre: producto,
+          agregado: true
+        });
+      }
+    });
+  }
+  
+  return productos;
+}

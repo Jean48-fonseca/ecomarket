@@ -2036,6 +2036,62 @@
   <script>
     // 🤖 FUNCIONES DEL CHAT ECOIA
     let chatAbierto = false;
+    
+    // 🛒 FUNCIÓN PARA MOSTRAR NOTIFICACIÓN DE CARRITO
+    function mostrarNotificacionCarrito(cantidad) {
+      // Actualizar badge del carrito si existe
+      const carritoIcon = document.querySelector('.carrito-icon');
+      if (carritoIcon) {
+        const badge = carritoIcon.querySelector('.badge') || document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = cantidad;
+        badge.style.cssText = `
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          background: #ff4444;
+          color: white;
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: pulse 0.5s ease-in-out;
+        `;
+        
+        if (!carritoIcon.querySelector('.badge')) {
+          carritoIcon.appendChild(badge);
+        }
+      }
+      
+      // Mostrar notificación flotante
+      const notificacion = document.createElement('div');
+      notificacion.innerHTML = `
+        <div style="
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: #4CAF50;
+          color: white;
+          padding: 15px 20px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          z-index: 10000;
+          animation: slideIn 0.3s ease-out;
+        ">
+          🛒 ${cantidad} productos agregados al carrito!
+        </div>
+      `;
+      
+      document.body.appendChild(notificacion);
+      
+      // Remover después de 3 segundos
+      setTimeout(() => {
+        notificacion.remove();
+      }, 3000);
+    }
 
     function toggleEcoiaChat() {
       const chat = document.getElementById('ecoiaChat');
@@ -2098,6 +2154,17 @@
         
         // Agregar respuesta de EcoIA
         agregarMensaje(data.respuesta, 'bot');
+        
+        // Si hay productos para agregar al carrito
+        if (data.productos_carrito && data.productos_carrito.length > 0) {
+          setTimeout(() => {
+            const carritoMsg = `🛒 He agregado ${data.productos_carrito.length} productos a tu carrito: ${data.productos_carrito.map(p => p.nombre).join(', ')}`;
+            agregarMensaje(carritoMsg, 'bot', false, 'carrito');
+            
+            // Simular agregado visual al carrito
+            mostrarNotificacionCarrito(data.productos_carrito.length);
+          }, 1500);
+        }
         status.textContent = 'Conectado';
 
       } catch (error) {
@@ -2119,13 +2186,19 @@
       }
     }
 
-    function agregarMensaje(contenido, tipo, esTemporary = false) {
+    function agregarMensaje(contenido, tipo, esTemporary = false, tipoEspecial = null) {
       const mensajesContainer = document.getElementById('ecoiaChatMessages');
       const mensaje = document.createElement('div');
       mensaje.className = `ecoia-message ecoia-${tipo}`;
       
       if (esTemporary) {
         mensaje.classList.add('ecoia-thinking');
+      }
+      
+      // Estilos especiales para mensajes de carrito
+      if (tipoEspecial === 'carrito') {
+        mensaje.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+        mensaje.style.borderLeft = '4px solid #2E7D32';
       }
       
       const now = new Date();
