@@ -146,19 +146,20 @@ aplicacion.post('/ecoia', async (req, res) => {
   }
 
   try {
-    // Intentar con Hugging Face primero
-    const respuesta = await consultaHuggingFace(pregunta);
+    // 🧠 USAR PRIMERO NUESTRA BASE DE CONOCIMIENTO INTELIGENTE
+    const respuestaInteligente = generarRespuestaFallback(pregunta);
     
     // Detectar si la respuesta incluye productos para el carrito
-    const productosParaCarrito = extraerProductosCarrito(respuesta);
+    const productosParaCarrito = extraerProductosCarrito(respuestaInteligente);
     
-    console.log('✅ EcoIA respondió:', respuesta.substring(0, 100) + '...');
+    console.log('✅ EcoIA Chef respondió:', respuestaInteligente.substring(0, 100) + '...');
     
     // Respuesta completa con productos para carrito
     const respuestaCompleta = {
-      respuesta: respuesta,
+      respuesta: respuestaInteligente,
       productos_carrito: productosParaCarrito,
-      tiene_receta: productosParaCarrito.length > 0
+      tiene_receta: productosParaCarrito.length > 0,
+      fuente: 'ecoia_chef'
     };
     
     res.json(respuestaCompleta);
@@ -166,9 +167,9 @@ aplicacion.post('/ecoia', async (req, res) => {
   } catch (error) {
     console.error('❌ Error en EcoIA:', error.message);
     
-    // Fallback a respuestas predefinidas si Hugging Face falla
-    const respuestaFallback = generarRespuestaFallback(pregunta);
-    res.json({ respuesta: respuestaFallback, productos_carrito: [], tiene_receta: false });
+    // Si falla todo, respuesta básica
+    const respuestaBasica = '🌱 ¡Hola! Soy EcoIA. Pregúntame sobre recetas como sushi, ceviche, pasta, curry, tacos o ensaladas. ¡Te ayudo con productos ecológicos!';
+    res.json({ respuesta: respuestaBasica, productos_carrito: [], tiene_receta: false });
   }
 });
 
@@ -299,33 +300,221 @@ function limpiarRespuestaIA(textoCompleto, preguntaOriginal) {
   return respuesta;
 }
 
-// ✅ SISTEMA DE RESPUESTAS FALLBACK
+// ✅ ECOIA CHEF INTELIGENTE - BASE DE CONOCIMIENTO DE RECETAS
 function generarRespuestaFallback(pregunta) {
   const preguntaLower = pregunta.toLowerCase();
   
-  // Respuestas por categorías
-  if (preguntaLower.includes('verdura') || preguntaLower.includes('vegetal')) {
-    return '🥬 ¡Excelente elección! Nuestras verduras son 100% orgánicas y locales. Te recomiendo la lechuga romana y los tomates frescos, perfectos para ensaladas nutritivas. Son ricos en vitaminas y cultivados sin pesticidas.';
+  // 🍣 RECETAS INTERNACIONALES
+  if (preguntaLower.includes('sushi')) {
+    return `🍣 **Sushi Vegetariano Ecológico**
+
+**Ingredientes de EcoMarket:**
+• Arroz integral - S/ 2.80/kg 🍚
+• Pepinos frescos - S/ 1.40/kg 🥒  
+• Zanahorias - S/ 1.50/kg 🥕
+
+**Preparación:**
+1. Cocina 1 taza de arroz con vinagre
+2. Corta pepinos y zanahorias en bastones
+3. Forma rollos con nori
+4. ¡Disfruta tu sushi sostenible!
+
+💰 **Costo:** S/ 6.00 aprox
+🌱 **Tip:** Usa palillos reutilizables
+
+[AGREGAR AL CARRITO: arroz-integral, pepino, zanahoria]`;
   }
   
-  if (preguntaLower.includes('fruta')) {
-    return '🍎 ¡Las frutas son geniales! Nuestras manzanas y naranjas están llenas de vitamina C. Los plátanos son perfectos para el desayuno y te dan energía natural. Todas nuestras frutas son de temporada y sostenibles.';
+  // 🐟 CEVICHE PERUANO VEGGIE
+  if (preguntaLower.includes('ceviche')) {
+    return `🐟 **Ceviche de Verduras Peruano**
+
+**Ingredientes de EcoMarket:**
+• Tomates maduros - S/ 1.90/kg 🍅
+• Cebollas rojas - S/ 1.30/kg 🧅
+• Pepinos - S/ 1.40/kg 🥒
+
+**Preparación:**
+1. Corta tomates y pepinos en cubos
+2. Juliana fina de cebolla  
+3. Marina con limón 15 min
+4. Sazona con sal y ají
+5. ¡Ceviche veggie listo!
+
+💰 **Costo:** S/ 5.00 aprox
+🌱 **Plus:** Vitaminas + bajo en calorías
+
+[AGREGAR AL CARRITO: tomate, cebolla, pepino]`;
   }
   
-  if (preguntaLower.includes('legumbre') || preguntaLower.includes('lenteja') || preguntaLower.includes('garbanzo')) {
-    return '🌱 ¡Las legumbres son súper nutritivas! Las lentejas y garbanzos son excelentes fuentes de proteína vegetal y fibra. Son perfectas para una dieta sostenible y te ayudan a reducir tu huella de carbono.';
+  // 🥩 LOMO SALTADO VEGGIE
+  if (preguntaLower.includes('lomo saltado') || preguntaLower.includes('lomo')) {
+    return `🥩 **Lomo Saltado Vegetariano**
+
+**Ingredientes de EcoMarket:**
+• Tomates frescos - S/ 1.90/kg 🍅
+• Cebollas - S/ 1.30/kg 🧅  
+• Arroz integral - S/ 2.80/kg 🍚
+
+**Preparación:**
+1. Saltea cebolla y tomate
+2. Agrega especias peruanas
+3. Sirve con arroz integral
+4. ¡Sabor criollo saludable!
+
+💰 **Costo:** S/ 6.00 aprox
+🌱 **Benefit:** Versión más sana del clásico
+
+[AGREGAR AL CARRITO: tomate, cebolla, arroz-integral]`;
   }
   
-  if (preguntaLower.includes('ecológico') || preguntaLower.includes('orgánico') || preguntaLower.includes('sostenible')) {
-    return '🌍 Todos nuestros productos son ecológicos y sostenibles. Trabajamos con productores locales que no usan pesticidas ni químicos dañinos. Así cuidamos tu salud y el planeta al mismo tiempo.';
+  // 🍝 PASTA ITALIANA
+  if (preguntaLower.includes('pasta') || preguntaLower.includes('espagueti')) {
+    return `� **Pasta Primavera Orgánica**
+
+**Ingredientes de EcoMarket:**
+• Tomates frescos - S/ 1.90/kg 🍅
+• Zanahorias - S/ 1.50/kg 🥕
+• Cebollas - S/ 1.30/kg 🧅
+
+**Preparación:**
+1. Saltea verduras en aceite de oliva
+2. Cocina pasta al dente
+3. Mezcla todo con amor
+4. ¡Pasta italiana saludable!
+
+💰 **Costo:** S/ 5.70 aprox
+🌱 **Rico en:** Fibra + antioxidantes
+
+[AGREGAR AL CARRITO: tomate, zanahoria, cebolla]`;
   }
   
-  if (preguntaLower.includes('precio') || preguntaLower.includes('costo') || preguntaLower.includes('barato')) {
-    return '💰 Nuestros precios son competitivos para productos orgánicos. Recuerda que inviertes en tu salud y el medio ambiente. Las verduras están entre S/ 1.4 - 2.2, frutas S/ 1.7 - 2.3, y legumbres S/ 2.4 - 2.8 por kg.';
+  // 🍛 CURRY DE VERDURAS
+  if (preguntaLower.includes('curry')) {
+    return `🍛 **Curry de Verduras Aromático**
+
+**Ingredientes de EcoMarket:**
+• Zanahorias - S/ 1.50/kg 🥕
+• Garbanzos - S/ 2.60/kg 🫘
+• Cebollas - S/ 1.30/kg 🧅
+• Arroz integral - S/ 2.80/kg 🍚
+
+**Preparación:**
+1. Sofríe cebolla con curry
+2. Agrega zanahorias y garbanzos
+3. Cocina 20 min a fuego lento
+4. Sirve con arroz
+5. ¡Curry veggie explosivo!
+
+💰 **Costo:** S/ 8.20 aprox
+🌱 **Super proteína** vegetal completa
+
+[AGREGAR AL CARRITO: zanahoria, garbanzos, cebolla, arroz-integral]`;
   }
   
-  // Respuesta genérica
-  return '🌱 ¡Hola! Soy EcoIA, tu asistente ecológico. Estoy aquí para ayudarte a elegir los mejores productos orgánicos y sostenibles. ¿Te interesa saber sobre alguna categoría específica? Tenemos verduras, frutas y legumbres frescas y locales.';
+  // 🥗 ENSALADAS
+  if (preguntaLower.includes('ensalada') || preguntaLower.includes('verdura')) {
+    return `🥗 **Ensalada Rainbow Súper Nutritiva**
+
+**Ingredientes de EcoMarket:**
+• Lechuga romana - S/ 1.60/kg 🥬
+• Tomates cherry - S/ 1.90/kg 🍅
+• Zanahorias - S/ 1.50/kg 🥕
+• Pepinos - S/ 1.40/kg 🥒
+
+**Preparación:**
+1. Lava y corta todo fresh
+2. Mezcla colores en bowl
+3. Aliña con limón y aceite
+4. ¡Ensalada arcoíris lista!
+
+💰 **Costo:** S/ 5.40 aprox
+🌱 **Cargada de:** Vitaminas A, C, K + fibra
+
+[AGREGAR AL CARRITO: lechuga-romana, tomate, zanahoria, pepino]`;
+  }
+  
+  // 🍓 SMOOTHIES
+  if (preguntaLower.includes('smoothie') || preguntaLower.includes('batido') || preguntaLower.includes('fruta')) {
+    return `� **Smoothie Energético Power**
+
+**Ingredientes de EcoMarket:**
+• Plátanos - S/ 1.80/kg 🍌
+• Fresas - S/ 2.80/kg 🍓
+• Manzanas - S/ 2.10/kg 🍎
+• Yogurt natural - S/ 2.90/kg 🥛
+
+**Preparación:**
+1. Pela y corta frutas
+2. Licúa con yogurt
+3. Agrega hielo si quieres
+4. ¡Smoothie power listo!
+
+💰 **Costo:** S/ 7.60 aprox
+🌱 **Energy boost:** Vitaminas + probióticos
+
+[AGREGAR AL CARRITO: plátano, fresa, manzana, yogurt]`;
+  }
+  
+  // 🌮 TACOS MEXICANOS
+  if (preguntaLower.includes('taco') || preguntaLower.includes('mexicano')) {
+    return `🌮 **Tacos Vegetarianos Mexicanos**
+
+**Ingredientes de EcoMarket:**
+• Frijoles negros - S/ 2.40/kg 🫘
+• Tomates - S/ 1.90/kg 🍅
+• Cebollas - S/ 1.30/kg 🧅
+• Lechuga - S/ 1.60/kg 🥬
+
+**Preparación:**
+1. Cocina frijoles con comino
+2. Pica vegetales frescos
+3. Arma tacos con amor
+4. ¡Fiesta mexicana veggie!
+
+💰 **Costo:** S/ 6.20 aprox
+🌱 **Alto en:** Proteína vegetal + fibra
+
+[AGREGAR AL CARRITO: frijoles-negros, tomate, cebolla, lechuga-romana]`;
+  }
+  
+  // 🍛 CAUSA LIMEÑA
+  if (preguntaLower.includes('causa')) {
+    return `🍛 **Causa Limeña Vegetariana**
+
+**Ingredientes de EcoMarket:**
+• Tomates - S/ 1.90/kg 🍅
+• Cebollas - S/ 1.30/kg 🧅
+• Pepinos - S/ 1.40/kg 🥒
+
+**Preparación:**
+1. Prepara puré de papa amarilla
+2. Mezcla verduras picaditas
+3. Arma capas coloridas
+4. ¡Causa limeña fresh!
+
+💰 **Costo:** S/ 4.60 aprox
+🌱 **Tradición** peruana + saludable
+
+[AGREGAR AL CARRITO: tomate, cebolla, pepino]`;
+  }
+  
+  // 🌾 RESPUESTA DEFAULT CON MENÚ
+  return `🌱 **¡Hola! Soy EcoIA, tu chef ecológico personal!**
+
+**Especialidades que puedo preparar:**
+🍣 **Internacionales:** sushi, pasta, curry, tacos
+🐟 **Peruanas:** ceviche, lomo saltado, causa
+🥗 **Saludables:** ensaladas, smoothies, bowls
+
+**¡Solo pregúntame!**
+• "¿Cómo hago sushi vegetariano?"
+• "Receta de ceviche de verduras"
+• "Quiero curry de garbanzos"
+
+💚 **¡Agregaré automáticamente los ingredientes a tu carrito!**
+
+¿Qué te provoca cocinar hoy? 👨‍🍳✨`;
 }
 
 // ✅ ENDPOINT PARA OBTENER PRODUCTOS (BONUS)
