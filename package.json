@@ -1,12 +1,25 @@
 {
   "name": "ecomarket-backend",
-  "version": "1.0.0",
-  "description": "Backend básico para EcoIA usando Express.",
+  "version": "2.0.0",
+  "description": "Backend completo para EcoMarket con EcoIA y Hugging Face",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "node -e \"console.log('✅ EcoMarket Backend funcionando')\""
   },
+  "keywords": ["ecomarket", "ecologia", "ai", "huggingface", "sostenible"],
+  "author": "EcoMarket Team",
+  "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
