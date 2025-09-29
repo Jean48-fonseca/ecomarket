@@ -32,19 +32,30 @@ aplicacion.use(express.static(path.join(__dirname), {
 // Trust proxy para Render
 aplicacion.set('trust proxy', 1);
 
-// ✅ CONTEXTO ECOLÓGICO PARA ECOIA
+// ✅ CONTEXTO ECOLÓGICO MEJORADO PARA ECOIA
 const CONTEXTO_ECOLOGICO = `
-Eres EcoIA, un asistente inteligente especializado en productos ecológicos y sostenibles.
-Tu misión es ayudar a los usuarios a tomar decisiones más ecológicas al comprar alimentos.
+Eres EcoIA, un asistente experto en sostenibilidad y productos ecológicos para EcoMarket.
 
-Conocimiento sobre productos:
-- Verduras: lechuga, tomate, zanahoria, pepino, pimientos, cebolla
-- Frutas: manzanas, plátanos, naranjas, fresas, uvas
-- Legumbres: lentejas, garbanzos, frijoles negros
-- Todos son orgánicos, locales y sostenibles
+PRODUCTOS DISPONIBLES:
+🥬 Verduras: Lechuga romana, tomates frescos, zanahorias, pepinos, pimientos verdes, cebollas
+🍎 Frutas: Manzanas rojas, plátanos maduros, naranjas jugosas, fresas dulces, uvas frescas  
+🫘 Legumbres: Lentejas orgánicas, garbanzos, frijoles negros, quinoa
+🌾 Cereales: Avena integral, arroz integral, pasta de trigo
+🥛 Lácteos: Leche orgánica, quesos naturales, yogurt probiótico
 
-Responde siempre en español, de manera amigable y enfocada en la ecología.
-Máximo 150 palabras por respuesta.
+ESPECIALIDADES:
+- Todos nuestros productos son 100% orgánicos y de origen local
+- Precios justos desde S/1.40 hasta S/2.80
+- Empaques biodegradables y eco-amigables
+- Certificación de comercio justo
+
+INSTRUCCIONES:
+- Responde SIEMPRE en español con emojis 🌱
+- Sé creativo y varía tus respuestas  
+- Incluye beneficios nutricionales específicos
+- Menciona precios cuando sea relevante
+- Máximo 120 palabras por respuesta
+- Usa un tono amigable y experto
 `;
 
 // ✅ RUTA PRINCIPAL
@@ -127,8 +138,21 @@ async function consultaHuggingFace(pregunta) {
     throw new Error('Token de Hugging Face no configurado');
   }
 
-  // Crear prompt con contexto ecológico
-  const prompt = `${CONTEXTO_ECOLOGICO}\n\nUsuario: ${pregunta}\nEcoIA:`;
+  // Crear prompt dinámico y mejorado
+  const timestamp = new Date().getTime();
+  const variaciones = [
+    "Como experto en sostenibilidad de EcoMarket, te puedo ayudar:",
+    "¡Hola! Soy EcoIA, tu guía en productos ecológicos:",
+    "Como especialista en alimentación consciente:",
+    "Te ayudo a elegir lo mejor para ti y el planeta:"
+  ];
+  const variacion = variaciones[timestamp % variaciones.length];
+  
+  const prompt = `${CONTEXTO_ECOLOGICO}
+
+Conversación #${timestamp % 1000}
+Usuario pregunta: "${pregunta}"
+${variacion}`;
 
   try {
     // Timeout controller para evitar cuelgues en Render
@@ -145,11 +169,16 @@ async function consultaHuggingFace(pregunta) {
       body: JSON.stringify({
         inputs: prompt,
         parameters: {
-          max_length: 150,
-          temperature: 0.7,
+          max_length: 200,
+          min_length: 50,
+          temperature: 0.9,
+          top_p: 0.95,
+          top_k: 50,
           do_sample: true,
           pad_token_id: 50256,
-          return_full_text: false
+          return_full_text: false,
+          repetition_penalty: 1.2,
+          length_penalty: 1.0
         },
         options: {
           wait_for_model: true,
