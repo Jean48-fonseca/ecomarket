@@ -16,7 +16,7 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: HUGGINGFACE_TOKEN
+      - key: DEEPSEEK_API_KEY
         sync: false  # ⚠️ CONFIGURAR EN RENDER DASHBOARD
       - key: MAX_REQUEST_SIZE
         value: 10mb

@@ -7,9 +7,10 @@ const aplicacion = express();
 const puerto = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
-// ✅ CONFIGURACIÓN HUGGING FACE
-const HUGGINGFACE_TOKEN = process.env.HUGGINGFACE_TOKEN;
-const MODEL_URL = 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium';
+// ✅ CONFIGURACIÓN DEEPSEEK API
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
+const DEEPSEEK_MODEL = 'deepseek-chat';
 
 // ✅ MIDDLEWARE OPTIMIZADO PARA RENDER
 aplicacion.use(express.json({ limit: '10mb' }));
@@ -81,9 +82,9 @@ aplicacion.get('/health', (req, res) => {
       used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
       total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB'
     },
-    huggingface: {
-      model: 'microsoft/DialoGPT-medium',
-      token_configured: !!HUGGINGFACE_TOKEN && HUGGINGFACE_TOKEN !== 'hf_your_token_here'
+    deepseek: {
+      model: 'deepseek-chat',
+      api_key_configured: !!DEEPSEEK_API_KEY && DEEPSEEK_API_KEY.length > 0
     }
   };
   
@@ -93,7 +94,7 @@ aplicacion.get('/health', (req, res) => {
 
 // ✅ ENDPOINT DE READY CHECK (para Render)
 aplicacion.get('/ready', (req, res) => {
-  const isReady = HUGGINGFACE_TOKEN && HUGGINGFACE_TOKEN !== 'hf_your_token_here';
+  const isReady = DEEPSEEK_API_KEY && DEEPSEEK_API_KEY.length > 0;
   
   if (isReady) {
     res.status(200).json({ 
@@ -103,7 +104,7 @@ aplicacion.get('/ready', (req, res) => {
   } else {
     res.status(503).json({ 
       status: 'NOT_READY', 
-      message: 'Token de Hugging Face no configurado' 
+      message: 'API Key de DeepSeek no configurado' 
     });
   }
 });
@@ -146,86 +147,90 @@ aplicacion.post('/ecoia', async (req, res) => {
   }
 
   try {
-    // 🧠 USAR PRIMERO NUESTRA BASE DE CONOCIMIENTO INTELIGENTE
-    const respuestaInteligente = generarRespuestaFallback(pregunta);
+    // 🚀 INTENTAR PRIMERO CON DEEPSEEK API
+    let respuesta;
+    let fuente = 'deepseek';
+    
+    try {
+      respuesta = await consultaDeepSeek(pregunta);
+      console.log('✅ DeepSeek respondió exitosamente');
+    } catch (deepseekError) {
+      console.log('⚠️ DeepSeek falló, usando base de conocimiento local:', deepseekError.message);
+      respuesta = generarRespuestaFallback(pregunta);
+      fuente = 'ecoia_chef_local';
+    }
     
     // Detectar si la respuesta incluye productos para el carrito
-    const productosParaCarrito = extraerProductosCarrito(respuestaInteligente);
+    const productosParaCarrito = extraerProductosCarrito(respuesta);
     
-    console.log('✅ EcoIA Chef respondió:', respuestaInteligente.substring(0, 100) + '...');
+    console.log('✅ EcoIA respondió (fuente: ' + fuente + '):', respuesta.substring(0, 100) + '...');
     
     // Respuesta completa con productos para carrito
     const respuestaCompleta = {
-      respuesta: respuestaInteligente,
+      respuesta: respuesta,
       productos_carrito: productosParaCarrito,
       tiene_receta: productosParaCarrito.length > 0,
-      fuente: 'ecoia_chef'
+      fuente: fuente,
+      timestamp: new Date().toISOString()
     };
     
     res.json(respuestaCompleta);
     
   } catch (error) {
-    console.error('❌ Error en EcoIA:', error.message);
+    console.error('❌ Error total en EcoIA:', error.message);
     
-    // Si falla todo, respuesta básica
-    const respuestaBasica = '🌱 ¡Hola! Soy EcoIA. Pregúntame sobre recetas como sushi, ceviche, pasta, curry, tacos o ensaladas. ¡Te ayudo con productos ecológicos!';
-    res.json({ respuesta: respuestaBasica, productos_carrito: [], tiene_receta: false });
+    // Si falla todo, respuesta básica de emergencia
+    const respuestaEmergencia = '🌱 ¡Hola! Soy EcoIA. Pregúntame sobre recetas como sushi, ceviche, pasta, curry, tacos o ensaladas. ¡Te ayudo con productos ecológicos!';
+    res.json({ respuesta: respuestaEmergencia, productos_carrito: [], tiene_receta: false, fuente: 'emergency' });
   }
 });
 
 // ✅ FUNCIÓN PARA CONSULTAR HUGGING FACE
-async function consultaHuggingFace(pregunta) {
-  // Verificar token
-  if (!HUGGINGFACE_TOKEN || HUGGINGFACE_TOKEN === 'hf_your_token_here') {
-    throw new Error('Token de Hugging Face no configurado');
+// ✅ FUNCIÓN PARA CONSULTAR DEEPSEEK API
+async function consultaDeepSeek(pregunta) {
+  // Verificar API key
+  if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY.length === 0) {
+    throw new Error('API Key de DeepSeek no configurado');
   }
-
-  // Crear prompt dinámico y mejorado
-  const timestamp = new Date().getTime();
-  const variaciones = [
-    "Como experto en sostenibilidad de EcoMarket, te puedo ayudar:",
-    "¡Hola! Soy EcoIA, tu guía en productos ecológicos:",
-    "Como especialista en alimentación consciente:",
-    "Te ayudo a elegir lo mejor para ti y el planeta:"
-  ];
-  const variacion = variaciones[timestamp % variaciones.length];
-  
-  const prompt = `${CONTEXTO_ECOLOGICO}
-
-Conversación #${timestamp % 1000}
-Usuario pregunta: "${pregunta}"
-${variacion}`;
 
   try {
     // Timeout controller para evitar cuelgues en Render
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 segundos
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos
 
-    const response = await fetch(MODEL_URL, {
+    const response = await fetch(DEEPSEEK_API_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${HUGGINGFACE_TOKEN}`,
+        "Authorization": `Bearer ${DEEPSEEK_API_KEY}`,
         "Content-Type": "application/json",
-        "User-Agent": "EcoIA-Render/1.0"
+        "User-Agent": "EcoIA-DeepSeek/1.0"
       },
       body: JSON.stringify({
-        inputs: prompt,
-        parameters: {
-          max_length: 200,
-          min_length: 50,
-          temperature: 0.9,
-          top_p: 0.95,
-          top_k: 50,
-          do_sample: true,
-          pad_token_id: 50256,
-          return_full_text: false,
-          repetition_penalty: 1.2,
-          length_penalty: 1.0
-        },
-        options: {
-          wait_for_model: true,
-          use_cache: false
-        }
+        model: DEEPSEEK_MODEL,
+        messages: [
+          {
+            role: "system",
+            content: `${CONTEXTO_ECOLOGICO}
+
+Instrucciones adicionales:
+- Responde SIEMPRE en español
+- Incluye emojis para hacer más atractiva la respuesta
+- Si das una receta, incluye al final: [AGREGAR AL CARRITO: producto1, producto2, producto3]
+- Usa nombres exactos de productos de EcoMarket
+- Sé creativo y variado en tus respuestas
+- Máximo 250 palabras`
+          },
+          {
+            role: "user", 
+            content: pregunta
+          }
+        ],
+        temperature: 0.8,
+        max_tokens: 400,
+        top_p: 0.9,
+        frequency_penalty: 0.1,
+        presence_penalty: 0.1,
+        stream: false
       }),
       signal: controller.signal
     });
@@ -234,40 +239,34 @@ ${variacion}`;
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Error HTTP de Hugging Face:', response.status, errorData);
+      console.error('Error HTTP de DeepSeek:', response.status, errorData);
       
-      // Manejo específico de errores comunes en Render
-      if (response.status === 503) {
-        throw new Error('Modelo cargándose, intenta en unos segundos');
-      } else if (response.status === 401) {
-        throw new Error('Token de Hugging Face inválido');
+      // Manejo específico de errores comunes
+      if (response.status === 401) {
+        throw new Error('API Key de DeepSeek inválido');
       } else if (response.status === 429) {
         throw new Error('Límite de solicitudes alcanzado');
+      } else if (response.status === 500) {
+        throw new Error('Error interno del servidor DeepSeek');
       }
       
       throw new Error(`HTTP ${response.status}: ${errorData}`);
     }
 
     const datos = await response.json();
-    console.log('🔄 Respuesta cruda de HF:', JSON.stringify(datos).substring(0, 200) + '...');
+    console.log('🔄 Respuesta cruda de DeepSeek:', JSON.stringify(datos).substring(0, 200) + '...');
 
-    // Procesar respuesta
-    let textoGenerado = '';
-    
-    if (Array.isArray(datos) && datos[0]?.generated_text) {
-      textoGenerado = datos[0].generated_text;
-    } else if (datos.generated_text) {
-      textoGenerado = datos.generated_text;
+    // Procesar respuesta de DeepSeek
+    if (datos.choices && datos.choices[0] && datos.choices[0].message) {
+      const respuesta = datos.choices[0].message.content.trim();
+      console.log('✅ DeepSeek respondió:', respuesta.substring(0, 100) + '...');
+      return respuesta;
     } else {
-      throw new Error('Formato de respuesta inesperado');
+      throw new Error('Formato de respuesta inesperado de DeepSeek');
     }
 
-    // Limpiar respuesta (remover el prompt original)
-    const respuestaLimpia = limpiarRespuestaIA(textoGenerado, pregunta);
-    return respuestaLimpia;
-
   } catch (error) {
-    console.error('Error en consultaHuggingFace:', error);
+    console.error('Error en consultaDeepSeek:', error);
     throw error;
   }
 }
@@ -540,11 +539,12 @@ aplicacion.listen(puerto, () => {
   console.log('🚀 ========================================');
   
   // Verificar configuración
-  if (HUGGINGFACE_TOKEN === 'hf_your_token_here') {
-    console.log('⚠️  ADVERTENCIA: Configura tu token de Hugging Face');
-    console.log('📝 Crea un archivo .env con: HUGGINGFACE_TOKEN=tu_token');
+  if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY.length === 0) {
+    console.log('⚠️  ADVERTENCIA: Configura tu API Key de DeepSeek');
+    console.log('📝 Crea un archivo .env con: DEEPSEEK_API_KEY=tu_api_key');
+    console.log('🌐 Obtén tu key en: https://platform.deepseek.com/api_keys');
   } else {
-    console.log('✅ Token de Hugging Face configurado');
+    console.log('✅ API Key de DeepSeek configurado');
   }
 });
 
