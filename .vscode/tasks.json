@@ -2,18 +2,38 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Abrir principal (Edge sin depurar)",
+			"label": "🚀 Iniciar Servidor EcoMarket",
+			"type": "shell",
+			"command": "python",
+			"args": ["-m", "http.server", "8000"],
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "new",
+				"showReuseMessage": false,
+				"clear": true
+			},
+			"isBackground": true,
+			"problemMatcher": [],
+			"runOptions": {
+				"instanceLimit": 1
+			},
+			"detail": "Inicia un servidor HTTP local en puerto 8000"
+		},
+		{
+			"label": "🌱 Abrir EcoMarket Principal",
 			"type": "shell",
 			"command": "cmd",
 			"args": [
 				"/c",
 				"start",
 				"msedge",
-				"\"${workspaceFolder}\\Untitled-1.html\""
+				"\"http://localhost:8000/Untitled-1.html\""
 			],
 			"isBackground": false,
 			"problemMatcher": [],
-			"group": "none"
+			"group": "none",
+			"detail": "Abre EcoMarket en Edge"
 		},
 		{
 			"label": "Abrir login (Edge sin depurar)",

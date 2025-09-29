@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "EcoMarket - Chrome",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:8000/Untitled-1.html",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "name": "EcoMarket Funcional - Chrome",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:8000/FUNCIONAL.html",
+            "webRoot": "${workspaceFolder}"
+        }
+    ]
+}

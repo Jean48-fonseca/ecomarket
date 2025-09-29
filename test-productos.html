@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoMarket - Test Productos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f8f9fa; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .card img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; }
+        .card h3 { margin: 15px 0 5px 0; color: #2d3436; }
+        .card .price { font-size: 18px; font-weight: bold; color: #4ec8c2; }
+        .card .tags { margin-top: 10px; }
+        .tag { display: inline-block; background: #e8f4f3; color: #276e6a; padding: 4px 8px; border-radius: 12px; font-size: 12px; margin-right: 5px; }
+        .debug { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌱 EcoMarket - Test de Productos</h1>
+        <div id="debug" class="debug">
+            <strong>Estado:</strong> <span id="status">Iniciando...</span><br>
+            <strong>Productos encontrados:</strong> <span id="productCount">0</span><br>
+            <strong>Errores:</strong> <span id="errors">Ninguno</span>
+        </div>
+    </div>
+
+    <div id="grid" class="grid"></div>
+
+    <script src="db.js"></script>
+    <script>
+        const statusEl = document.getElementById('status');
+        const productCountEl = document.getElementById('productCount');
+        const errorsEl = document.getElementById('errors');
+        const gridEl = document.getElementById('grid');
+
+        // Datos de productos simplificados para testing
+        const testProducts = [
+            {id:'t1', name:'Lechuga', category:'verduras', price:1.6, unit:'pieza', img:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400', tags:['fresco','verde']},
+            {id:'t2', name:'Tomate', category:'verduras', price:1.9, unit:'kg', img:'https://images.unsplash.com/photo-1546470427-e26264be0b0d?w=400', tags:['rojo','jugoso']},
+            {id:'t3', name:'Manzana', category:'frutas', price:2.3, unit:'kg', img:'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400', tags:['dulce','snack']}
+        ];
+
+        function renderTestProducts(productsList) {
+            statusEl.textContent = 'Renderizando productos...';
+            gridEl.innerHTML = '';
+            
+            try {
+                productsList.forEach(product => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <img src="${product.img}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x200?text=${encodeURIComponent(product.name)}'">
+                        <h3>${product.name}</h3>
+                        <div class="price">S/ ${product.price} / ${product.unit}</div>
+                        <div class="tags">
+                            ${product.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                    `;
+                    gridEl.appendChild(card);
+                });
+                
+                statusEl.textContent = 'Productos renderizados exitosamente ✅';
+                productCountEl.textContent = productsList.length;
+                
+            } catch (error) {
+                statusEl.textContent = 'Error al renderizar ❌';
+                errorsEl.textContent = error.message;
+                console.error('Error:', error);
+            }
+        }
+
+        // Test 1: Productos de prueba
+        setTimeout(() => {
+            statusEl.textContent = 'Probando con productos de prueba...';
+            renderTestProducts(testProducts);
+        }, 1000);
+
+        // Test 2: Productos reales (si existen)
+        setTimeout(() => {
+            if (typeof products !== 'undefined' && products.length > 0) {
+                statusEl.textContent = 'Probando con productos reales...';
+                renderTestProducts(products.slice(0, 6)); // Solo los primeros 6
+            }
+        }, 3000);
+
+    </script>
+</body>
+</html>

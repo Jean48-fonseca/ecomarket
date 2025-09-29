@@ -1,18 +1,3 @@
-  <script>
-    // Insertar usuarios de ejemplo automáticamente si la base está vacía
-    (async function autoSeedUsers(){
-      if(!window.EcoDB) return;
-      const users = await EcoDB.listUsers().catch(()=>[]);
-      if(!users || users.length === 0){
-        await EcoDB.seedSample();
-        console.log('Usuarios de ejemplo creados:');
-        console.log('Cliente: usuario="cliente1" contraseña="passCliente1"');
-        console.log('Cliente: usuario="cliente2" contraseña="passCliente2"');
-        console.log('Empleado: usuario="trabajador1" contraseña="trabPass1" código="EMP-1001"');
-        console.log('Empleado: usuario="trabajador2" contraseña="trabPass2" código="EMP-1002"');
-      }
-    })();
-  </script>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1770,6 +1755,27 @@
       if(changed){
         setImgOverrides(cur);
         console.log('Overrides de imagen actualizados (se agregaron claves faltantes).');
+      }
+    })();
+
+    // ✅ INICIALIZACIÓN CORRECTA - AQUÍ AL FINAL
+    console.log('🚀 Inicializando EcoMarket...');
+    console.log('📦 Total de productos:', products.length);
+    
+    // Renderizar productos inicialmente
+    render(products);
+    
+    // Insertar usuarios de ejemplo automáticamente si la base está vacía
+    (async function autoSeedUsers(){
+      if(!window.EcoDB) return;
+      const users = await EcoDB.listUsers().catch(()=>[]);
+      if(!users || users.length === 0){
+        await EcoDB.seedSample();
+        console.log('✅ Usuarios de ejemplo creados:');
+        console.log('Cliente: usuario="cliente1" contraseña="passCliente1"');
+        console.log('Cliente: usuario="cliente2" contraseña="passCliente2"');  
+        console.log('Empleado: usuario="trabajador1" contraseña="trabPass1" código="EMP-1001"');
+        console.log('Empleado: usuario="trabajador2" contraseña="trabPass2" código="EMP-1002"');
       }
     })();
 

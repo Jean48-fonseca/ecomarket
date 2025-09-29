@@ -1,46 +1,33 @@
 {
-    // Usa IntelliSense para conocer los atributos posibles.
-    // Más info: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-                            {
-                                    "name": "Abrir principal (Edge)",
-                                    "type": "msedge",
-                    "request": "launch",
-                    "file": "${workspaceFolder}\\Untitled-1.html",
-                                    "webRoot": "${workspaceFolder}",
-                                    "userDataDir": true,
-                                "runtimeArgs": [
-                                    "--allow-file-access-from-files",
-                                    "--disable-extensions-file-access-check"
-                                ],
-                                    "trace": true,
-                    "presentation": { "reveal": "always", "hidden": false }
-                },
-                {
-                    "name": "Abrir login (Edge)",
-                                    "type": "msedge",
-                    "request": "launch",
-                    "file": "${workspaceFolder}\\login.html",
-                                    "webRoot": "${workspaceFolder}",
-                                    "userDataDir": true,
-                                "runtimeArgs": [
-                                    "--allow-file-access-from-files",
-                                    "--disable-extensions-file-access-check"
-                                ],
-                                    "trace": true,
-                    "presentation": { "reveal": "always", "hidden": false }
-                },
-                {
-                    "name": "Abrir principal (Edge, http)",
-                    "type": "msedge",
-                    "request": "launch",
-                    "url": "http://localhost:5500/Untitled-1.html",
-                    "webRoot": "${workspaceFolder}",
-                    "preLaunchTask": "serve-5500",
-                    "userDataDir": true,
-                    "trace": true,
-                    "presentation": { "reveal": "always", "hidden": false }
-                }
+        {
+            "name": "EcoMarket Principal (Edge)",
+            "type": "msedge",
+            "request": "launch",
+            "file": "${workspaceFolder}\\Untitled-1.html",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "name": "EcoMarket Login (Edge)",
+            "type": "msedge",
+            "request": "launch",
+            "file": "${workspaceFolder}\\login.html",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "name": "EcoMarket Servidor Local",
+            "type": "msedge",
+            "request": "launch",
+            "url": "http://localhost:8000/Untitled-1.html",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "name": "EcoMarket Version Funcional",
+            "type": "msedge",
+            "request": "launch",
+            "url": "http://localhost:8000/FUNCIONAL.html",
+            "webRoot": "${workspaceFolder}"
+        }
     ]
 }
