@@ -147,15 +147,22 @@ aplicacion.post('/ecoia', async (req, res) => {
   }
 
   try {
-    // 🚀 INTENTAR PRIMERO CON DEEPSEEK API
+    // 🚀 INTENTAR PRIMERO CON DEEPSEEK API (si está configurado)
     let respuesta;
     let fuente = 'deepseek';
     
-    try {
-      respuesta = await consultaDeepSeek(pregunta);
-      console.log('✅ DeepSeek respondió exitosamente');
-    } catch (deepseekError) {
-      console.log('⚠️ DeepSeek falló, usando base de conocimiento local:', deepseekError.message);
+    // Verificar si DeepSeek está disponible
+    if (DEEPSEEK_API_KEY && DEEPSEEK_API_KEY.length > 0 && !DEEPSEEK_API_KEY.includes('tu_api_key')) {
+      try {
+        respuesta = await consultaDeepSeek(pregunta);
+        console.log('✅ DeepSeek respondió exitosamente');
+      } catch (deepseekError) {
+        console.log('⚠️ DeepSeek falló, usando base local:', deepseekError.message);
+        respuesta = generarRespuestaFallback(pregunta);
+        fuente = 'ecoia_chef_local';
+      }
+    } else {
+      console.log('🔄 DeepSeek no configurado, usando base de conocimiento local');
       respuesta = generarRespuestaFallback(pregunta);
       fuente = 'ecoia_chef_local';
     }
