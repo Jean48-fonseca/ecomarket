@@ -1,17 +1,36 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+
+// ✅ CONFIGURACIÓN EXPRESS
 const aplicacion = express();
 const puerto = process.env.PORT || 3000;
+const isProduction = process.env.NODE_ENV === 'production';
 
 // ✅ CONFIGURACIÓN HUGGING FACE
-const HUGGINGFACE_TOKEN = process.env.HUGGINGFACE_TOKEN || 'hf_your_token_here';
+const HUGGINGFACE_TOKEN = process.env.HUGGINGFACE_TOKEN;
 const MODEL_URL = 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium';
 
-// ✅ MIDDLEWARE
-aplicacion.use(express.json());
-aplicacion.use(cors()); // Permitir CORS para desarrollo
-aplicacion.use(express.static(__dirname));
+// ✅ MIDDLEWARE OPTIMIZADO PARA RENDER
+aplicacion.use(express.json({ limit: '10mb' }));
+
+// CORS más específico para producción
+const corsOptions = {
+  origin: isProduction 
+    ? ['https://your-render-app.onrender.com', 'https://ecomarket.onrender.com'] 
+    : ['http://localhost:8000', 'http://127.0.0.1:8000'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+aplicacion.use(cors(corsOptions));
+
+// Servir archivos estáticos
+aplicacion.use(express.static(path.join(__dirname), {
+  maxAge: isProduction ? '1d' : '0'
+}));
+
+// Trust proxy para Render
+aplicacion.set('trust proxy', 1);
 
 // ✅ CONTEXTO ECOLÓGICO PARA ECOIA
 const CONTEXTO_ECOLOGICO = `
@@ -33,14 +52,44 @@ aplicacion.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'Untitled-1.html'));
 });
 
-// ✅ RUTA DE SALUD DEL SERVIDOR
+// ✅ RUTA DE SALUD DEL SERVIDOR (RENDER HEALTH CHECK)
 aplicacion.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  const healthData = {
+    status: 'OK',
     timestamp: new Date().toISOString(),
     service: 'EcoIA Backend',
-    model: 'Hugging Face DialoGPT'
-  });
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    uptime: process.uptime(),
+    memory: {
+      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
+      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB'
+    },
+    huggingface: {
+      model: 'microsoft/DialoGPT-medium',
+      token_configured: !!HUGGINGFACE_TOKEN && HUGGINGFACE_TOKEN !== 'hf_your_token_here'
+    }
+  };
+  
+  // Status code 200 para que Render sepa que está saludable
+  res.status(200).json(healthData);
+});
+
+// ✅ ENDPOINT DE READY CHECK (para Render)
+aplicacion.get('/ready', (req, res) => {
+  const isReady = HUGGINGFACE_TOKEN && HUGGINGFACE_TOKEN !== 'hf_your_token_here';
+  
+  if (isReady) {
+    res.status(200).json({ 
+      status: 'READY', 
+      message: 'EcoIA está listo para atender consultas' 
+    });
+  } else {
+    res.status(503).json({ 
+      status: 'NOT_READY', 
+      message: 'Token de Hugging Face no configurado' 
+    });
+  }
 });
 
 // ✅ ENDPOINT PRINCIPAL DE ECOIA
@@ -82,31 +131,54 @@ async function consultaHuggingFace(pregunta) {
   const prompt = `${CONTEXTO_ECOLOGICO}\n\nUsuario: ${pregunta}\nEcoIA:`;
 
   try {
+    // Timeout controller para evitar cuelgues en Render
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 segundos
+
     const response = await fetch(MODEL_URL, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${HUGGINGFACE_TOKEN}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "User-Agent": "EcoIA-Render/1.0"
       },
       body: JSON.stringify({
         inputs: prompt,
         parameters: {
-          max_length: 200,
+          max_length: 150,
           temperature: 0.7,
           do_sample: true,
-          pad_token_id: 50256
+          pad_token_id: 50256,
+          return_full_text: false
+        },
+        options: {
+          wait_for_model: true,
+          use_cache: false
         }
-      })
+      }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorData = await response.text();
       console.error('Error HTTP de Hugging Face:', response.status, errorData);
+      
+      // Manejo específico de errores comunes en Render
+      if (response.status === 503) {
+        throw new Error('Modelo cargándose, intenta en unos segundos');
+      } else if (response.status === 401) {
+        throw new Error('Token de Hugging Face inválido');
+      } else if (response.status === 429) {
+        throw new Error('Límite de solicitudes alcanzado');
+      }
+      
       throw new Error(`HTTP ${response.status}: ${errorData}`);
     }
 
     const datos = await response.json();
-    console.log('🔄 Respuesta cruda de HF:', datos);
+    console.log('🔄 Respuesta cruda de HF:', JSON.stringify(datos).substring(0, 200) + '...');
 
     // Procesar respuesta
     let textoGenerado = '';

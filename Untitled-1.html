@@ -2071,10 +2071,11 @@
       status.textContent = 'Pensando...';
 
       try {
-        // Determinar URL del backend
-        const backendURL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        // Determinar URL del backend (compatible con Render)
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const backendURL = isLocal 
           ? 'http://localhost:3000/ecoia'
-          : '/ecoia'; // Para producción
+          : `${window.location.origin}/ecoia`; // Para Render y otras plataformas
 
         console.log('🔗 Consultando EcoIA en:', backendURL);
 

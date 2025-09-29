@@ -1,0 +1,40 @@
+# 🚀 CONFIGURACIÓN RENDER PARA ECOIA + ECOMARKET
+services:
+  - type: web
+    name: ecomarket-backend
+    env: node
+    plan: free
+    region: oregon  # Cambia según tu región preferida
+    
+    # 📦 Comandos de build y start
+    buildCommand: npm install --production
+    startCommand: npm start
+    
+    # 🔧 Variables de entorno
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: HUGGINGFACE_TOKEN
+        sync: false  # ⚠️ CONFIGURAR EN RENDER DASHBOARD
+      - key: MAX_REQUEST_SIZE
+        value: 10mb
+      - key: TIMEOUT_SECONDS
+        value: 20
+      - key: TRUST_PROXY
+        value: "1"
+        
+    # 🩺 Configuración de salud
+    healthCheckPath: /health
+    
+    # 📊 Escalamiento
+    scaling:
+      minInstances: 1
+      maxInstances: 1
+      
+    # 🔒 Configuración adicional para producción
+    disk:
+      name: data
+      mountPath: /tmp
+      sizeGB: 1

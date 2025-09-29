@@ -2,32 +2,59 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "EcoMarket Principal (Edge)",
+            "name": "🚀 EcoIA Backend (Node.js)",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}\\app.js",
+            "envFile": "${workspaceFolder}\\.env",
+            "console": "integratedTerminal",
+            "restart": true,
+            "runtimeArgs": ["--inspect"],
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
+            "name": "🌐 EcoMarket Frontend (con Backend)",
+            "type": "msedge",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}",
+            "preLaunchTask": "Iniciar Backend EcoIA"
+        },
+        {
+            "name": "📄 EcoMarket Solo Frontend (Sin EcoIA)",
             "type": "msedge",
             "request": "launch",
             "file": "${workspaceFolder}\\Untitled-1.html",
+            "webRoot": "${workspaceFolder}",
+            "runtimeArgs": ["--disable-web-security", "--user-data-dir", "--allow-file-access-from-files"]
+        },
+        {
+            "name": "🌐 Abrir con Live Server",
+            "type": "msedge", 
+            "request": "launch",
+            "url": "http://127.0.0.1:5500/Untitled-1.html",
             "webRoot": "${workspaceFolder}"
         },
         {
-            "name": "EcoMarket Login (Edge)",
+            "name": "🔍 Debug EcoMarket Completo",
             "type": "msedge",
             "request": "launch",
-            "file": "${workspaceFolder}\\login.html",
-            "webRoot": "${workspaceFolder}"
-        },
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}",
+            "sourceMaps": true,
+            "trace": true
+        }
+    ],
+    "compounds": [
         {
-            "name": "EcoMarket Servidor Local",
-            "type": "msedge",
-            "request": "launch",
-            "url": "http://localhost:8000/Untitled-1.html",
-            "webRoot": "${workspaceFolder}"
-        },
-        {
-            "name": "EcoMarket Version Funcional",
-            "type": "msedge",
-            "request": "launch",
-            "url": "http://localhost:8000/FUNCIONAL.html",
-            "webRoot": "${workspaceFolder}"
+            "name": "🎯 EcoMarket + EcoIA (Todo junto)",
+            "configurations": [
+                "🚀 EcoIA Backend (Node.js)",
+                "🌐 EcoMarket Frontend (con Backend)"
+            ],
+            "stopAll": true
         }
     ]
 }
