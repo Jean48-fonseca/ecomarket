@@ -185,13 +185,16 @@ aplicacion.post('/ecoia', async (req, res) => {
   }
 });
 
-// ✅ FUNCIÓN PARA CONSULTAR HUGGING FACE
 // ✅ FUNCIÓN PARA CONSULTAR DEEPSEEK API
 async function consultaDeepSeek(pregunta) {
   // Verificar API key
   if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY.length === 0) {
+    console.error('❌ API Key de DeepSeek no configurado');
     throw new Error('API Key de DeepSeek no configurado');
   }
+
+  console.log('🔍 Consultando DeepSeek API...');
+  console.log('🔑 API Key presente:', DEEPSEEK_API_KEY ? 'SÍ (longitud: ' + DEEPSEEK_API_KEY.length + ')' : 'NO');
 
   try {
     // Timeout controller para evitar cuelgues en Render
@@ -594,3 +597,26 @@ function extraerProductosCarrito(respuesta) {
   
   return productos;
 }
+
+// ✅ INICIAR SERVIDOR
+aplicacion.listen(puerto, () => {
+  console.log('🚀 ========================================');
+  console.log('✅ ECOMARKET BACKEND INICIADO');
+  console.log('🤖 Sistema: EcoIA con DeepSeek API');
+  console.log(`📡 Servidor corriendo en puerto: ${puerto}`);
+  console.log(`🌐 URL local: http://localhost:${puerto}`);
+  console.log(`🧠 Punto final de EcoIA: http://localhost:${puerto}/ecoia`);
+  console.log(`❤️  Salud del servidor: http://localhost:${puerto}/health`);
+  console.log('🚀 ========================================');
+  
+  // Verificar configuración
+  if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY.length === 0) {
+    console.log('⚠️  ADVERTENCIA: Configura tu API Key de DeepSeek');
+    console.log('📝 Crea un archivo .env con: DEEPSEEK_API_KEY=tu_api_key');
+    console.log('🌐 Obtén tu key en: https://platform.deepseek.com/api_keys');
+  } else {
+    console.log('✅ API Key de DeepSeek configurado');
+  }
+  
+  console.log('🎉 Tu servicio está activo 🚀');
+});
