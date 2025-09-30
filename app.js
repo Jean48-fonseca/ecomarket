@@ -163,9 +163,25 @@ aplicacion.post('/ecoia', async (req, res) => {
   }
 
   try {
-    // 🧠 USAR SIEMPRE NUESTRA BASE DE CONOCIMIENTO (MÁS CONFIABLE)
-    console.log('🤖 Procesando pregunta con EcoIA Chef...');
-    const respuesta = generarRespuestaFallback(pregunta);
+    let respuesta;
+    let fuente = 'ecoia_chef_local';
+    
+    // 🚀 PRIORIDAD 1: Intentar DeepSeek API (IA Real)
+    if (DEEPSEEK_API_KEY && DEEPSEEK_API_KEY.length > 0) {
+      try {
+        console.log('🧠 Intentando DeepSeek API...');
+        respuesta = await consultaDeepSeek(pregunta);
+        fuente = 'deepseek_api';
+        console.log('✅ DeepSeek respondió exitosamente');
+      } catch (error) {
+        console.log('⚠️ DeepSeek falló, usando backup local:', error.message);
+        respuesta = generarRespuestaFallback(pregunta);
+      }
+    } else {
+      // 🛡️ FALLBACK: Base de conocimiento local
+      console.log('🤖 Usando EcoIA Chef local (sin API key)...');
+      respuesta = generarRespuestaFallback(pregunta);
+    }
     
     // Detectar si la respuesta incluye productos para el carrito
     const productosParaCarrito = extraerProductosCarrito(respuesta);
@@ -177,8 +193,9 @@ aplicacion.post('/ecoia', async (req, res) => {
       respuesta: respuesta,
       productos_carrito: productosParaCarrito,
       tiene_receta: productosParaCarrito.length > 0,
-      fuente: 'ecoia_chef_local',
-      timestamp: new Date().toISOString()
+      fuente: fuente,
+      timestamp: new Date().toISOString(),
+      ecoia_version: fuente === 'deepseek_api' ? 'DeepSeek IA Real' : 'Local v3.0'
     };
     
     res.json(respuestaCompleta);
@@ -198,7 +215,7 @@ aplicacion.post('/ecoia', async (req, res) => {
   }
 });
 
-// ✅ FUNCIÓN PARA CONSULTAR DEEPSEEK API
+// ✅ FUNCIÓN MEJORADA PARA CONSULTAR DEEPSEEK API
 async function consultaDeepSeek(pregunta) {
   // Verificar API key
   if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY.length === 0) {
@@ -206,7 +223,7 @@ async function consultaDeepSeek(pregunta) {
     throw new Error('API Key de DeepSeek no configurado');
   }
 
-  console.log('🔍 Consultando DeepSeek API...');
+  console.log('🔍 Consultando DeepSeek API con contexto mejorado...');
   console.log('🔑 API Key presente:', DEEPSEEK_API_KEY ? 'SÍ (longitud: ' + DEEPSEEK_API_KEY.length + ')' : 'NO');
 
   try {
@@ -226,15 +243,28 @@ async function consultaDeepSeek(pregunta) {
         messages: [
           {
             role: "system",
-            content: `${CONTEXTO_ECOLOGICO}
+            content: `Eres EcoIA, el asistente más inteligente y amable de EcoMarket, una tienda online ecológica revolucionaria.
 
-Instrucciones adicionales:
-- Responde SIEMPRE en español
-- Incluye emojis para hacer más atractiva la respuesta
-- Si das una receta, incluye al final: [AGREGAR AL CARRITO: producto1, producto2, producto3]
-- Usa nombres exactos de productos de EcoMarket
-- Sé creativo y variado en tus respuestas
-- Máximo 250 palabras`
+🌱 **TU PERSONALIDAD:**
+- Súper amigable, como DeepSeek pero especializado en ecología
+- Conversacional y natural (nunca robótico)
+- Experto chef ecológico con conocimiento infinito
+- Siempre positivo y motivador hacia la vida green
+
+🛒 **PRODUCTOS ECOMARKET (USA ESTOS PRECIOS):**
+🥬 Verduras: lechuga-romana(S/1.60), tomate(S/1.90), zanahoria(S/1.50), pepino(S/1.40), cebolla(S/1.30)
+🍎 Frutas: manzana(S/2.10), plátano(S/1.80), naranja(S/2.00), fresa(S/2.80), uva(S/2.50)
+🫘 Legumbres: lentejas(S/2.40), garbanzos(S/2.60), frijoles-negros(S/2.40), quinoa(S/4.20)
+🌾 Cereales: avena(S/2.60), arroz-integral(S/2.80)
+🥛 Lácteos: leche(S/3.20), queso(S/4.50), yogurt(S/2.90)
+
+🎯 **INSTRUCCIONES ESPECIALES:**
+- Responde SIEMPRE en español con emojis
+- Para recetas, incluye: [AGREGAR AL CARRITO: producto1, producto2, etc]
+- Puedes hablar de CUALQUIER tema (no solo recetas)
+- Sé creativo, divertido y muy variado
+- Máximo 300 palabras por respuesta
+- Si no sabes algo, inventa creativamente basado en tu conocimiento ecológico`
           },
           {
             role: "user", 
