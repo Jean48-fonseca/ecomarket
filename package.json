@@ -1,7 +1,7 @@
 {
   "name": "ecomarket-backend",
-  "version": "2.0.0",
-  "description": "Backend completo para EcoMarket con EcoIA y Hugging Face",
+  "version": "3.0.0",
+  "description": "Backend inteligente EcoMarket con EcoIA Super Conversacional + DeepSeek",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",

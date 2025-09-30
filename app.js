@@ -106,6 +106,25 @@ aplicacion.get('/ready', (req, res) => {
   });
 });
 
+// ✅ NUEVO ENDPOINT DE DIAGNÓSTICO Y VERSIÓN
+aplicacion.get('/version', (req, res) => {
+  res.status(200).json({
+    app: 'EcoMarket Backend',
+    version: '3.0.0',
+    fecha_deploy: new Date().toISOString(),
+    ecoia_version: 'Super Conversacional v3.0',
+    features: [
+      '🧠 Respuestas contextuales por hora del día',
+      '🎭 Múltiples variaciones por receta',
+      '🎲 Aleatoriedad extrema anti-repetición',
+      '🌱 Base de conocimiento local expandida',
+      '💬 Conversación natural mejorada'
+    ],
+    timestamp: Date.now(),
+    status: 'DEPLOYED_AND_READY'
+  });
+});
+
 // ✅ ENDPOINT PARA AGREGAR PRODUCTOS AL CARRITO (desde EcoIA)
 aplicacion.post('/ecoia/agregar-carrito', async (req, res) => {
   try {
@@ -360,23 +379,90 @@ function generarRespuestaFallback(pregunta) {
 
 // 🍣 FUNCIONES DE RECETAS ESPECÍFICAS
 function generarRecetaSushi() {
-  return `🍣 **Sushi Vegetariano Ecológico**
+  const variaciones = [
+    `🍣 **Sushi Vegetariano Ecológico - Versión Clásica**
 
 **Ingredientes de EcoMarket:**
 • Arroz integral - S/ 2.80/kg 🍚
 • Pepinos frescos - S/ 1.40/kg 🥒  
 • Zanahorias - S/ 1.50/kg 🥕
 
-**Preparación:**
-1. Cocina 1 taza de arroz con vinagre
-2. Corta pepinos y zanahorias en bastones
-3. Forma rollos con nori
-4. ¡Disfruta tu sushi sostenible!
+**Preparación paso a paso:**
+1. Cocina 1 taza de arroz con vinagre de arroz
+2. Deja enfriar el arroz hasta temperatura ambiente
+3. Corta pepinos y zanahorias en bastones finos
+4. Extiende arroz sobre nori, agrega vegetales
+5. Enrolla con bambú y corta en porciones
+6. ¡Disfruta tu sushi sostenible!
 
-💰 **Costo:** S/ 6.00 aprox
-🌱 **Tip:** Usa palillos reutilizables
+💰 **Costo:** S/ 5.70 aprox
+🌱 **Tip:** Usa palillos reutilizables de bambú
 
-[AGREGAR AL CARRITO: arroz-integral, pepino, zanahoria]`;
+[AGREGAR AL CARRITO: arroz-integral, pepino, zanahoria]`,
+
+    `🍣 **Sushi Roll Arcoíris - Explosión de colores**
+
+**Ingredientes de EcoMarket:**
+• Arroz integral - S/ 2.80/kg 🍚
+• Tomates cherry - S/ 1.90/kg 🍅
+• Pepinos crujientes - S/ 1.40/kg 🥒
+• Zanahorias dulces - S/ 1.50/kg 🥕
+
+**Preparación creativa:**
+1. Prepara arroz sushi perfecto (secreto: un poquito de azúcar)
+2. Corta todos los vegetales en tiras coloridas
+3. Arma rolls con técnica California
+4. ¡Cada rollo es una obra de arte comestible!
+
+💰 **Costo:** S/ 6.60 aprox  
+🌱 **Secret tip:** Humedece las manos para trabajar el arroz
+
+[AGREGAR AL CARRITO: arroz-integral, tomate, pepino, zanahoria]`,
+
+    `🍣 **Sushi Fusion Peruano-Japonés**
+
+**Ingredientes de EcoMarket:**
+• Arroz integral - S/ 2.80/kg 🍚
+• Palta peruana - extra cremosa
+• Pepinos del valle - S/ 1.40/kg 🥒
+
+**Preparación fusion:**
+1. Arroz al estilo nikkei (con un toque de limón)
+2. Palta en láminas súper finas  
+3. Pepino en juliana perfecta
+4. Roll estilo maki con alma peruana
+5. ¡East meets West en tu cocina!
+
+💰 **Costo:** S/ 5.20 aprox
+🌱 **Lima tip:** El limón peruano le da un twist único
+
+[AGREGAR AL CARRITO: arroz-integral, pepino]`,
+
+    `🍣 **Sushi Express - Técnica ninja de 15 minutos**
+
+**Ingredientes de EcoMarket:**
+• Arroz integral precocido - S/ 2.80/kg 🍚
+• Zanahorias baby - S/ 1.50/kg 🥕
+• Pepinos mini - S/ 1.40/kg 🥒
+
+**Preparación express:**
+1. ⚡ Truco ninja: arroz en microondas 3 min
+2. 🥒 Vegetales en tiras mientras enfría
+3. 🌀 Enrollado rápido con film transparente  
+4. 🔪 Corte perfecto con cuchillo húmedo
+5. ¡Sushi en tiempo récord!
+
+💰 **Costo:** S/ 5.70 aprox
+🌱 **Ninja tip:** La velocidad está en la preparación
+
+[AGREGAR AL CARRITO: arroz-integral, zanahoria, pepino]`
+  ];
+  
+  // 🎲 Selección súper aleatoria con timestamp
+  const timestamp = Date.now();
+  const indice = (timestamp + Math.floor(Math.random() * 100)) % variaciones.length;
+  
+  return variaciones[indice];
 }
 
 function generarRecetaCeviche() {
@@ -711,51 +797,206 @@ function responderSobreProductos(pregunta) {
 }
 
 function responderConversacionGeneral(pregunta) {
-  const respuestasVariadas = [
-    `🌱 **¡Hola! Soy EcoIA, tu chef ecológico personal**
+  // 🎭 ANÁLISIS DE CONTEXTO PARA VARIEDAD EXTREMA
+  const hora = new Date().getHours();
+  const esManana = hora >= 6 && hora < 12;
+  const esTarde = hora >= 12 && hora < 18;
+  const esNoche = hora >= 18 || hora < 6;
+  
+  const preguntaLower = pregunta.toLowerCase();
+  const tieneSaludo = preguntaLower.includes('hola') || preguntaLower.includes('buenos') || preguntaLower.includes('buenas');
+  const preguntaCorta = pregunta.length < 20;
+  
+  let respuestasVariadas = [];
+  
+  // � RESPUESTAS DE MAÑANA
+  if (esManana) {
+    respuestasVariadas = [
+      `☀️ **¡Buenos días! Soy EcoIA, tu chef matutino**
 
-💚 **Puedo ayudarte con:**
-• Recetas saludables y deliciosas
-• Consejos de alimentación ecológica  
-• Información nutricional
-• Productos orgánicos EcoMarket
+🥣 **Para empezar el día con energía:**
+• Avena con frutas frescas de EcoMarket
+• Smoothie verde energizante  
+• Tostadas con palta orgánica
 
-¿En qué puedo ayudarte hoy? ¡Pregúntame lo que quieras! 😊`,
+¿Qué desayuno saludable te preparo? 🌱`,
 
-    `👨‍🍳 **¡Qué gusto saludarte!**
+      `🌄 **¡Qué hermosa mañana para comer sano!**
 
-🍽️ **Especialidades que domino:**
-• Cocina peruana veggie (ceviche, lomo saltado, causa)
-• Platos internacionales (sushi, pasta, curry, tacos)
-• Alimentación nutritiva y sostenible
+💪 **Ideas para tu desayuno perfecto:**
+• Bowl de quinoa con plátano y fresas
+• Yogurt con granola casera
+• Jugo verde detox
 
-¿Tienes hambre de algo específico? ¡Solo dímelo! 🤤`,
+¿Con qué quieres conquistar este día? ✨`,
 
-    `🌿 **¡EcoIA a tu servicio!**
+      `🐓 **¡Levántate con sabor ecológico!**
 
-✨ **Hoy puedes preguntarme sobre:**
-• "¿Cómo hacer sushi vegetariano?"
-• "¿Qué receta rica en proteínas me recomiendas?"
-• "¿Cuáles son los beneficios de los productos orgánicos?"
-• "¿Me ayudas con una dieta balanceada?"
+🍎 **Desayunos que te van a encantar:**
+• Manzanas al horno con canela
+• Batido de mango y jengibre
+• Tortilla de verduras fresh
 
-¡Soy tu asistente culinario 24/7! 🤖💚`,
+¿Qué te provoca para arrancar? �`
+    ];
+  }
+  
+  // 🌞 RESPUESTAS DE TARDE  
+  else if (esTarde) {
+    respuestasVariadas = [
+      `� **¡Buenas tardes, chef casero!**
 
-    `🍎 **¡Hola, amante de la vida saludable!**
+🍽️ **Especialidades de la tarde:**
+• Almuerzo peruano saludable (lomo saltado veggie)
+• Ensaladas coloridas y nutritivas
+• Sopas reconfortantes
 
-🎯 **Mi misión:** Ayudarte a comer rico, sano y sostenible
+¿Qué te apetece para el almuerzo? 😋`,
 
-🧠 **Qué puedo hacer:**
-• Crear recetas personalizadas
-• Explicar beneficios nutricionales
-• Recomendar productos EcoMarket
-• Darte tips de vida ecológica
+      `☀️ **¡Hora del almuerzo llegó!**
 
-¿Por dónde empezamos? 🚀`
+🥗 **Platos perfectos para la tarde:**
+• Curry de garbanzos aromático
+• Pasta primavera con vegetales
+• Ceviche de verduras refrescante
+
+¿Cocinamos algo delicioso juntos? 👨‍🍳`,
+
+      `🌤️ **¡Tarde perfecta para experimentar!**
+
+🌮 **Aventuras culinarias de hoy:**
+• Tacos mexicanos vegetarianos
+• Sushi rolls creativos
+• Bowls nutritivos personalizados
+
+¿Te animas a probar algo nuevo? 🎉`
+    ];
+  }
+  
+  // 🌙 RESPUESTAS DE NOCHE
+  else if (esNoche) {
+    respuestasVariadas = [
+      `🌙 **¡Buenas noches, alma ecológica!**
+
+🍲 **Cenas ligeras y reconfortantes:**
+• Sopa de lentejas aromática
+• Ensalada tibia de quinoa
+• Smoothie relajante de frutas
+
+¿Una cena saludable para descansar bien? 😴`,
+
+      `✨ **¡La noche es perfecta para cuidarse!**
+
+🥄 **Cenas que nutren cuerpo y alma:**
+• Crema de verduras casera
+• Té de hierbas con frutas
+• Bowl de avena nocturno
+
+¿Qué te haría sentir bien antes de dormir? 🌛`,
+
+      `🌃 **¡Noche de autocuidado llegó!**
+
+🫖 **Opciones relajantes para la cena:**
+• Infusiones detox naturales
+• Ensalada de frutas con yogurt
+• Snacks saludables para la noche
+
+¿Terminamos el día con algo rico y sano? 💤`
+    ];
+  }
+  
+  // 🤝 RESPUESTAS PARA SALUDOS
+  if (tieneSaludo) {
+    respuestasVariadas.push(
+      `👋 **¡Hola, hola! EcoIA aquí presente**
+
+😊 **¡Qué alegría saludarte!** Soy tu chef ecológico favorito y estoy súper emocionado de ayudarte hoy.
+
+🎨 **Puedo crear para ti:**
+• Recetas únicas y personalizadas
+• Consejos nutricionales exactos  
+• Combinaciones de sabores increíbles
+
+¿Empezamos esta aventura culinaria? 🎭`,
+
+      `� **¡Saludos cordiales, amante de lo natural!**
+
+🌈 **Me da mucha alegría conectar contigo.** Soy EcoIA, especialista en transformar ingredientes simples en experiencias gastronómicas increíbles.
+
+🔥 **Lo que más me emociona:**
+• Sorprenderte con recetas innovadoras
+• Enseñarte secretos de nutrición
+• Ayudarte a vivir más saludable cada día
+
+¿Qué magia culinaria creamos hoy? ✨`
+    );
+  }
+  
+  // 🎲 RESPUESTAS GENERALES EXTRA VARIADAS
+  const respuestasExtras = [
+    `🤖 **¡EcoIA Mode: ON! Sistema culinario activado**
+
+🧠 **Procesando tus gustos... ¡Listo!**
+
+💫 **Base de datos cargada con:**
+• 1000+ combinaciones de sabores
+• Técnicas de cocina de 20 países
+• Valores nutricionales exactos
+• Tips ecológicos premium
+
+¿Qué consulta gastronómica procesamos? 🔍`,
+
+    `🌺 **¡Bienvenido al universo EcoMarket!**
+
+🎪 **Soy tu guía en este circo de sabores donde todo es:**
+• Orgánico y certificado
+• Nutritivo y delicioso  
+• Sostenible y responsable
+• Económico y accesible
+
+¿Hacia qué aventura alimentaria navegamos? ⛵`,
+
+    `🎭 **¡Plot twist! No soy solo un chef, soy tu aliado wellness**
+
+🏆 **Mi superpoder:** Convertir cualquier antojo en una opción súper saludable sin perder ni una pizca de sabor.
+
+🎯 **Misiones especiales:**
+• Recetas anti-aburrimiento
+• Nutrición level expert
+• Productos EcoMarket premium
+• Tips de vida green
+
+¿Cuál será nuestra misión hoy? 🕵️‍♂️`,
+
+    `🚀 **¡Houston, tenemos un chef! EcoIA reportándose**
+
+🛸 **Vengo del planeta Verde-Saludable para compartir:**
+• Secretos ancestrales de nutrición
+• Técnicas de cocina intergaláctica
+• Ingredientes con superpoderes
+• Recetas de otras dimensiones
+
+¿Preparado para esta experiencia culinaria espacial? �`,
+
+    `🎪 **¡Ladies and gentlemen, EcoIA en el escenario!**
+
+🎭 **El show de hoy incluye:**
+• Acto 1: Recetas que te volarán la mente
+• Acto 2: Nutrición que cambiará tu vida
+• Acto 3: Productos EcoMarket estelares
+• Gran finale: ¡Carrito lleno de felicidad!
+
+¿Qué función quieres ver primero? 🎬`
   ];
   
-  // Seleccionar respuesta aleatoria para variedad
-  return respuestasVariadas[Math.floor(Math.random() * respuestasVariadas.length)];
+  // 🎲 COMBINAR TODAS LAS OPCIONES
+  const todasLasRespuestas = [...respuestasVariadas, ...respuestasExtras];
+  
+  // 🎰 SELECCIÓN SÚPER ALEATORIA CON TIMESTAMP
+  const timestamp = Date.now();
+  const indice = (timestamp + Math.floor(Math.random() * 1000)) % todasLasRespuestas.length;
+  
+  return todasLasRespuestas[indice];
 }
 
 // ✅ ENDPOINT PARA OBTENER PRODUCTOS (BONUS)
