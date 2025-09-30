@@ -296,13 +296,71 @@ function limpiarRespuestaIA(textoCompleto, preguntaOriginal) {
   return respuesta;
 }
 
-// ✅ ECOIA CHEF INTELIGENTE - BASE DE CONOCIMIENTO DE RECETAS
+// 🧠 ECOIA CONVERSACIONAL INTELIGENTE - RESPONDE TODO
 function generarRespuestaFallback(pregunta) {
   const preguntaLower = pregunta.toLowerCase();
   
-  // 🍣 RECETAS INTERNACIONALES
+  // 🔍 ANÁLISIS INTELIGENTE DE LA PREGUNTA
+  const palabrasClaveEcologia = ['ecologico', 'organico', 'sostenible', 'sustentable', 'medio ambiente', 'planeta', 'verde', 'natural', 'bio'];
+  const palabrasClaveAlimentacion = ['comer', 'dieta', 'nutricion', 'vitamina', 'proteina', 'fibra', 'caloria', 'peso', 'salud'];
+  const palabrasClaveRecetas = ['receta', 'cocinar', 'preparar', 'ingrediente', 'plato'];
+  const palabrasClaveCompras = ['precio', 'costo', 'comprar', 'carrito', 'producto', 'tienda'];
+  
+  // 🍣 RECETAS ESPECÍFICAS (mantener las existentes)
   if (preguntaLower.includes('sushi')) {
-    return `🍣 **Sushi Vegetariano Ecológico**
+    return generarRecetaSushi();
+  }
+  
+  // 🐟 RECETAS ESPECÍFICAS
+  if (preguntaLower.includes('ceviche')) {
+    return generarRecetaCeviche();
+  }
+  
+  if (preguntaLower.includes('lomo saltado') || preguntaLower.includes('lomo')) {
+    return generarRecetaLomoSaltado();
+  }
+  
+  if (preguntaLower.includes('pasta') || preguntaLower.includes('espagueti')) {
+    return generarRecetaPasta();
+  }
+  if (preguntaLower.includes('curry')) {
+    return generarRecetaCurry();
+  }
+  if (preguntaLower.includes('ensalada') || preguntaLower.includes('verdura', 'verde')) {
+    return generarRecetaEnsalada();
+  }
+  if (preguntaLower.includes('smoothie') || preguntaLower.includes('batido') || preguntaLower.includes('fruta')) {
+    return generarRecetaSmoothie();
+  }
+  if (preguntaLower.includes('taco') || preguntaLower.includes('mexicano')) {
+    return generarRecetaTacos();
+  }
+  if (preguntaLower.includes('causa')) {
+    return generarRecetaCausa();
+  }
+
+  // � RESPUESTAS SOBRE ECOLOGÍA Y SOSTENIBILIDAD
+  if (palabrasClaveEcologia.some(palabra => preguntaLower.includes(palabra))) {
+    return responderSobreEcologia(pregunta);
+  }
+
+  // � RESPUESTAS SOBRE ALIMENTACIÓN Y NUTRICIÓN
+  if (palabrasClaveAlimentacion.some(palabra => preguntaLower.includes(palabra))) {
+    return responderSobreNutricion(pregunta);
+  }
+
+  // 🛒 RESPUESTAS SOBRE PRODUCTOS Y COMPRAS
+  if (palabrasClaveCompras.some(palabra => preguntaLower.includes(palabra)) || preguntaLower.includes('ecomarket')) {
+    return responderSobreProductos(pregunta);
+  }
+
+  // 🤖 CONVERSACIÓN GENERAL
+  return responderConversacionGeneral(pregunta);
+}
+
+// 🍣 FUNCIONES DE RECETAS ESPECÍFICAS
+function generarRecetaSushi() {
+  return `🍣 **Sushi Vegetariano Ecológico**
 
 **Ingredientes de EcoMarket:**
 • Arroz integral - S/ 2.80/kg 🍚
@@ -319,11 +377,10 @@ function generarRespuestaFallback(pregunta) {
 🌱 **Tip:** Usa palillos reutilizables
 
 [AGREGAR AL CARRITO: arroz-integral, pepino, zanahoria]`;
-  }
-  
-  // 🐟 CEVICHE PERUANO VEGGIE
-  if (preguntaLower.includes('ceviche')) {
-    return `🐟 **Ceviche de Verduras Peruano**
+}
+
+function generarRecetaCeviche() {
+  return `🐟 **Ceviche de Verduras Peruano**
 
 **Ingredientes de EcoMarket:**
 • Tomates maduros - S/ 1.90/kg 🍅
@@ -341,11 +398,10 @@ function generarRespuestaFallback(pregunta) {
 🌱 **Plus:** Vitaminas + bajo en calorías
 
 [AGREGAR AL CARRITO: tomate, cebolla, pepino]`;
-  }
-  
-  // 🥩 LOMO SALTADO VEGGIE
-  if (preguntaLower.includes('lomo saltado') || preguntaLower.includes('lomo')) {
-    return `🥩 **Lomo Saltado Vegetariano**
+}
+
+function generarRecetaLomoSaltado() {
+  return `🥩 **Lomo Saltado Vegetariano**
 
 **Ingredientes de EcoMarket:**
 • Tomates frescos - S/ 1.90/kg 🍅
@@ -362,11 +418,10 @@ function generarRespuestaFallback(pregunta) {
 🌱 **Benefit:** Versión más sana del clásico
 
 [AGREGAR AL CARRITO: tomate, cebolla, arroz-integral]`;
-  }
-  
-  // 🍝 PASTA ITALIANA
-  if (preguntaLower.includes('pasta') || preguntaLower.includes('espagueti')) {
-    return `� **Pasta Primavera Orgánica**
+}
+
+function generarRecetaPasta() {
+  return `🍝 **Pasta Primavera Orgánica**
 
 **Ingredientes de EcoMarket:**
 • Tomates frescos - S/ 1.90/kg 🍅
@@ -383,11 +438,10 @@ function generarRespuestaFallback(pregunta) {
 🌱 **Rico en:** Fibra + antioxidantes
 
 [AGREGAR AL CARRITO: tomate, zanahoria, cebolla]`;
-  }
-  
-  // 🍛 CURRY DE VERDURAS
-  if (preguntaLower.includes('curry')) {
-    return `🍛 **Curry de Verduras Aromático**
+}
+
+function generarRecetaCurry() {
+  return `🍛 **Curry de Verduras Aromático**
 
 **Ingredientes de EcoMarket:**
 • Zanahorias - S/ 1.50/kg 🥕
@@ -406,11 +460,10 @@ function generarRespuestaFallback(pregunta) {
 🌱 **Super proteína** vegetal completa
 
 [AGREGAR AL CARRITO: zanahoria, garbanzos, cebolla, arroz-integral]`;
-  }
-  
-  // 🥗 ENSALADAS
-  if (preguntaLower.includes('ensalada') || preguntaLower.includes('verdura')) {
-    return `🥗 **Ensalada Rainbow Súper Nutritiva**
+}
+
+function generarRecetaEnsalada() {
+  return `🥗 **Ensalada Rainbow Súper Nutritiva**
 
 **Ingredientes de EcoMarket:**
 • Lechuga romana - S/ 1.60/kg 🥬
@@ -428,11 +481,10 @@ function generarRespuestaFallback(pregunta) {
 🌱 **Cargada de:** Vitaminas A, C, K + fibra
 
 [AGREGAR AL CARRITO: lechuga-romana, tomate, zanahoria, pepino]`;
-  }
-  
-  // 🍓 SMOOTHIES
-  if (preguntaLower.includes('smoothie') || preguntaLower.includes('batido') || preguntaLower.includes('fruta')) {
-    return `� **Smoothie Energético Power**
+}
+
+function generarRecetaSmoothie() {
+  return `🍓 **Smoothie Energético Power**
 
 **Ingredientes de EcoMarket:**
 • Plátanos - S/ 1.80/kg 🍌
@@ -450,11 +502,10 @@ function generarRespuestaFallback(pregunta) {
 🌱 **Energy boost:** Vitaminas + probióticos
 
 [AGREGAR AL CARRITO: plátano, fresa, manzana, yogurt]`;
-  }
-  
-  // 🌮 TACOS MEXICANOS
-  if (preguntaLower.includes('taco') || preguntaLower.includes('mexicano')) {
-    return `🌮 **Tacos Vegetarianos Mexicanos**
+}
+
+function generarRecetaTacos() {
+  return `🌮 **Tacos Vegetarianos Mexicanos**
 
 **Ingredientes de EcoMarket:**
 • Frijoles negros - S/ 2.40/kg 🫘
@@ -472,11 +523,10 @@ function generarRespuestaFallback(pregunta) {
 🌱 **Alto en:** Proteína vegetal + fibra
 
 [AGREGAR AL CARRITO: frijoles-negros, tomate, cebolla, lechuga-romana]`;
-  }
-  
-  // 🍛 CAUSA LIMEÑA
-  if (preguntaLower.includes('causa')) {
-    return `🍛 **Causa Limeña Vegetariana**
+}
+
+function generarRecetaCausa() {
+  return `🍛 **Causa Limeña Vegetariana**
 
 **Ingredientes de EcoMarket:**
 • Tomates - S/ 1.90/kg 🍅
@@ -493,24 +543,219 @@ function generarRespuestaFallback(pregunta) {
 🌱 **Tradición** peruana + saludable
 
 [AGREGAR AL CARRITO: tomate, cebolla, pepino]`;
+}
+
+// 🌱 FUNCIONES DE RESPUESTAS INTELIGENTES
+function responderSobreEcologia(pregunta) {
+  const preguntaLower = pregunta.toLowerCase();
+  
+  if (preguntaLower.includes('medio ambiente') || preguntaLower.includes('planeta')) {
+    return `🌍 **Cuidar el planeta con pequeñas acciones diarias**
+
+🌱 **Tips ecológicos:**
+• Compra productos orgánicos locales
+• Reduce el desperdicio de alimentos
+• Usa bolsas reutilizables
+• Consume frutas y verduras de temporada
+• Evita envases plásticos
+
+💚 **En EcoMarket encontrarás:**
+Todos nuestros productos son certificados orgánicos y de comercio justo. ¡Cada compra es un voto por un planeta más verde!
+
+¿Te interesa algún producto ecológico específico? 🌿`;
   }
   
-  // 🌾 RESPUESTA DEFAULT CON MENÚ
-  return `🌱 **¡Hola! Soy EcoIA, tu chef ecológico personal!**
+  if (preguntaLower.includes('organico') || preguntaLower.includes('bio')) {
+    return `🌿 **¿Por qué elegir productos orgánicos?**
 
-**Especialidades que puedo preparar:**
-🍣 **Internacionales:** sushi, pasta, curry, tacos
-🐟 **Peruanas:** ceviche, lomo saltado, causa
-🥗 **Saludables:** ensaladas, smoothies, bowls
+✅ **Beneficios:**
+• Sin pesticidas químicos
+• Mayor contenido nutricional
+• Mejor sabor natural
+• Apoyas agricultura sostenible
+• Proteges biodiversidad
 
-**¡Solo pregúntame!**
-• "¿Cómo hago sushi vegetariano?"
-• "Receta de ceviche de verduras"
-• "Quiero curry de garbanzos"
+🛒 **En EcoMarket tenemos:**
+• Frutas y verduras orgánicas certificadas
+• Legumbres sin transgénicos
+• Cereales integrales naturales
 
-💚 **¡Agregaré automáticamente los ingredientes a tu carrito!**
+¿Qué producto orgánico te gustaría conocer? 🥕`;
+  }
+  
+  return `🌱 **¡Soy EcoIA, tu guía hacia una vida más sostenible!**
 
-¿Qué te provoca cocinar hoy? 👨‍🍳✨`;
+💚 **Puedo ayudarte con:**
+• Consejos de vida ecológica
+• Productos orgánicos certificados
+• Alimentación sostenible
+• Reducción de huella ambiental
+
+¿Qué aspecto ecológico te interesa más? 🌍`;
+}
+
+function responderSobreNutricion(pregunta) {
+  const preguntaLower = pregunta.toLowerCase();
+  
+  if (preguntaLower.includes('proteina') || preguntaLower.includes('proteinas')) {
+    return `💪 **Proteínas vegetales en EcoMarket**
+
+🫘 **Excelentes fuentes:**
+• Lentejas - S/ 2.40/kg (18g proteína/100g)
+• Garbanzos - S/ 2.60/kg (19g proteína/100g)
+• Quinoa - S/ 4.20/kg (14g proteína/100g)
+• Frijoles negros - S/ 2.40/kg (21g proteína/100g)
+
+🌱 **Combinaciones perfectas:**
+• Lentejas + arroz = proteína completa
+• Garbanzos + quinoa = súper alimento
+
+¿Te preparo una receta rica en proteínas? 🏋️‍♀️`;
+  }
+  
+  if (preguntaLower.includes('vitamina') || preguntaLower.includes('antioxidante')) {
+    return `🍎 **Vitaminas y antioxidantes en EcoMarket**
+
+🌈 **Por colores:**
+• **Rojos:** Tomates (licopeno), fresas (vitamina C)
+• **Naranjas:** Zanahorias (betacaroteno), naranjas (vitamina C)
+• **Verdes:** Lechuga (folato), manzanas (fibra)
+
+💊 **Beneficios:**
+• Fortalecen sistema inmune
+• Protegen células del envejecimiento
+• Mejoran energía y vitalidad
+
+¿Quieres un smoothie cargado de vitaminas? 🥤`;
+  }
+  
+  if (preguntaLower.includes('peso') || preguntaLower.includes('adelgazar') || preguntaLower.includes('dieta')) {
+    return `⚖️ **Alimentación saludable para peso ideal**
+
+🥗 **Alimentos EcoMarket ideales:**
+• **Fibra:** Avena, lentejas, manzanas (te sacian más)
+• **Bajas calorías:** Lechuga, pepino, tomate
+• **Metabolismo:** Jengibre, té verde, limón
+
+📊 **Tips nutricionales:**
+• Desayuna frutas y avena
+• Almuerza ensaladas coloridas  
+• Cena ligero con verduras
+
+¿Te preparo un menú semanal saludable? 📅`;
+  }
+  
+  return `🍎 **¡Nutrición inteligente con EcoIA!**
+
+🧠 **Puedo ayudarte con:**
+• Información nutricional de productos
+• Recetas balanceadas
+• Combinaciones de alimentos
+• Dietas específicas (vegana, mediterránea, etc.)
+
+¿Sobre qué aspecto nutricional quieres aprender? 🥗`;
+}
+
+function responderSobreProductos(pregunta) {
+  const preguntaLower = pregunta.toLowerCase();
+  
+  if (preguntaLower.includes('precio') || preguntaLower.includes('costo')) {
+    return `💰 **Precios EcoMarket - Calidad orgánica accesible**
+
+🥬 **Verduras frescas:**
+• Lechuga romana - S/ 1.60/kg
+• Tomate orgánico - S/ 1.90/kg  
+• Zanahoria dulce - S/ 1.50/kg
+• Pepino fresco - S/ 1.40/kg
+
+🍎 **Frutas de temporada:**
+• Manzana roja - S/ 2.10/kg
+• Plátano orgánico - S/ 1.80/kg
+• Naranja jugosa - S/ 2.00/kg
+
+💡 **¡Tip de ahorro:** Compra combos para recetas y ahorras hasta 15%!
+
+¿Te ayudo a calcular el costo de alguna receta? 🧮`;
+  }
+  
+  if (preguntaLower.includes('carrito') || preguntaLower.includes('comprar')) {
+    return `🛒 **¡Tu carrito inteligente EcoMarket!**
+
+🤖 **Funciones automáticas:**
+• Te sugiero los mejores productos
+• Calculo costos totales
+• Agrego ingredientes de recetas automáticamente
+• Ofertas personalizadas según tus gustos
+
+📱 **¿Cómo funciona?**
+1. Me dices qué quieres cocinar
+2. Te doy la receta completa
+3. Agrego automáticamente al carrito
+4. Listo para comprar
+
+¿Qué receta quieres que agregue a tu carrito? 👨‍🍳`;
+  }
+  
+  return `🛒 **¡Bienvenido a EcoMarket!**
+
+🌟 **Nuestros productos estrella:**
+• Verduras orgánicas certificadas
+• Frutas frescas de temporada  
+• Legumbres sin transgénicos
+• Cereales integrales naturales
+• Lácteos de granjas sostenibles
+
+💚 **Todos con certificación ecológica**
+
+¿Qué producto específico te interesa? 🥕`;
+}
+
+function responderConversacionGeneral(pregunta) {
+  const respuestasVariadas = [
+    `🌱 **¡Hola! Soy EcoIA, tu chef ecológico personal**
+
+💚 **Puedo ayudarte con:**
+• Recetas saludables y deliciosas
+• Consejos de alimentación ecológica  
+• Información nutricional
+• Productos orgánicos EcoMarket
+
+¿En qué puedo ayudarte hoy? ¡Pregúntame lo que quieras! 😊`,
+
+    `👨‍🍳 **¡Qué gusto saludarte!**
+
+🍽️ **Especialidades que domino:**
+• Cocina peruana veggie (ceviche, lomo saltado, causa)
+• Platos internacionales (sushi, pasta, curry, tacos)
+• Alimentación nutritiva y sostenible
+
+¿Tienes hambre de algo específico? ¡Solo dímelo! 🤤`,
+
+    `🌿 **¡EcoIA a tu servicio!**
+
+✨ **Hoy puedes preguntarme sobre:**
+• "¿Cómo hacer sushi vegetariano?"
+• "¿Qué receta rica en proteínas me recomiendas?"
+• "¿Cuáles son los beneficios de los productos orgánicos?"
+• "¿Me ayudas con una dieta balanceada?"
+
+¡Soy tu asistente culinario 24/7! 🤖💚`,
+
+    `🍎 **¡Hola, amante de la vida saludable!**
+
+🎯 **Mi misión:** Ayudarte a comer rico, sano y sostenible
+
+🧠 **Qué puedo hacer:**
+• Crear recetas personalizadas
+• Explicar beneficios nutricionales
+• Recomendar productos EcoMarket
+• Darte tips de vida ecológica
+
+¿Por dónde empezamos? 🚀`
+  ];
+  
+  // Seleccionar respuesta aleatoria para variedad
+  return respuestasVariadas[Math.floor(Math.random() * respuestasVariadas.length)];
 }
 
 // ✅ ENDPOINT PARA OBTENER PRODUCTOS (BONUS)
