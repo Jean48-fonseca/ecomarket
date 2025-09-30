@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fetch = require('node-fetch');
 
 // ✅ CONFIGURACIÓN EXPRESS
 const aplicacion = express();
@@ -523,27 +524,6 @@ aplicacion.get('/productos', (req, res) => {
   res.json(productos);
 });
 
-// ✅ INICIAR SERVIDOR
-aplicacion.listen(puerto, () => {
-  console.log('🚀 ========================================');
-  console.log('🌱 ECOMARKET BACKEND INICIADO');
-  console.log('🚀 ========================================');
-  console.log(`✅ Servidor corriendo en puerto: ${puerto}`);
-  console.log(`🌐 URL local: http://localhost:${puerto}`);
-  console.log(`🤖 EcoIA endpoint: http://localhost:${puerto}/ecoia`);
-  console.log(`❤️  Salud del servidor: http://localhost:${puerto}/health`);
-  console.log('🚀 ========================================');
-  
-  // Verificar configuración
-  if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY.length === 0) {
-    console.log('⚠️  ADVERTENCIA: Configura tu API Key de DeepSeek');
-    console.log('📝 Crea un archivo .env con: DEEPSEEK_API_KEY=tu_api_key');
-    console.log('🌐 Obtén tu key en: https://platform.deepseek.com/api_keys');
-  } else {
-    console.log('✅ API Key de DeepSeek configurado');
-  }
-});
-
 // ✅ FUNCIÓN PARA EXTRAER PRODUCTOS DEL CARRITO
 function extraerProductosCarrito(respuesta) {
   const productos = [];
@@ -591,25 +571,26 @@ function extraerProductosCarrito(respuesta) {
   return productos;
 }
 
-// ✅ INICIAR SERVIDOR
+// ✅ INICIAR SERVIDOR (ÚNICA DECLARACIÓN)
 aplicacion.listen(puerto, () => {
   console.log('🚀 ========================================');
   console.log('✅ ECOMARKET BACKEND INICIADO');
-  console.log('🤖 Sistema: EcoIA con DeepSeek API');
+  console.log('🤖 Sistema: EcoIA Chef con DeepSeek API + Local Fallback');
   console.log(`📡 Servidor corriendo en puerto: ${puerto}`);
+  console.log(`🌐 Ambiente: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 URL local: http://localhost:${puerto}`);
-  console.log(`🧠 Punto final de EcoIA: http://localhost:${puerto}/ecoia`);
-  console.log(`❤️  Salud del servidor: http://localhost:${puerto}/health`);
+  console.log(`🧠 Endpoint EcoIA: http://localhost:${puerto}/ecoia`);
+  console.log(`❤️  Health Check: http://localhost:${puerto}/health`);
   console.log('🚀 ========================================');
   
   // Verificar configuración
   if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY.length === 0) {
-    console.log('⚠️  ADVERTENCIA: Configura tu API Key de DeepSeek');
-    console.log('📝 Crea un archivo .env con: DEEPSEEK_API_KEY=tu_api_key');
-    console.log('🌐 Obtén tu key en: https://platform.deepseek.com/api_keys');
+    console.log('⚠️  ADVERTENCIA: DeepSeek API Key no configurado');
+    console.log('�️  EcoIA funcionará con base de conocimiento local');
+    console.log('📝 Para DeepSeek: Configura DEEPSEEK_API_KEY en variables de entorno');
   } else {
-    console.log('✅ API Key de DeepSeek configurado');
+    console.log(`✅ DeepSeek API Key configurado: ${DEEPSEEK_API_KEY.substring(0, 10)}...`);
   }
   
-  console.log('🎉 Tu servicio está activo 🚀');
+  console.log('🎉 ¡Servidor EcoMarket listo para recibir consultas! 🚀');
 });
