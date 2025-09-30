@@ -319,61 +319,94 @@ function limpiarRespuestaIA(textoCompleto, preguntaOriginal) {
 function generarRespuestaFallback(pregunta) {
   const preguntaLower = pregunta.toLowerCase();
   
+  // 🔍 LOGGING PARA DEBUG - Ver qué está detectando
+  console.log('🔍 EcoIA analizando:', pregunta);
+  console.log('📝 Pregunta lowercase:', preguntaLower);
+  
   // 🔍 ANÁLISIS INTELIGENTE DE LA PREGUNTA
   const palabrasClaveEcologia = ['ecologico', 'organico', 'sostenible', 'sustentable', 'medio ambiente', 'planeta', 'verde', 'natural', 'bio'];
   const palabrasClaveAlimentacion = ['comer', 'dieta', 'nutricion', 'vitamina', 'proteina', 'fibra', 'caloria', 'peso', 'salud'];
   const palabrasClaveRecetas = ['receta', 'cocinar', 'preparar', 'ingrediente', 'plato'];
   const palabrasClaveCompras = ['precio', 'costo', 'comprar', 'carrito', 'producto', 'tienda'];
   
-  // 🍣 RECETAS ESPECÍFICAS (mantener las existentes)
-  if (preguntaLower.includes('sushi')) {
+  // 🎯 DETECCIÓN MÁS ESTRICTA
+  const pidioRecetaExplicita = preguntaLower.includes('receta') || preguntaLower.includes('como hacer') || 
+                               preguntaLower.includes('como preparar') || preguntaLower.includes('preparar');
+  
+  // � DETECCIÓN MÁS PRECISA DE RECETAS ESPECÍFICAS
+  
+  // Detectar peticiones explícitas de recetas
+  const pidioReceta = preguntaLower.includes('receta') || preguntaLower.includes('como hacer') || 
+                      preguntaLower.includes('como preparar') || preguntaLower.includes('cocinar');
+  
+  // 🍣 RECETAS ESPECÍFICAS - SOLO con petición explícita
+  if (preguntaLower.includes('sushi') && pidioRecetaExplicita) {
+    console.log('✅ Detectado: Petición de receta de sushi');
     return generarRecetaSushi();
   }
   
-  // 🐟 RECETAS ESPECÍFICAS
-  if (preguntaLower.includes('ceviche')) {
+  if (preguntaLower.includes('ceviche') && pidioRecetaExplicita) {
+    console.log('✅ Detectado: Petición de receta de ceviche');
     return generarRecetaCeviche();
   }
   
-  if (preguntaLower.includes('lomo saltado') || preguntaLower.includes('lomo')) {
+  if ((preguntaLower.includes('lomo saltado') || preguntaLower.includes('lomo')) && pidioRecetaExplicita) {
+    console.log('✅ Detectado: Petición de receta de lomo saltado');
     return generarRecetaLomoSaltado();
   }
   
-  if (preguntaLower.includes('pasta') || preguntaLower.includes('espagueti')) {
+  if ((preguntaLower.includes('pasta') || preguntaLower.includes('espagueti')) && pidioRecetaExplicita) {
+    console.log('✅ Detectado: Petición de receta de pasta');
     return generarRecetaPasta();
   }
-  if (preguntaLower.includes('curry')) {
+  
+  if (preguntaLower.includes('curry') && pidioRecetaExplicita) {
+    console.log('✅ Detectado: Petición de receta de curry');
     return generarRecetaCurry();
   }
-  if (preguntaLower.includes('ensalada') || preguntaLower.includes('verdura', 'verde')) {
+  
+  if (preguntaLower.includes('ensalada') && pidioRecetaExplicita) {
+    console.log('✅ Detectado: Petición de receta de ensalada');
     return generarRecetaEnsalada();
   }
-  if (preguntaLower.includes('smoothie') || preguntaLower.includes('batido') || preguntaLower.includes('fruta')) {
+  
+  if ((preguntaLower.includes('smoothie') || preguntaLower.includes('batido')) && pidioRecetaExplicita) {
+    console.log('✅ Detectado: Petición de receta de smoothie');
     return generarRecetaSmoothie();
   }
-  if (preguntaLower.includes('taco') || preguntaLower.includes('mexicano')) {
+  
+  if ((preguntaLower.includes('taco') || preguntaLower.includes('mexicano')) && pidioRecetaExplicita) {
+    console.log('✅ Detectado: Petición de receta de tacos');
     return generarRecetaTacos();
   }
-  if (preguntaLower.includes('causa')) {
+  
+  if (preguntaLower.includes('causa') && pidioRecetaExplicita) {
+    console.log('✅ Detectado: Petición de receta de causa');
     return generarRecetaCausa();
   }
 
   // � RESPUESTAS SOBRE ECOLOGÍA Y SOSTENIBILIDAD
-  if (palabrasClaveEcologia.some(palabra => preguntaLower.includes(palabra))) {
+  if ((preguntaLower.includes('organico') || preguntaLower.includes('ecologico')) && 
+      (preguntaLower.includes('que es') || preguntaLower.includes('beneficio'))) {
+    console.log('✅ Pregunta específica sobre ecología');
     return responderSobreEcologia(pregunta);
   }
 
   // � RESPUESTAS SOBRE ALIMENTACIÓN Y NUTRICIÓN
-  if (palabrasClaveAlimentacion.some(palabra => preguntaLower.includes(palabra))) {
+  if ((preguntaLower.includes('proteina') || preguntaLower.includes('vitamina')) && 
+      preguntaLower.includes('donde')) {
+    console.log('✅ Pregunta específica sobre nutrición');
     return responderSobreNutricion(pregunta);
   }
 
   // 🛒 RESPUESTAS SOBRE PRODUCTOS Y COMPRAS
-  if (palabrasClaveCompras.some(palabra => preguntaLower.includes(palabra)) || preguntaLower.includes('ecomarket')) {
+  if (preguntaLower.includes('precio') && (preguntaLower.includes('cuanto') || preguntaLower.includes('cuesta'))) {
+    console.log('✅ Pregunta específica sobre precios');
     return responderSobreProductos(pregunta);
   }
 
-  // 🤖 CONVERSACIÓN GENERAL
+  // 🤖 CONVERSACIÓN GENERAL (DEFAULT - Más seguro)
+  console.log('✅ Respuesta: Conversación general');
   return responderConversacionGeneral(pregunta);
 }
 
