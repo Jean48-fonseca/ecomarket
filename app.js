@@ -82,9 +82,11 @@ aplicacion.get('/health', (req, res) => {
       used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
       total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB'
     },
-    deepseek: {
-      model: 'deepseek-chat',
-      api_key_configured: !!DEEPSEEK_API_KEY && DEEPSEEK_API_KEY.length > 0
+    ecoia_chef: {
+      status: 'ACTIVO',
+      base_conocimiento: 'Local + Recetas',
+      recetas: 15,
+      productos_ecomarket: 12
     }
   };
   
@@ -94,19 +96,13 @@ aplicacion.get('/health', (req, res) => {
 
 // ✅ ENDPOINT DE READY CHECK (para Render)
 aplicacion.get('/ready', (req, res) => {
-  const isReady = DEEPSEEK_API_KEY && DEEPSEEK_API_KEY.length > 0;
-  
-  if (isReady) {
-    res.status(200).json({ 
-      status: 'READY', 
-      message: 'EcoIA está listo para atender consultas' 
-    });
-  } else {
-    res.status(503).json({ 
-      status: 'NOT_READY', 
-      message: 'API Key de DeepSeek no configurado' 
-    });
-  }
+  // EcoIA SIEMPRE está listo con nuestra base de conocimiento
+  res.status(200).json({ 
+    status: 'READY', 
+    message: 'EcoIA Chef está listo para atender consultas',
+    modo: 'Base de conocimiento local',
+    recetas_disponibles: ['sushi', 'ceviche', 'lomo saltado', 'pasta', 'curry', 'tacos', 'ensaladas']
+  });
 });
 
 // ✅ ENDPOINT PARA AGREGAR PRODUCTOS AL CARRITO (desde EcoIA)
@@ -147,48 +143,38 @@ aplicacion.post('/ecoia', async (req, res) => {
   }
 
   try {
-    // 🚀 INTENTAR PRIMERO CON DEEPSEEK API (si está configurado)
-    let respuesta;
-    let fuente = 'deepseek';
-    
-    // Verificar si DeepSeek está disponible
-    if (DEEPSEEK_API_KEY && DEEPSEEK_API_KEY.length > 0 && !DEEPSEEK_API_KEY.includes('tu_api_key')) {
-      try {
-        respuesta = await consultaDeepSeek(pregunta);
-        console.log('✅ DeepSeek respondió exitosamente');
-      } catch (deepseekError) {
-        console.log('⚠️ DeepSeek falló, usando base local:', deepseekError.message);
-        respuesta = generarRespuestaFallback(pregunta);
-        fuente = 'ecoia_chef_local';
-      }
-    } else {
-      console.log('🔄 DeepSeek no configurado, usando base de conocimiento local');
-      respuesta = generarRespuestaFallback(pregunta);
-      fuente = 'ecoia_chef_local';
-    }
+    // 🧠 USAR SIEMPRE NUESTRA BASE DE CONOCIMIENTO (MÁS CONFIABLE)
+    console.log('🤖 Procesando pregunta con EcoIA Chef...');
+    const respuesta = generarRespuestaFallback(pregunta);
     
     // Detectar si la respuesta incluye productos para el carrito
     const productosParaCarrito = extraerProductosCarrito(respuesta);
     
-    console.log('✅ EcoIA respondió (fuente: ' + fuente + '):', respuesta.substring(0, 100) + '...');
+    console.log('✅ EcoIA Chef respondió:', respuesta.substring(0, 100) + '...');
     
     // Respuesta completa con productos para carrito
     const respuestaCompleta = {
       respuesta: respuesta,
       productos_carrito: productosParaCarrito,
       tiene_receta: productosParaCarrito.length > 0,
-      fuente: fuente,
+      fuente: 'ecoia_chef_local',
       timestamp: new Date().toISOString()
     };
     
     res.json(respuestaCompleta);
     
   } catch (error) {
-    console.error('❌ Error total en EcoIA:', error.message);
+    console.error('❌ Error en EcoIA:', error.message);
     
-    // Si falla todo, respuesta básica de emergencia
-    const respuestaEmergencia = '🌱 ¡Hola! Soy EcoIA. Pregúntame sobre recetas como sushi, ceviche, pasta, curry, tacos o ensaladas. ¡Te ayudo con productos ecológicos!';
-    res.json({ respuesta: respuestaEmergencia, productos_carrito: [], tiene_receta: false, fuente: 'emergency' });
+    // Respuesta básica de emergencia
+    const respuestaEmergencia = '🌱 ¡Hola! Soy EcoIA, tu chef ecológico. Pregúntame sobre recetas como sushi, ceviche, pasta, curry, tacos o ensaladas. ¡Te ayudo con productos ecológicos y los agrego a tu carrito!';
+    res.json({ 
+      respuesta: respuestaEmergencia, 
+      productos_carrito: [], 
+      tiene_receta: false, 
+      fuente: 'emergency',
+      error: 'Modo de emergencia activo' 
+    });
   }
 });
 
