@@ -1658,81 +1658,135 @@
       brandLoginLink.title = 'Haz clic para iniciar sesión o registrarte';
     }
 
-    // --- Panel administrativo: IndexedDB para usuarios y trabajadores ---
-    // UI mínima añadida dinámicamente
-    (function addAdminPanel(){
-      const adminHtml = `
-      <section aria-label="Panel admin" style="max-width:980px;margin:18px auto;padding:12px;background:#ffffffc7;border-radius:12px;">
-        <h3 style="margin:0 0 8px;">Panel administrativo (DB en el navegador)</h3>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-          <button id="createDbBtn" class="btn" type="button">Crear DB</button>
-          <button id="seedDbBtn" class="btn" type="button">Insertar ejemplos</button>
-          <button id="listUsersBtn" class="btn" type="button">Listar usuarios</button>
-          <button id="listWorkersBtn" class="btn" type="button">Listar trabajadores</button>
-        </div>
-        <div id="adminOutput" style="background:#f8f9fa;border:1px solid #e9ecef;padding:10px;border-radius:8px;max-height:260px;overflow:auto;font-family:monospace;font-size:13px;">
-          Estado del panel admin.
-        </div>
-        <hr style="margin:12px 0;border:none;border-top:1px solid #e9ecef" />
-        <h4 style="margin:0 0 8px;">Imágenes de productos (id → URL)</h4>
-        <div class="row" style="display:grid;gap:8px;grid-template-columns:1fr;">
-          <textarea id="imgOverrides" placeholder='{"c3":"https://.../quinoa.jpg","v2":"https://.../tomate.jpg","v1":"https://.../lechuga-romana.jpg","v3":"https://.../zanahoria.jpg"}' style="min-height:120px;border:1px solid #e9ecef;border-radius:8px;padding:8px"></textarea>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button id="btnLoadOverrides" class="btn" type="button">Cargar overrides</button>
-            <button id="btnSaveOverrides" class="btn" type="button">Guardar overrides</button>
-            <button id="btnApplyOverrides" class="btn" type="button">Aplicar al catálogo</button>
-          </div>
-        </div>
-      </section>
-      `;
-      const container = document.createElement('div');
-      container.innerHTML = adminHtml;
-      document.querySelector('.container').insertAdjacentElement('afterend', container);
+    // Panel administrativo (oculto por defecto, visible solo para administradores)
+    const adminPanel = document.createElement('section');
+    adminPanel.id = 'adminPanel';
+    adminPanel.style.cssText = 'display:none;margin:20px auto;max-width:800px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.1);padding:20px;';
+    adminPanel.innerHTML = `
+      <h3 style="color:#4ec8c2;margin:0 0 15px;border-bottom:2px solid #e9ecef;padding-bottom:10px;">Panel administrativo (DB en el navegador)</h3>
+      <div style="display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap;">
+        <button onclick="createDatabase()" style="background:#4ec8c2;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;">Crear DB</button>
+        <button onclick="insertSampleData()" style="background:#28a745;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;">Insertar ejemplos</button>
+        <button onclick="listUsers()" style="background:#17a2b8;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;">Listar usuarios</button>
+        <button onclick="listWorkers()" style="background:#6f42c1;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;">Listar trabajadores</button>
+      </div>
+      <div id="adminStatus" style="padding:10px;background:#f8f9fa;border-radius:6px;font-family:monospace;font-size:13px;min-height:40px;">Estado del panel admin.</div>
+      
+      <h4 style="color:#4ec8c2;margin:20px 0 10px;">Imágenes de productos (id → URL)</h4>
+      <textarea id="imageOverridesTextarea" style="width:100%;height:120px;font-family:monospace;font-size:12px;border:1px solid #ddd;border-radius:6px;padding:8px;" placeholder="JSON de overrides de imágenes..."></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button onclick="loadImageOverrides()" style="background:#6c757d;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">Cargar overrides</button>
+        <button onclick="saveImageOverrides()" style="background:#fd7e14;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">Guardar overrides</button>
+        <button onclick="applyImageOverrides()" style="background:#20c997;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">Aplicar al catálogo</button>
+      </div>
+    `;
+    
+    // Insertar el panel después de los productos
+    const productsSection = document.getElementById('productsGrid').parentElement;
+    productsSection.parentElement.insertBefore(adminPanel, productsSection.nextSibling);
 
-      document.getElementById('createDbBtn').addEventListener('click', async ()=>{
-        await EcoDB.dbOpen();
-        adminLog('IndexedDB creada/abierta.');
-      });
-      document.getElementById('seedDbBtn').addEventListener('click', async ()=>{
+    // Funciones del panel administrativo
+    window.createDatabase = async function(){
+      const status = document.getElementById('adminStatus');
+      try {
+        status.textContent = 'Creando base de datos...';
+        await EcoDB.init();
+        status.textContent = '✅ Base de datos creada correctamente.';
+      } catch (error) {
+        status.textContent = '❌ Error: ' + error.message;
+      }
+    };
+
+    window.insertSampleData = async function(){
+      const status = document.getElementById('adminStatus');
+      try {
+        status.textContent = 'Insertando datos de ejemplo...';
         await EcoDB.seedSample();
-        adminLog('Datos de ejemplo insertados (si no existían).');
-      });
-      document.getElementById('listUsersBtn').addEventListener('click', async ()=>{
-        const u = await EcoDB.listUsers();
-        adminLog(JSON.stringify(u, null, 2));
-      });
-      document.getElementById('listWorkersBtn').addEventListener('click', async ()=>{
-        const w = await EcoDB.listWorkers();
-        adminLog(JSON.stringify(w, null, 2));
-      });
+        status.textContent = '✅ Datos de ejemplo insertados.';
+      } catch (error) {
+        status.textContent = '❌ Error: ' + error.message;
+      }
+    };
 
-      // Overrides UI
-      const loadOverridesUI = ()=>{
-        const map = getImgOverrides();
-        document.getElementById('imgOverrides').value = JSON.stringify(map, null, 2);
-      };
-      document.getElementById('btnLoadOverrides').addEventListener('click', loadOverridesUI);
-      document.getElementById('btnSaveOverrides').addEventListener('click', ()=>{
-        try{
-          const txt = document.getElementById('imgOverrides').value;
-          const obj = JSON.parse(txt || '{}');
-          setImgOverrides(obj);
-          adminLog('Overrides guardados.');
-        }catch(e){ alert('JSON inválido: '+e.message); }
-      });
-      document.getElementById('btnApplyOverrides').addEventListener('click', ()=>{
-        render(searchAndRank());
-        adminLog('Overrides aplicados al catálogo.');
-      });
+    window.listUsers = async function(){
+      const status = document.getElementById('adminStatus');
+      try {
+        status.textContent = 'Listando usuarios...';
+        const users = await EcoDB.listUsers();
+        status.textContent = `✅ Usuarios (${users.length}):\n` + users.map(u => `- ${u.username} (${u.first_name} ${u.last_name})`).join('\n');
+      } catch (error) {
+        status.textContent = '❌ Error: ' + error.message;
+      }
+    };
 
-      loadOverridesUI();
-    })();
+    window.listWorkers = async function(){
+      const status = document.getElementById('adminStatus');
+      try {
+        status.textContent = 'Listando trabajadores...';
+        const workers = await EcoDB.listWorkers();
+        status.textContent = `✅ Trabajadores (${workers.length}):\n` + workers.map(w => `- ${w.employeeCode} (${w.department})`).join('\n');
+      } catch (error) {
+        status.textContent = '❌ Error: ' + error.message;
+      }
+    };
 
-    function adminLog(msg){
-      const el = document.getElementById('adminOutput');
-      const now = new Date().toISOString();
-      el.textContent = `${now} - ${msg}\n` + el.textContent;
+    window.loadImageOverrides = function(){
+      const textarea = document.getElementById('imageOverridesTextarea');
+      const overrides = getImgOverrides();
+      textarea.value = JSON.stringify(overrides, null, 2);
+    };
+
+    window.saveImageOverrides = function(){
+      const textarea = document.getElementById('imageOverridesTextarea');
+      const status = document.getElementById('adminStatus');
+      try {
+        const overrides = JSON.parse(textarea.value || '{}');
+        setImgOverrides(overrides);
+        status.textContent = '✅ Overrides guardados en localStorage.';
+      } catch (error) {
+        status.textContent = '❌ Error en JSON: ' + error.message;
+      }
+    };
+
+    window.applyImageOverrides = function(){
+      const status = document.getElementById('adminStatus');
+      try {
+        renderProducts(filterProducts(state.q, state.category, state.ai));
+        status.textContent = '✅ Imágenes aplicadas al catálogo.';
+      } catch (error) {
+        status.textContent = '❌ Error aplicando imágenes: ' + error.message;
+      }
+    };
+
+    // Mostrar panel solo para administradores
+    async function toggleAdminPanel() {
+      const user = getSession();
+      if (!user || !user.userId) return;
+      
+      try {
+        const worker = await EcoDB.findWorkerByUserId(user.userId);
+        if (worker && worker.is_admin === 1) {
+          const panel = document.getElementById('adminPanel');
+          panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+          
+          // Cargar overrides automáticamente al mostrar
+          if (panel.style.display === 'block') {
+            loadImageOverrides();
+          }
+        }
+      } catch (error) {
+        console.error('Error verificando permisos admin:', error);
+      }
     }
+
+    // Atajo de teclado para mostrar/ocultar panel (Ctrl+Alt+A)
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.altKey && e.key === 'a') {
+        e.preventDefault();
+        toggleAdminPanel();
+      }
+    });
+
     // Los helpers de DB/crypto fueron centralizados en db.js (EcoDB)
 
     // Seed/merge de overrides: aplica claves faltantes sin sobrescribir las existentes
