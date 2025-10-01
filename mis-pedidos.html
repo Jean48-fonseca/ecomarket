@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mis Pedidos - EcoMarket</title>
+  <style>
+    :root {
+      --primary: #4ec8c2;
+      --accent: #d70606;
+      --text: #2d3436;
+      --bg: #f4f9fb;
+      --panel: #ffffff;
+      --muted: #6c757d;
+      --border: #e9ecef;
+    }
+    
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #60e1f5, #e0eafc);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: var(--panel);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    header h1 {
+      margin: 0;
+      font-size: 1.8em;
+    }
+    
+    .back-link {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    
+    .content {
+      padding: 30px;
+    }
+    
+    .pedido {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-left: 4px solid var(--primary);
+    }
+    
+    .pedido-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .pedido-id {
+      font-weight: bold;
+      color: var(--primary);
+    }
+    
+    .pedido-fecha {
+      color: var(--muted);
+      font-size: 0.9em;
+    }
+    
+    .pedido-total {
+      font-weight: bold;
+      font-size: 1.1em;
+      color: var(--accent);
+    }
+    
+    .pedido-estado {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8em;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .estado-pendiente {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .estado-confirmado {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .estado-enviado {
+      background: #cce5ff;
+      color: #004085;
+    }
+    
+    .estado-entregado {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+    
+    .pedido-items {
+      margin-top: 15px;
+    }
+    
+    .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #e9ecef;
+    }
+    
+    .item:last-child {
+      border-bottom: none;
+    }
+    
+    .item-info {
+      flex: 1;
+    }
+    
+    .item-nombre {
+      font-weight: 500;
+    }
+    
+    .item-detalle {
+      font-size: 0.9em;
+      color: var(--muted);
+    }
+    
+    .item-precio {
+      font-weight: bold;
+      color: var(--accent);
+    }
+    
+    .no-pedidos {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+    
+    .no-pedidos h3 {
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    
+    .btn {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    
+    .btn:hover {
+      background: #45b5ae;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+    
+    @media (max-width: 600px) {
+      .pedido-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+      }
+      
+      .back-link {
+        position: static;
+        display: block;
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script src="db.js"></script>
+  
+  <div class="container">
+    <header>
+      <a href="./Untitled-1.html" class="back-link">← Volver a EcoMarket</a>
+      <h1>📦 Mis Pedidos</h1>
+    </header>
+    
+    <div class="content">
+      <div id="loading" class="loading">
+        <p>⏳ Cargando tus pedidos...</p>
+      </div>
+      
+      <div id="pedidosContainer" style="display: none;">
+        <!-- Los pedidos se cargarán aquí dinámicamente -->
+      </div>
+      
+      <div id="noPedidos" class="no-pedidos" style="display: none;">
+        <h3>📭 No tienes pedidos aún</h3>
+        <p>¡Comienza a comprar productos frescos y ecológicos!</p>
+        <a href="./Untitled-1.html" class="btn">🛒 Ir de compras</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Obtener sesión del usuario
+    function getSession() {
+      try {
+        return JSON.parse(sessionStorage.getItem('ecomarket_user') || 'null');
+      } catch {
+        return null;
+      }
+    }
+
+    // Función para obtener pedidos del localStorage (simulación)
+    function getPedidos() {
+      try {
+        const pedidos = JSON.parse(localStorage.getItem('ecomarket_pedidos') || '[]');
+        const user = getSession();
+        if (user) {
+          return pedidos.filter(p => p.userId === user.id);
+        }
+        return [];
+      } catch {
+        return [];
+      }
+    }
+
+    // Formatear fecha
+    function formatearFecha(fechaISO) {
+      const fecha = new Date(fechaISO);
+      return fecha.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // Formatear precio
+    function formatearPrecio(precio) {
+      return `S/ ${precio.toFixed(2)}`;
+    }
+
+    // Renderizar pedidos
+    function renderizarPedidos() {
+      const loading = document.getElementById('loading');
+      const container = document.getElementById('pedidosContainer');
+      const noPedidos = document.getElementById('noPedidos');
+      
+      const user = getSession();
+      if (!user) {
+        window.location.href = './login.html?return=' + encodeURIComponent(location.href);
+        return;
+      }
+
+      const pedidos = getPedidos();
+      
+      loading.style.display = 'none';
+      
+      if (pedidos.length === 0) {
+        noPedidos.style.display = 'block';
+        return;
+      }
+      
+      container.style.display = 'block';
+      
+      // Ordenar pedidos por fecha (más recientes primero)
+      pedidos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+      
+      container.innerHTML = pedidos.map(pedido => `
+        <div class="pedido">
+          <div class="pedido-header">
+            <div>
+              <div class="pedido-id">Pedido #${pedido.id}</div>
+              <div class="pedido-fecha">${formatearFecha(pedido.fecha)}</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <div class="pedido-total">${formatearPrecio(pedido.total)}</div>
+              <div class="pedido-estado estado-${pedido.estado}">${pedido.estado}</div>
+            </div>
+          </div>
+          
+          <div class="pedido-items">
+            ${pedido.items.map(item => `
+              <div class="item">
+                <div class="item-info">
+                  <div class="item-nombre">${item.nombre}</div>
+                  <div class="item-detalle">${item.cantidad} × ${formatearPrecio(item.precio)} c/u</div>
+                </div>
+                <div class="item-precio">${formatearPrecio(item.cantidad * item.precio)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Generar pedidos de ejemplo si no existen
+    function generarPedidosEjemplo() {
+      const user = getSession();
+      if (!user) return;
+      
+      const pedidosExistentes = getPedidos();
+      if (pedidosExistentes.length > 0) return;
+      
+      const pedidosEjemplo = [
+        {
+          id: 'PED-001',
+          userId: user.id,
+          fecha: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // hace 2 días
+          estado: 'entregado',
+          total: 15.50,
+          items: [
+            { nombre: 'Lechuga Romana', cantidad: 2, precio: 1.60 },
+            { nombre: 'Tomate', cantidad: 1, precio: 1.90 },
+            { nombre: 'Brócoli', cantidad: 3, precio: 3.00 },
+            { nombre: 'Aceite de Oliva', cantidad: 1, precio: 6.90 }
+          ]
+        },
+        {
+          id: 'PED-002',
+          userId: user.id,
+          fecha: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // hace 5 días
+          estado: 'confirmado',
+          total: 8.30,
+          items: [
+            { nombre: 'Manzana Roja', cantidad: 2, precio: 2.30 },
+            { nombre: 'Plátano', cantidad: 1, precio: 1.70 },
+            { nombre: 'Lentejas', cantidad: 1, precio: 2.60 },
+            { nombre: 'Avena', cantidad: 1, precio: 2.10 }
+          ]
+        }
+      ];
+      
+      const todosPedidos = JSON.parse(localStorage.getItem('ecomarket_pedidos') || '[]');
+      todosPedidos.push(...pedidosEjemplo);
+      localStorage.setItem('ecomarket_pedidos', JSON.stringify(todosPedidos));
+    }
+
+    // Inicializar página
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(() => {
+        generarPedidosEjemplo();
+        renderizarPedidos();
+      }, 500); // Simular carga
+    });
+  </script>
+</body>
+</html>
