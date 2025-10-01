@@ -1639,6 +1639,9 @@
   });
   render(products);
   renderSession();
+  // Inicializar carrito
+  migrateLegacyCartIfNeeded();
+  updateCartBadge();
   // Si es gerente, iniciar refresco periódico del badge de reclamos
   startReclamosBadgeAutoUpdate();
 

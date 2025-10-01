@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito de Compras - EcoMarket</title>
+    <script src="db.js"></script>
+    <style>
+        :root {
+            --primary-green: #2d5a27;
+            --secondary-green: #4a7c59;
+            --light-green: #7fb069;
+            --accent-gold: #d4af37;
+            --light-gray: #f8f9fa;
+            --dark-gray: #343a40;
+            --white: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --error: #dc3545;
+            --success: #28a745;
+            --primary: #4ec8c2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #60e1f5 0%, #e0eafc 100%);
+            min-height: 100vh;
+            color: var(--dark-gray);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: var(--primary-green);
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-button {
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-button:hover {
+            background: var(--secondary-green);
+            transform: translateY(-2px);
+        }
+
+        .cart-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+        }
+
+        .cart-items {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        .cart-summary {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px var(--shadow);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .section-title {
+            color: var(--primary-green);
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border: 2px solid var(--light-gray);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .cart-item:hover {
+            border-color: var(--light-green);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px var(--shadow);
+        }
+
+        .item-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 2px solid var(--light-gray);
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: var(--primary-green);
+            margin-bottom: 5px;
+        }
+
+        .item-price {
+            color: var(--accent-gold);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .qty-btn {
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .qty-btn:hover {
+            background: var(--secondary-green);
+            transform: scale(1.1);
+        }
+
+        .qty-input {
+            width: 60px;
+            text-align: center;
+            border: 2px solid var(--light-gray);
+            border-radius: 8px;
+            padding: 8px;
+            font-weight: 600;
+        }
+
+        .remove-btn {
+            background: var(--error);
+            color: var(--white);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--primary-green);
+        }
+
+        .checkout-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+            color: var(--white);
+            border: none;
+            padding: 15px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .checkout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(45, 90, 39, 0.3);
+        }
+
+        .checkout-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        .empty-cart-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-cart h3 {
+            color: var(--primary-green);
+            margin-bottom: 15px;
+        }
+
+        .empty-cart p {
+            color: var(--dark-gray);
+            margin-bottom: 25px;
+        }
+
+        .continue-shopping {
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .continue-shopping:hover {
+            background: var(--secondary-green);
+            transform: translateY(-2px);
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .alert-error {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 1.6rem;
+            }
+
+            .cart-content {
+                grid-template-columns: 1fr;
+            }
+
+            .cart-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .item-image {
+                width: 120px;
+                height: 120px;
+            }
+
+            .quantity-controls {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 Mi Carrito</h1>
+            <a href="Untitled-1.html" class="back-button">
+                ← Seguir Comprando
+            </a>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <div id="cart-content" class="cart-content">
+            <!-- Se llenará dinámicamente -->
+        </div>
+
+        <div id="empty-cart" class="empty-cart" style="display: none;">
+            <div class="empty-cart-icon">🛒</div>
+            <h3>Tu carrito está vacío</h3>
+            <p>¡Agrega algunos productos frescos y deliciosos!</p>
+            <a href="Untitled-1.html" class="continue-shopping">Explorar Productos</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCart();
+        });
+
+        function getSession() {
+            try {
+                return JSON.parse(localStorage.getItem('ecomarket_session') || 'null');
+            } catch {
+                return null;
+            }
+        }
+
+        function getCartKey() {
+            const s = getSession();
+            if (!s) return null;
+            const uid = s.userId || s.username || 'anon';
+            return 'ecomarket_cart_' + encodeURIComponent(uid);
+        }
+
+        function loadCart() {
+            const session = getSession();
+            if (!session) {
+                showAlert('error', '⚠️ Debes iniciar sesión para ver tu carrito');
+                setTimeout(() => {
+                    window.location.href = 'login.html?return=' + encodeURIComponent(window.location.href);
+                }, 2000);
+                return;
+            }
+
+            const cartKey = getCartKey();
+            let cart = [];
+            
+            try {
+                cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+            } catch {
+                cart = [];
+            }
+
+            if (cart.length === 0) {
+                document.getElementById('cart-content').style.display = 'none';
+                document.getElementById('empty-cart').style.display = 'block';
+                return;
+            }
+
+            renderCart(cart);
+        }
+
+        function renderCart(cart) {
+            const cartContent = document.getElementById('cart-content');
+            const emptyCart = document.getElementById('empty-cart');
+            
+            cartContent.style.display = 'grid';
+            emptyCart.style.display = 'none';
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const delivery = subtotal > 50 ? 0 : 5;
+            const total = subtotal + delivery;
+
+            cartContent.innerHTML = `
+                <div class="cart-items">
+                    <h2 class="section-title">📦 Productos en tu carrito</h2>
+                    ${cart.map((item, index) => `
+                        <div class="cart-item" data-index="${index}">
+                            <img src="${item.img || 'https://placehold.co/80x80?text=' + encodeURIComponent(item.name)}" 
+                                 alt="${item.name}" class="item-image" 
+                                 onerror="this.src='https://placehold.co/80x80?text=' + encodeURIComponent('${item.name}')">
+                            <div class="item-details">
+                                <div class="item-name">${item.name}</div>
+                                <div class="item-price">S/ ${item.price.toFixed(2)}</div>
+                                <div class="quantity-controls">
+                                    <button class="qty-btn" onclick="updateQuantity(${index}, -1)">-</button>
+                                    <input type="number" class="qty-input" value="${item.qty}" 
+                                           onchange="setQuantity(${index}, this.value)" min="1">
+                                    <button class="qty-btn" onclick="updateQuantity(${index}, 1)">+</button>
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <strong>Subtotal: S/ ${(item.price * item.qty).toFixed(2)}</strong>
+                                </div>
+                            </div>
+                            <button class="remove-btn" onclick="removeItem(${index})">🗑️ Eliminar</button>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="cart-summary">
+                    <h2 class="section-title">💰 Resumen del Pedido</h2>
+                    <div class="summary-row">
+                        <span>Subtotal (${cart.reduce((sum, item) => sum + item.qty, 0)} productos):</span>
+                        <span>S/ ${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Entrega:</span>
+                        <span>${delivery === 0 ? 'GRATIS' : 'S/ ' + delivery.toFixed(2)}</span>
+                    </div>
+                    ${delivery === 0 ? '<small style="color: #28a745;">🎉 ¡Envío gratis por compras mayores a S/ 50!</small>' : '<small>Envío gratis en compras mayores a S/ 50</small>'}
+                    <div class="summary-row">
+                        <span>Total:</span>
+                        <span>S/ ${total.toFixed(2)}</span>
+                    </div>
+                    <button class="checkout-btn" onclick="proceedToCheckout()">
+                        🚀 Proceder al Pago
+                    </button>
+                    <small style="display: block; margin-top: 10px; text-align: center; color: #6c757d;">
+                        📱 Pago seguro y entrega rápida
+                    </small>
+                </div>
+            `;
+        }
+
+        function updateQuantity(index, delta) {
+            const cartKey = getCartKey();
+            if (!cartKey) return;
+
+            let cart = [];
+            try {
+                cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+            } catch {
+                return;
+            }
+
+            if (index >= 0 && index < cart.length) {
+                cart[index].qty = Math.max(1, (cart[index].qty || 1) + delta);
+                localStorage.setItem(cartKey, JSON.stringify(cart));
+                loadCart();
+            }
+        }
+
+        function setQuantity(index, newQty) {
+            const cartKey = getCartKey();
+            if (!cartKey) return;
+
+            let cart = [];
+            try {
+                cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+            } catch {
+                return;
+            }
+
+            const qty = parseInt(newQty) || 1;
+            if (index >= 0 && index < cart.length) {
+                cart[index].qty = Math.max(1, qty);
+                localStorage.setItem(cartKey, JSON.stringify(cart));
+                loadCart();
+            }
+        }
+
+        function removeItem(index) {
+            const cartKey = getCartKey();
+            if (!cartKey) return;
+
+            let cart = [];
+            try {
+                cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+            } catch {
+                return;
+            }
+
+            if (index >= 0 && index < cart.length) {
+                const itemName = cart[index].name;
+                cart.splice(index, 1);
+                localStorage.setItem(cartKey, JSON.stringify(cart));
+                showAlert('success', `✅ ${itemName} eliminado del carrito`);
+                loadCart();
+            }
+        }
+
+        function proceedToCheckout() {
+            const cartKey = getCartKey();
+            if (!cartKey) return;
+
+            let cart = [];
+            try {
+                cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+            } catch {
+                return;
+            }
+
+            if (cart.length === 0) {
+                showAlert('error', '❌ Tu carrito está vacío');
+                return;
+            }
+
+            // Crear pedido
+            const session = getSession();
+            const pedido = {
+                id: 'PED-' + Date.now(),
+                fecha: new Date().toISOString(),
+                usuario: session.username,
+                productos: cart.map(item => ({
+                    id: item.id,
+                    nombre: item.name,
+                    precio: item.price,
+                    cantidad: item.qty,
+                    subtotal: item.price * item.qty
+                })),
+                subtotal: cart.reduce((sum, item) => sum + (item.price * item.qty), 0),
+                entrega: cart.reduce((sum, item) => sum + (item.price * item.qty), 0) > 50 ? 0 : 5,
+                total: cart.reduce((sum, item) => sum + (item.price * item.qty), 0) + (cart.reduce((sum, item) => sum + (item.price * item.qty), 0) > 50 ? 0 : 5),
+                estado: 'pendiente'
+            };
+
+            // Guardar pedido
+            let pedidos = [];
+            try {
+                pedidos = JSON.parse(localStorage.getItem('ecomarket_pedidos') || '[]');
+            } catch {
+                pedidos = [];
+            }
+            
+            pedidos.push(pedido);
+            localStorage.setItem('ecomarket_pedidos', JSON.stringify(pedidos));
+
+            // Limpiar carrito
+            localStorage.removeItem(cartKey);
+
+            // Mostrar confirmación y redirigir
+            showAlert('success', `🎉 ¡Pedido ${pedido.id} creado exitosamente! Total: S/ ${pedido.total.toFixed(2)}`);
+            
+            setTimeout(() => {
+                window.location.href = 'mis-pedidos.html';
+            }, 2000);
+        }
+
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alert-container');
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+            
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

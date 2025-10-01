@@ -1,384 +1,714 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mis Pedidos - EcoMarket</title>
-  <style>
-    :root {
-      --primary: #4ec8c2;
-      --accent: #d70606;
-      --text: #2d3436;
-      --bg: #f4f9fb;
-      --panel: #ffffff;
-      --muted: #6c757d;
-      --border: #e9ecef;
-    }
-    
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-      background: linear-gradient(135deg, #60e1f5, #e0eafc);
-      min-height: 100vh;
-      padding: 20px;
-    }
-    
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      background: var(--panel);
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
-    
-    header {
-      background: var(--primary);
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
-    
-    header h1 {
-      margin: 0;
-      font-size: 1.8em;
-    }
-    
-    .back-link {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    
-    .back-link:hover {
-      text-decoration: underline;
-    }
-    
-    .content {
-      padding: 30px;
-    }
-    
-    .pedido {
-      background: #f8f9fa;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-      border-left: 4px solid var(--primary);
-    }
-    
-    .pedido-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    
-    .pedido-id {
-      font-weight: bold;
-      color: var(--primary);
-    }
-    
-    .pedido-fecha {
-      color: var(--muted);
-      font-size: 0.9em;
-    }
-    
-    .pedido-total {
-      font-weight: bold;
-      font-size: 1.1em;
-      color: var(--accent);
-    }
-    
-    .pedido-estado {
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.8em;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-    
-    .estado-pendiente {
-      background: #fff3cd;
-      color: #856404;
-    }
-    
-    .estado-confirmado {
-      background: #d4edda;
-      color: #155724;
-    }
-    
-    .estado-enviado {
-      background: #cce5ff;
-      color: #004085;
-    }
-    
-    .estado-entregado {
-      background: #d1ecf1;
-      color: #0c5460;
-    }
-    
-    .pedido-items {
-      margin-top: 15px;
-    }
-    
-    .item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid #e9ecef;
-    }
-    
-    .item:last-child {
-      border-bottom: none;
-    }
-    
-    .item-info {
-      flex: 1;
-    }
-    
-    .item-nombre {
-      font-weight: 500;
-    }
-    
-    .item-detalle {
-      font-size: 0.9em;
-      color: var(--muted);
-    }
-    
-    .item-precio {
-      font-weight: bold;
-      color: var(--accent);
-    }
-    
-    .no-pedidos {
-      text-align: center;
-      padding: 40px;
-      color: var(--muted);
-    }
-    
-    .no-pedidos h3 {
-      color: var(--primary);
-      margin-bottom: 10px;
-    }
-    
-    .btn {
-      display: inline-block;
-      background: var(--primary);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: bold;
-      transition: background 0.3s;
-    }
-    
-    .btn:hover {
-      background: #45b5ae;
-    }
-    
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: var(--muted);
-    }
-    
-    @media (max-width: 600px) {
-      .pedido-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      
-      .item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-      }
-      
-      .back-link {
-        position: static;
-        display: block;
-        margin-bottom: 10px;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Pedidos - EcoMarket</title>
+    <style>
+        :root {
+            --primary-green: #2d5a27;
+            --secondary-green: #4a7c59;
+            --light-green: #7fb069;
+            --accent-gold: #d4af37;
+            --light-gray: #f8f9fa;
+            --dark-gray: #343a40;
+            --white: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --error: #dc3545;
+            --success: #28a745;
+            --warning: #ffc107;
+            --info: #17a2b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #60e1f5 0%, #e0eafc 100%);
+            min-height: 100vh;
+            color: var(--dark-gray);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: var(--primary-green);
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-button {
+            background: #4ec8c2;
+            color: var(--white);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-button:hover {
+            background: var(--secondary-green);
+            transform: translateY(-2px);
+        }
+
+        .filter-section {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--primary-green);
+            font-weight: 500;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            border-color: var(--light-green);
+            outline: none;
+        }
+
+        .clear-filters-btn {
+            background: var(--light-gray);
+            color: var(--dark-gray);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clear-filters-btn:hover {
+            background: #e9ecef;
+        }
+
+        .orders-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .order-card {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--shadow);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .order-info h3 {
+            color: var(--primary-green);
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+
+        .order-date {
+            color: var(--dark-gray);
+            font-size: 0.95rem;
+        }
+
+        .order-status {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .status-pendiente {
+            background: rgba(255, 193, 7, 0.2);
+            color: #856404;
+            border: 1px solid #ffc107;
+        }
+
+        .status-confirmado {
+            background: rgba(23, 162, 184, 0.2);
+            color: #0c5460;
+            border: 1px solid #17a2b8;
+        }
+
+        .status-enviado {
+            background: rgba(40, 167, 69, 0.2);
+            color: #155724;
+            border: 1px solid #28a745;
+        }
+
+        .status-entregado {
+            background: rgba(40, 167, 69, 0.3);
+            color: #155724;
+            border: 1px solid #28a745;
+        }
+
+        .status-cancelado {
+            background: rgba(220, 53, 69, 0.2);
+            color: #721c24;
+            border: 1px solid #dc3545;
+        }
+
+        .order-items {
+            margin-bottom: 20px;
+        }
+
+        .items-header {
+            color: var(--primary-green);
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .item:last-child {
+            border-bottom: none;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 500;
+            color: var(--dark-gray);
+        }
+
+        .item-details {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .item-price {
+            font-weight: 600;
+            color: var(--accent-gold);
+        }
+
+        .order-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 2px solid var(--light-gray);
+            margin-top: 15px;
+        }
+
+        .total-label {
+            font-weight: 600;
+            color: var(--primary-green);
+            font-size: 1.1rem;
+        }
+
+        .total-amount {
+            font-weight: bold;
+            color: var(--primary-green);
+            font-size: 1.3rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            color: var(--primary-green);
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            color: var(--dark-gray);
+            margin-bottom: 25px;
+        }
+
+        .start-shopping {
+            background: #4ec8c2;
+            color: var(--white);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .start-shopping:hover {
+            background: var(--secondary-green);
+            transform: translateY(-2px);
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+
+        .alert-info {
+            background: rgba(23, 162, 184, 0.1);
+            border: 1px solid var(--info);
+            color: var(--info);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--dark-gray);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(212, 175, 55, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--accent-gold);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 1.6rem;
+            }
+
+            .filter-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .order-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .order-total {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body>
-  <script src="db.js"></script>
-  
-  <div class="container">
-    <header>
-      <a href="./Untitled-1.html" class="back-link">← Volver a EcoMarket</a>
-      <h1>📦 Mis Pedidos</h1>
-    </header>
-    
-    <div class="content">
-      <div id="loading" class="loading">
-        <p>⏳ Cargando tus pedidos...</p>
-      </div>
-      
-      <div id="pedidosContainer" style="display: none;">
-        <!-- Los pedidos se cargarán aquí dinámicamente -->
-      </div>
-      
-      <div id="noPedidos" class="no-pedidos" style="display: none;">
-        <h3>📭 No tienes pedidos aún</h3>
-        <p>¡Comienza a comprar productos frescos y ecológicos!</p>
-        <a href="./Untitled-1.html" class="btn">🛒 Ir de compras</a>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Obtener sesión del usuario
-    function getSession() {
-      try {
-        return JSON.parse(sessionStorage.getItem('ecomarket_user') || 'null');
-      } catch {
-        return null;
-      }
-    }
-
-    // Función para obtener pedidos del localStorage (simulación)
-    function getPedidos() {
-      try {
-        const pedidos = JSON.parse(localStorage.getItem('ecomarket_pedidos') || '[]');
-        const user = getSession();
-        if (user) {
-          return pedidos.filter(p => p.userId === user.id);
-        }
-        return [];
-      } catch {
-        return [];
-      }
-    }
-
-    // Formatear fecha
-    function formatearFecha(fechaISO) {
-      const fecha = new Date(fechaISO);
-      return fecha.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    }
-
-    // Formatear precio
-    function formatearPrecio(precio) {
-      return `S/ ${precio.toFixed(2)}`;
-    }
-
-    // Renderizar pedidos
-    function renderizarPedidos() {
-      const loading = document.getElementById('loading');
-      const container = document.getElementById('pedidosContainer');
-      const noPedidos = document.getElementById('noPedidos');
-      
-      const user = getSession();
-      if (!user) {
-        window.location.href = './login.html?return=' + encodeURIComponent(location.href);
-        return;
-      }
-
-      const pedidos = getPedidos();
-      
-      loading.style.display = 'none';
-      
-      if (pedidos.length === 0) {
-        noPedidos.style.display = 'block';
-        return;
-      }
-      
-      container.style.display = 'block';
-      
-      // Ordenar pedidos por fecha (más recientes primero)
-      pedidos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-      
-      container.innerHTML = pedidos.map(pedido => `
-        <div class="pedido">
-          <div class="pedido-header">
-            <div>
-              <div class="pedido-id">Pedido #${pedido.id}</div>
-              <div class="pedido-fecha">${formatearFecha(pedido.fecha)}</div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 15px;">
-              <div class="pedido-total">${formatearPrecio(pedido.total)}</div>
-              <div class="pedido-estado estado-${pedido.estado}">${pedido.estado}</div>
-            </div>
-          </div>
-          
-          <div class="pedido-items">
-            ${pedido.items.map(item => `
-              <div class="item">
-                <div class="item-info">
-                  <div class="item-nombre">${item.nombre}</div>
-                  <div class="item-detalle">${item.cantidad} × ${formatearPrecio(item.precio)} c/u</div>
-                </div>
-                <div class="item-precio">${formatearPrecio(item.cantidad * item.precio)}</div>
-              </div>
-            `).join('')}
-          </div>
+    <div class="container">
+        <div class="header">
+            <h1>📦 Mis Pedidos</h1>
+            <a href="Untitled-1.html" class="back-button">
+                ← Volver al Inicio
+            </a>
         </div>
-      `).join('');
-    }
 
-    // Generar pedidos de ejemplo si no existen
-    function generarPedidosEjemplo() {
-      const user = getSession();
-      if (!user) return;
-      
-      const pedidosExistentes = getPedidos();
-      if (pedidosExistentes.length > 0) return;
-      
-      const pedidosEjemplo = [
-        {
-          id: 'PED-001',
-          userId: user.id,
-          fecha: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // hace 2 días
-          estado: 'entregado',
-          total: 15.50,
-          items: [
-            { nombre: 'Lechuga Romana', cantidad: 2, precio: 1.60 },
-            { nombre: 'Tomate', cantidad: 1, precio: 1.90 },
-            { nombre: 'Brócoli', cantidad: 3, precio: 3.00 },
-            { nombre: 'Aceite de Oliva', cantidad: 1, precio: 6.90 }
-          ]
-        },
-        {
-          id: 'PED-002',
-          userId: user.id,
-          fecha: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // hace 5 días
-          estado: 'confirmado',
-          total: 8.30,
-          items: [
-            { nombre: 'Manzana Roja', cantidad: 2, precio: 2.30 },
-            { nombre: 'Plátano', cantidad: 1, precio: 1.70 },
-            { nombre: 'Lentejas', cantidad: 1, precio: 2.60 },
-            { nombre: 'Avena', cantidad: 1, precio: 2.10 }
-          ]
+        <div id="alert-container"></div>
+
+        <div class="filter-section">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="filter-estado">Estado del Pedido</label>
+                    <select id="filter-estado">
+                        <option value="">Todos los estados</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="confirmado">Confirmado</option>
+                        <option value="enviado">Enviado</option>
+                        <option value="entregado">Entregado</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-desde">Desde</label>
+                    <input type="date" id="filter-desde">
+                </div>
+                <div class="filter-group">
+                    <label for="filter-hasta">Hasta</label>
+                    <input type="date" id="filter-hasta">
+                </div>
+                <div class="filter-group">
+                    <button type="button" class="clear-filters-btn" onclick="clearFilters()">
+                        🔄 Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>Cargando tus pedidos...</p>
+        </div>
+
+        <div id="orders-container" class="orders-grid">
+            <!-- Los pedidos se cargarán aquí -->
+        </div>
+
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">📦</div>
+            <h3>No tienes pedidos aún</h3>
+            <p>¡Explora nuestros productos frescos y haz tu primer pedido!</p>
+            <a href="Untitled-1.html" class="start-shopping">Comenzar a Comprar</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrders();
+            setupFilters();
+        });
+
+        function getSession() {
+            try {
+                return JSON.parse(localStorage.getItem('ecomarket_session') || 'null');
+            } catch {
+                return null;
+            }
         }
-      ];
-      
-      const todosPedidos = JSON.parse(localStorage.getItem('ecomarket_pedidos') || '[]');
-      todosPedidos.push(...pedidosEjemplo);
-      localStorage.setItem('ecomarket_pedidos', JSON.stringify(todosPedidos));
-    }
 
-    // Inicializar página
-    document.addEventListener('DOMContentLoaded', function() {
-      setTimeout(() => {
-        generarPedidosEjemplo();
-        renderizarPedidos();
-      }, 500); // Simular carga
-    });
-  </script>
+        function loadOrders() {
+            const session = getSession();
+            if (!session) {
+                showAlert('error', '⚠️ Debes iniciar sesión para ver tus pedidos');
+                setTimeout(() => {
+                    window.location.href = 'login.html?return=' + encodeURIComponent(window.location.href);
+                }, 2000);
+                return;
+            }
+
+            showLoading(true);
+
+            // Simular carga de datos
+            setTimeout(() => {
+                try {
+                    // Cargar pedidos desde localStorage
+                    let allOrders = [];
+                    try {
+                        allOrders = JSON.parse(localStorage.getItem('ecomarket_pedidos') || '[]');
+                    } catch {
+                        allOrders = [];
+                    }
+
+                    // Si no hay pedidos, crear algunos de ejemplo para demostración
+                    if (allOrders.length === 0) {
+                        generateSampleOrders(session);
+                        allOrders = JSON.parse(localStorage.getItem('ecomarket_pedidos') || '[]');
+                    }
+
+                    // Filtrar pedidos del usuario actual
+                    const userOrders = allOrders.filter(order => 
+                        order.usuario === session.username || 
+                        order.userId === session.userId ||
+                        order.user_id === session.userId
+                    );
+
+                    showLoading(false);
+
+                    if (userOrders.length === 0) {
+                        showEmptyState();
+                        return;
+                    }
+
+                    displayOrders(userOrders);
+                } catch (error) {
+                    console.error('Error loading orders:', error);
+                    showLoading(false);
+                    showAlert('error', '❌ Error al cargar los pedidos');
+                }
+            }, 800);
+        }
+
+        function generateSampleOrders(session) {
+            const sampleOrders = [
+                {
+                    id: 'PED-' + Date.now(),
+                    usuario: session.username,
+                    userId: session.userId,
+                    fecha: new Date().toISOString(),
+                    estado: 'pendiente',
+                    productos: [
+                        { id: 'v1', nombre: 'Tomate', precio: 1.90, cantidad: 2, subtotal: 3.80 },
+                        { id: 'v5', nombre: 'Brócoli', precio: 3.00, cantidad: 1, subtotal: 3.00 },
+                        { id: 'o4', nombre: 'Aceite de Oliva', precio: 6.90, cantidad: 1, subtotal: 6.90 }
+                    ],
+                    subtotal: 13.70,
+                    entrega: 0,
+                    total: 13.70
+                },
+                {
+                    id: 'PED-' + (Date.now() - 86400000),
+                    usuario: session.username,
+                    userId: session.userId,
+                    fecha: new Date(Date.now() - 86400000).toISOString(),
+                    estado: 'confirmado',
+                    productos: [
+                        { id: 'f1', nombre: 'Manzana Roja', precio: 2.30, cantidad: 3, subtotal: 6.90 },
+                        { id: 'f2', nombre: 'Plátano', precio: 1.70, cantidad: 2, subtotal: 3.40 }
+                    ],
+                    subtotal: 10.30,
+                    entrega: 0,
+                    total: 10.30
+                }
+            ];
+
+            localStorage.setItem('ecomarket_pedidos', JSON.stringify(sampleOrders));
+        }
+
+        function displayOrders(orders) {
+            const container = document.getElementById('orders-container');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (orders.length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            container.style.display = 'grid';
+            emptyState.style.display = 'none';
+
+            // Ordenar por fecha (más reciente primero)
+            orders.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+            container.innerHTML = orders.map(order => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-info">
+                            <h3>${order.id}</h3>
+                            <p class="order-date">📅 ${formatDate(order.fecha)}</p>
+                        </div>
+                        <div class="order-status status-${order.estado}">
+                            ${getStatusIcon(order.estado)} ${formatStatus(order.estado)}
+                        </div>
+                    </div>
+                    
+                    <div class="order-items">
+                        <div class="items-header">
+                            📋 Productos (${order.productos ? order.productos.length : 0})
+                        </div>
+                        ${order.productos ? order.productos.map(item => `
+                            <div class="item">
+                                <div class="item-info">
+                                    <div class="item-name">${item.nombre}</div>
+                                    <div class="item-details">Cantidad: ${item.cantidad} × S/ ${item.precio.toFixed(2)}</div>
+                                </div>
+                                <div class="item-price">S/ ${item.subtotal.toFixed(2)}</div>
+                            </div>
+                        `).join('') : '<p>No hay productos en este pedido</p>'}
+                    </div>
+                    
+                    <div class="order-total">
+                        <div class="total-label">💰 Total del Pedido:</div>
+                        <div class="total-amount">S/ ${order.total.toFixed(2)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setupFilters() {
+            const estadoFilter = document.getElementById('filter-estado');
+            const desdeFilter = document.getElementById('filter-desde');
+            const hastaFilter = document.getElementById('filter-hasta');
+
+            [estadoFilter, desdeFilter, hastaFilter].forEach(filter => {
+                filter.addEventListener('change', applyFilters);
+            });
+        }
+
+        function applyFilters() {
+            const session = getSession();
+            if (!session) return;
+
+            let allOrders = [];
+            try {
+                allOrders = JSON.parse(localStorage.getItem('ecomarket_pedidos') || '[]');
+            } catch {
+                allOrders = [];
+            }
+
+            let userOrders = allOrders.filter(order => 
+                order.usuario === session.username || 
+                order.userId === session.userId ||
+                order.user_id === session.userId
+            );
+
+            const estadoFilter = document.getElementById('filter-estado').value;
+            const desdeFilter = document.getElementById('filter-desde').value;
+            const hastaFilter = document.getElementById('filter-hasta').value;
+
+            if (estadoFilter) {
+                userOrders = userOrders.filter(order => order.estado === estadoFilter);
+            }
+
+            if (desdeFilter) {
+                const desde = new Date(desdeFilter);
+                userOrders = userOrders.filter(order => new Date(order.fecha) >= desde);
+            }
+
+            if (hastaFilter) {
+                const hasta = new Date(hastaFilter);
+                hasta.setHours(23, 59, 59, 999); // Final del día
+                userOrders = userOrders.filter(order => new Date(order.fecha) <= hasta);
+            }
+
+            displayOrders(userOrders);
+        }
+
+        function clearFilters() {
+            document.getElementById('filter-estado').value = '';
+            document.getElementById('filter-desde').value = '';
+            document.getElementById('filter-hasta').value = '';
+            loadOrders();
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showEmptyState() {
+            document.getElementById('orders-container').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'block';
+        }
+
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alert-container');
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+            
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-PE', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatStatus(status) {
+            const statusMap = {
+                'pendiente': 'Pendiente',
+                'confirmado': 'Confirmado',
+                'enviado': 'Enviado',
+                'entregado': 'Entregado',
+                'cancelado': 'Cancelado'
+            };
+            return statusMap[status] || status;
+        }
+
+        function getStatusIcon(status) {
+            const iconMap = {
+                'pendiente': '⏳',
+                'confirmado': '✅',
+                'enviado': '🚚',
+                'entregado': '📦',
+                'cancelado': '❌'
+            };
+            return iconMap[status] || '📋';
+        }
+    </script>
 </body>
 </html>
