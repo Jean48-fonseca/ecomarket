@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📸 EcoMarket - Gestor de Imágenes</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 15px; 
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .header { 
+            background: linear-gradient(45deg, #4CAF50, #45a049); 
+            color: white; 
+            padding: 30px; 
+            text-align: center; 
+        }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 1.1em; }
+        
+        .controls { 
+            padding: 30px; 
+            background: #f8f9fa; 
+            border-bottom: 1px solid #e9ecef;
+        }
+        .upload-zone { 
+            border: 3px dashed #4CAF50; 
+            border-radius: 10px; 
+            padding: 40px; 
+            text-align: center; 
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .upload-zone:hover { background: #f0f8f0; }
+        .upload-zone.dragover { background: #e8f5e8; border-color: #45a049; }
+        
+        .categories { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 20px; 
+            padding: 30px;
+        }
+        .category { 
+            background: white; 
+            border-radius: 10px; 
+            padding: 20px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid;
+        }
+        .category.verduras { border-left-color: #4CAF50; }
+        .category.frutas { border-left-color: #FF9800; }
+        .category.legumbres { border-left-color: #8BC34A; }
+        .category.cereales { border-left-color: #FFC107; }
+        .category.carnes { border-left-color: #F44336; }
+        .category.embutidos { border-left-color: #E91E63; }
+        .category.especias { border-left-color: #9C27B0; }
+        .category.otros { border-left-color: #607D8B; }
+        
+        .category h3 { margin-bottom: 15px; color: #333; }
+        .product { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 10px; 
+            padding: 10px; 
+            background: #f8f9fa; 
+            border-radius: 5px;
+        }
+        .product img { 
+            width: 60px; 
+            height: 60px; 
+            object-fit: cover; 
+            border-radius: 5px; 
+            margin-right: 15px;
+        }
+        .product-info { flex: 1; }
+        .product-name { font-weight: bold; color: #333; }
+        .product-id { color: #666; font-size: 0.9em; }
+        .upload-btn { 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            padding: 8px 15px; 
+            border-radius: 5px; 
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .upload-btn:hover { background: #45a049; }
+        
+        .instructions { 
+            background: #e3f2fd; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 10px; 
+            border-left: 5px solid #2196F3;
+        }
+        .instructions h4 { color: #1976D2; margin-bottom: 10px; }
+        .instructions ul { margin-left: 20px; }
+        .instructions li { margin-bottom: 5px; }
+        
+        .json-output { 
+            background: #2d3748; 
+            color: #68d391; 
+            padding: 20px; 
+            border-radius: 10px; 
+            font-family: 'Courier New', monospace; 
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 Gestor de Imágenes EcoMarket</h1>
+            <p>Organiza y asigna imágenes a tus productos de forma inteligente</p>
+        </div>
+        
+        <div class="controls">
+            <div class="upload-zone" id="uploadZone">
+                <h3>📁 Arrastra tus imágenes aquí</h3>
+                <p>o haz clic para seleccionar archivos</p>
+                <input type="file" id="fileInput" multiple accept="image/*" style="display: none;">
+            </div>
+            
+            <div class="instructions">
+                <h4>🎯 Instrucciones de uso:</h4>
+                <ul>
+                    <li><strong>Nombres de archivo:</strong> Usa el ID del producto (ej: v1.jpg, f3.png, l2.webp)</li>
+                    <li><strong>Carpetas:</strong> Guarda en /images/[categoría]/ (ej: /images/verduras/v1.jpg)</li>
+                    <li><strong>Formatos:</strong> JPG, PNG, WebP (recomendado: 800x550px)</li>
+                    <li><strong>Override:</strong> El sistema generará código para sobrescribir las imágenes automáticamente</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="categories" id="categories">
+            <!-- Se llenarán dinámicamente -->
+        </div>
+        
+        <div class="json-output" id="jsonOutput" style="display: none;">
+            <h4>📋 Código generado para actualizar imágenes:</h4>
+            <div id="generatedCode"></div>
+        </div>
+    </div>
+
+    <script>
+        // Productos del sistema EcoMarket
+        const products = [
+            // Verduras
+            {id:'v1', name:'Lechuga Romana', category:'verduras'},
+            {id:'v2', name:'Tomate', category:'verduras'},
+            {id:'v3', name:'Zanahoria', category:'verduras'},
+            {id:'v4', name:'Pepino', category:'verduras'},
+            {id:'v5', name:'Pimiento Verde', category:'verduras'},
+            {id:'v6', name:'Cebolla Morada', category:'verduras'},
+            {id:'v7', name:'Ajo', category:'verduras'},
+            {id:'v8', name:'Berenjena', category:'verduras'},
+            {id:'v9', name:'Espárragos', category:'verduras'},
+            {id:'v10', name:'Brócoli', category:'verduras'},
+            {id:'v11', name:'Cilantro', category:'verduras'},
+            {id:'v12', name:'Papa Blanca', category:'verduras'},
+            
+            // Legumbres
+            {id:'l1', name:'Lentejas', category:'legumbres'},
+            {id:'l2', name:'Garbanzos', category:'legumbres'},
+            {id:'l3', name:'Frijoles Negros', category:'legumbres'},
+            {id:'l4', name:'Soja', category:'legumbres'},
+            {id:'l5', name:'Alubias Blancas', category:'legumbres'},
+            
+            // Frutas
+            {id:'f1', name:'Manzana Roja', category:'frutas'},
+            {id:'f2', name:'Plátano', category:'frutas'},
+            {id:'f3', name:'Naranja', category:'frutas'},
+            {id:'f4', name:'Fresa', category:'frutas'},
+            {id:'f5', name:'Mango', category:'frutas'},
+            {id:'f6', name:'Piña', category:'frutas'},
+            {id:'f7', name:'Kiwis', category:'frutas'},
+            
+            // Cereales
+            {id:'c1', name:'Arroz Integral', category:'cereales'},
+            {id:'c2', name:'Avena', category:'cereales'},
+            {id:'c3', name:'Quinoa', category:'cereales'},
+            {id:'c4', name:'Harina de Trigo', category:'cereales'},
+            {id:'c5', name:'Semillas de Chía', category:'cereales'},
+            {id:'o16', name:'Spaghetti', category:'cereales'},
+            
+            // Embutidos
+            {id:'e1', name:'Jamón Cocido', category:'embutidos'},
+            {id:'e2', name:'Chorizo', category:'embutidos'},
+            {id:'e3', name:'Salchicha de Pavo', category:'embutidos'},
+            {id:'e4', name:'Pavo Ahumado', category:'embutidos'},
+            {id:'e5', name:'Salami', category:'embutidos'},
+            
+            // Carnes
+            {id:'m1', name:'Pechuga de Pollo', category:'carnes'},
+            {id:'m2', name:'Carne de Res (Lomo)', category:'carnes'},
+            {id:'m3', name:'Carne de Cerdo (Chuleta)', category:'carnes'},
+            {id:'m4', name:'Filete de Pescado', category:'carnes'},
+            {id:'m5', name:'Atún en Lata', category:'carnes'},
+            {id:'m6', name:'Camarones', category:'carnes'},
+            
+            // Especias
+            {id:'s1', name:'Sal de Mesa', category:'especias'},
+            {id:'s2', name:'Pimienta Negra Molida', category:'especias'},
+            {id:'s3', name:'Comino Molido', category:'especias'},
+            {id:'s4', name:'Orégano Seco', category:'especias'},
+            {id:'s5', name:'Paprika (Pimentón Dulce)', category:'especias'},
+            {id:'s6', name:'Cúrcuma en Polvo', category:'especias'},
+            {id:'s7', name:'Hojas de Laurel', category:'especias'},
+            {id:'s8', name:'Canela en Rama', category:'especias'},
+            {id:'s9', name:'Romero Seco', category:'especias'},
+            {id:'s10', name:'Tomillo Seco', category:'especias'},
+            {id:'s11', name:'Curry en Polvo', category:'especias'},
+            {id:'s12', name:'Pasta de Ají Amarillo', category:'especias'},
+            
+            // Otros
+            {id:'o1', name:'Huevos (docena)', category:'otros'},
+            {id:'o2', name:'Leche Entera', category:'otros'},
+            {id:'o3', name:'Aceite de Oliva', category:'otros'},
+            {id:'o4', name:'Yogur Natural', category:'otros'},
+            {id:'o5', name:'Miel Natural', category:'otros'},
+            {id:'o6', name:'Café Molido', category:'otros'},
+            {id:'o7', name:'Té Verde', category:'otros'},
+            {id:'o8', name:'Queso Fresco', category:'otros'},
+            {id:'o9', name:'Mantequilla', category:'otros'},
+            {id:'o10', name:'Salsa de Soya', category:'otros'},
+            {id:'o11', name:'Leche Evaporada', category:'otros'},
+            {id:'o12', name:'Leche Condensada', category:'otros'},
+            {id:'o13', name:'Crema de Leche', category:'otros'},
+            {id:'o14', name:'Yogur Griego', category:'otros'},
+            {id:'o15', name:'Queso Parmesano', category:'otros'},
+            {id:'o17', name:'Azúcar Blanca', category:'otros'},
+            {id:'o18', name:'Vinagre Blanco', category:'otros'},
+            {id:'o19', name:'Galletas de Soda', category:'otros'}
+        ];
+
+        const categoryIcons = {
+            'verduras': '🥬',
+            'frutas': '🍎',
+            'legumbres': '🫘',
+            'cereales': '🌾',
+            'carnes': '🥩',
+            'embutidos': '🥓',
+            'especias': '🧂',
+            'otros': '🥛'
+        };
+
+        // Agrupar productos por categoría
+        const productsByCategory = {};
+        products.forEach(product => {
+            if (!productsByCategory[product.category]) {
+                productsByCategory[product.category] = [];
+            }
+            productsByCategory[product.category].push(product);
+        });
+
+        // Renderizar categorías
+        function renderCategories() {
+            const container = document.getElementById('categories');
+            container.innerHTML = '';
+
+            Object.keys(productsByCategory).forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = `category ${category}`;
+                
+                const icon = categoryIcons[category] || '📦';
+                categoryDiv.innerHTML = `
+                    <h3>${icon} ${category.charAt(0).toUpperCase() + category.slice(1)}</h3>
+                    ${productsByCategory[category].map(product => `
+                        <div class="product">
+                            <img src="./images/${category}/${product.id}.jpg" 
+                                 alt="${product.name}" 
+                                 onerror="this.src='https://placehold.co/60x60?text=${product.id}'"
+                                 title="Imagen actual: ${product.id}">
+                            <div class="product-info">
+                                <div class="product-name">${product.name}</div>
+                                <div class="product-id">ID: ${product.id}</div>
+                            </div>
+                            <button class="upload-btn" onclick="selectImageForProduct('${product.id}')">
+                                📸 Cambiar
+                            </button>
+                        </div>
+                    `).join('')}
+                `;
+                
+                container.appendChild(categoryDiv);
+            });
+        }
+
+        // Manejar drag & drop
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            const overrides = {};
+            let processedFiles = 0;
+
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const fileName = file.name.split('.')[0];
+                        const product = products.find(p => p.id === fileName);
+                        
+                        if (product) {
+                            overrides[product.id] = e.target.result;
+                            console.log(`✅ Imagen cargada para ${product.name} (${product.id})`);
+                        } else {
+                            console.log(`⚠️ No se encontró producto con ID: ${fileName}`);
+                        }
+                        
+                        processedFiles++;
+                        if (processedFiles === files.length) {
+                            generateOverrideCode(overrides);
+                            renderCategories(); // Actualizar vista
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        function generateOverrideCode(overrides) {
+            const jsonOutput = document.getElementById('jsonOutput');
+            const generatedCode = document.getElementById('generatedCode');
+            
+            if (Object.keys(overrides).length > 0) {
+                const code = `
+// 📸 Código para actualizar imágenes en EcoMarket
+// Copia y pega este código en la consola del navegador en tu tienda
+
+const newImages = ${JSON.stringify(overrides, null, 2)};
+const currentOverrides = getImgOverrides();
+const updatedOverrides = {...currentOverrides, ...newImages};
+setImgOverrides(updatedOverrides);
+location.reload(); // Recargar para ver los cambios
+
+console.log('✅ Imágenes actualizadas:', Object.keys(newImages));
+                `;
+                
+                generatedCode.textContent = code;
+                jsonOutput.style.display = 'block';
+            }
+        }
+
+        function selectImageForProduct(productId) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const overrides = {};
+                        overrides[productId] = event.target.result;
+                        generateOverrideCode(overrides);
+                        renderCategories();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+
+        // Inicializar
+        renderCategories();
+    </script>
+</body>
+</html>

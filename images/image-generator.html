@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Generador de Imagen EcoMarket</title>
+</head>
+<body>
+    <canvas id="ecomarketCanvas" width="400" height="300" style="border: 1px solid #ccc;"></canvas>
+    <br><br>
+    <button onclick="generateImage()">Generar Imagen EcoMarket</button>
+    <button onclick="downloadImage()">Descargar PNG</button>
+    <br><br>
+    <textarea id="base64Output" style="width: 100%; height: 200px;" placeholder="Aquí aparecerá el código base64..."></textarea>
+
+    <script>
+        function generateImage() {
+            const canvas = document.getElementById('ecomarketCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Limpiar canvas
+            ctx.clearRect(0, 0, 400, 300);
+            
+            // Fondo degradado
+            const gradient = ctx.createLinearGradient(0, 0, 400, 300);
+            gradient.addColorStop(0, '#f5f5dc');
+            gradient.addColorStop(1, '#e8e8e8');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 400, 300);
+            
+            // Header EcoMarket
+            ctx.fillStyle = '#8B4513';
+            roundRect(ctx, 150, 20, 100, 40, 8);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('ECOMARKET', 200, 35);
+            ctx.font = '10px Arial';
+            ctx.fillText('— Sustainable Living Made Easy —', 200, 50);
+            
+            // Estanterías
+            ctx.fillStyle = '#D2B48C';
+            ctx.fillRect(290, 60, 100, 180);
+            
+            // Productos en estanterías
+            const colors = ['#4CAF50', '#FF9800', '#F44336', '#2196F3', '#9C27B0', '#FFC107'];
+            for (let i = 0; i < 6; i++) {
+                ctx.fillStyle = colors[i];
+                ctx.fillRect(295 + (i * 15), 70, 12, 15);
+                ctx.fillRect(295 + (i * 15), 100, 12, 15);
+                ctx.fillRect(295 + (i * 15), 130, 12, 15);
+            }
+            
+            // Ventanas
+            ctx.fillStyle = 'rgba(135, 206, 235, 0.7)';
+            ctx.fillRect(0, 0, 400, 60);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 2;
+            ctx.fillRect(50, 10, 80, 40);
+            ctx.strokeRect(50, 10, 80, 40);
+            ctx.fillRect(270, 10, 80, 40);
+            ctx.strokeRect(270, 10, 80, 40);
+            
+            // Familia (empleados y clientes)
+            drawPerson(ctx, 45, 210, '#FFB74D', '#4CAF50', '#2E7D32', 'EMPLEADO');
+            drawPerson(ctx, 135, 220, '#FFCC80', '#E1F5FE', '#1976D2', 'MADRE');
+            drawPerson(ctx, 175, 230, '#FFCC80', '#F8BBD9', '#C2185B', 'NIÑA', true);
+            drawPerson(ctx, 215, 210, '#FFB74D', '#FFFDE7', '#424242', 'PADRE');
+            drawPerson(ctx, 255, 230, '#FFAB91', '#2196F3', '#1565C0', 'NIÑO', true);
+            drawPerson(ctx, 325, 215, '#D7CCC8', '#4CAF50', '#2E7D32', 'EMPLEADO');
+            
+            // Carrito
+            ctx.fillStyle = '#9E9E9E';
+            ctx.fillRect(95, 225, 25, 18);
+            ctx.strokeStyle = '#616161';
+            ctx.strokeRect(95, 225, 25, 18);
+            
+            // Ruedas del carrito
+            ctx.fillStyle = '#424242';
+            ctx.beginPath();
+            ctx.arc(98, 250, 3, 0, 2 * Math.PI);
+            ctx.arc(117, 250, 3, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Productos en carrito
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(97, 215, 4, 6);
+            ctx.fillStyle = '#FF9800';
+            ctx.fillRect(103, 215, 4, 6);
+            ctx.fillStyle = '#F44336';
+            ctx.fillRect(109, 215, 4, 6);
+            
+            // Suelo con efecto
+            const floorGradient = ctx.createLinearGradient(0, 260, 400, 260);
+            floorGradient.addColorStop(0, 'rgba(215, 204, 200, 0.3)');
+            floorGradient.addColorStop(0.5, 'rgba(188, 170, 164, 0.3)');
+            floorGradient.addColorStop(1, 'rgba(215, 204, 200, 0.3)');
+            ctx.fillStyle = floorGradient;
+            ctx.fillRect(0, 260, 400, 40);
+            
+            // Plants
+            drawLeaf(ctx, 20, 120);
+            drawLeaf(ctx, 370, 130);
+            
+            // Generar base64
+            const base64 = canvas.toDataURL('image/png');
+            document.getElementById('base64Output').value = base64;
+        }
+        
+        function drawPerson(ctx, x, y, headColor, bodyColor, legColor, label, small = false) {
+            const scale = small ? 0.7 : 1;
+            const headSize = 15 * scale;
+            const bodyWidth = 18 * scale;
+            const bodyHeight = 25 * scale;
+            const legWidth = 6 * scale;
+            const legHeight = 15 * scale;
+            
+            // Cabeza
+            ctx.fillStyle = headColor;
+            ctx.beginPath();
+            ctx.arc(x, y - bodyHeight - headSize, headSize, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Cuerpo
+            ctx.fillStyle = bodyColor;
+            roundRect(ctx, x - bodyWidth/2, y - bodyHeight, bodyWidth, bodyHeight, 4);
+            
+            // Piernas
+            ctx.fillStyle = legColor;
+            roundRect(ctx, x - bodyWidth/2 + 2, y, legWidth, legHeight, 3);
+            roundRect(ctx, x + bodyWidth/2 - legWidth - 2, y, legWidth, legHeight, 3);
+            
+            // Etiqueta empleado
+            if (label === 'EMPLEADO') {
+                ctx.fillStyle = 'white';
+                ctx.font = '6px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('ECO', x, y - bodyHeight + 8);
+            }
+        }
+        
+        function drawLeaf(ctx, x, y) {
+            ctx.fillStyle = '#4CAF50';
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.quadraticCurveTo(x - 8, y + 10, x, y + 15);
+            ctx.quadraticCurveTo(x + 8, y + 10, x, y);
+            ctx.fill();
+        }
+        
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        function downloadImage() {
+            const canvas = document.getElementById('ecomarketCanvas');
+            const link = document.createElement('a');
+            link.download = 'ecomarket-family.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Generar automáticamente al cargar
+        window.onload = generateImage;
+    </script>
+</body>
+</html>
