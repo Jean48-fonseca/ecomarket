@@ -234,30 +234,26 @@
     // Verificar EcoDB antes de cualquier acción
     async function checkEcoDB(){
       if(!window.EcoDB || typeof EcoDB.findUserByUsername!=='function'){
-        document.body.innerHTML = '<div style="max-width:500px;margin:60px auto;padding:32px 18px;background:#fff;border-radius:14px;box-shadow:0 8px 32px #0002;text-align:center;font-size:1.2em;color:#d70606;">'+
-        '<b>Error crítico:</b><br> No se pudo cargar la base de datos del sistema (EcoDB).<br><br>'+ 
-        'Por favor, recarga la página con <b>Ctrl+F5</b> o borra la caché del navegador.<br><br>'+ 
-        'Si el problema persiste, contacta soporte técnico.'+
-        '</div>';
-        throw new Error('EcoDB no está disponible');
+        console.warn('EcoDB no disponible, algunas funciones usarán fallback localStorage');
+        // don't throw; allow UI to continue with degraded mode
+        return;
       }
-      
-      // Inicializar base de datos
-      await EcoDB.dbOpen();
-      
+      try {
+        await EcoDB.dbOpen();
+      } catch (err) {
+        console.warn('dbOpen falló, usando fallback localStorage:', err);
+        // continue, EcoDB functions implement fallbacks where possible
+      }
       // Crear usuarios predeterminados si no existen
-      if(typeof EcoDB.listUsers==='function' && typeof EcoDB.initializeDefaultUsers==='function'){
-        const users = await EcoDB.listUsers().catch(()=>[]);
-        if(!users || users.length===0){
-          await EcoDB.initializeDefaultUsers();
-          console.log('Usuarios predeterminados creados.');
-          console.log('Credenciales disponibles:');
-          console.log('- cliente1 / cliente123');
-          console.log('- admin / admin123');
-          console.log('- empleado1 / emp123');
-          console.log('- gerente / gerente123');
+      try {
+        if(typeof EcoDB.listUsers==='function' && typeof EcoDB.initializeDefaultUsers==='function'){
+          const users = await EcoDB.listUsers().catch(()=>[]);
+          if(!users || users.length===0){
+            await EcoDB.initializeDefaultUsers();
+            console.log('Usuarios predeterminados creados.');
+          }
         }
-      }
+      } catch(e){ console.warn('Inicialización de usuarios falló:', e); }
     }
 
     // Alternar entre tabs Cliente/Empleado

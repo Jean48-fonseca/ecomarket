@@ -768,9 +768,8 @@
                 return;
             }
 
-            const cartKey = getCartKey();
+            const cartKey = getCartKey() || 'ecomarket_cart_anon';
             let cart = [];
-            
             try {
                 cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
             } catch {
@@ -912,14 +911,8 @@
             const cartKey = getCartKey();
             if (!cartKey) return;
 
-            // Renovar sesión al iniciar proceso de pago
-            if (!renewSession()) {
-                showAlert('error', '❌ Tu sesión ha expirado. Redirigiendo al login...');
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 2000);
-                return;
-            }
+            // Renovar sesión al iniciar proceso de pago (si hay EcoSession)
+            try { if (typeof EcoSession !== 'undefined' && !EcoSession.renewSession()) { showAlert('error', '❌ Tu sesión ha expirado. Redirigiendo al login...'); setTimeout(()=>window.location.href='login.html',2000); return; } } catch(e){ console.warn('renewSession falló o no está disponible', e); }
 
             let cart = [];
             try {
