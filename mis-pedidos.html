@@ -453,32 +453,50 @@
         });
 
         function getSession() {
+            // Versión más tolerante de lectura de sesión.
+            // Acepta: JSON string, objeto ya parseado, y distintos nombres de campo (userId / username).
             try {
-                const sessionData = localStorage.getItem('ecomarket_session');
-                if (!sessionData || sessionData === 'null') {
+                let raw = localStorage.getItem('ecomarket_session');
+                if (!raw || raw === 'null') return null;
+
+                // Si ya es un objeto (algunas páginas podrían escribirlo así), usarlo directamente
+                let session = null;
+                if (typeof raw === 'object') {
+                    session = raw;
+                } else {
+                    try {
+                        session = JSON.parse(raw);
+                    } catch (err) {
+                        // No es JSON válido: puede ser un string con solo el username
+                        session = { username: String(raw) };
+                    }
+                }
+
+                // Normalizar campos comunes
+                if (!session) return null;
+                // algunos flows usan 'userId', otros 'id' o 'user_id'
+                session.userId = session.userId || session.id || session.user_id || null;
+                session.username = session.username || session.user || (session.userId ? String(session.userId) : null) || null;
+
+                // Si faltan ambos identificadores, no hay sesión válida
+                if (!session.userId && !session.username) {
+                    console.warn('Sesion presente pero sin identificador (userId/username)');
                     return null;
                 }
-                
-                const session = JSON.parse(sessionData);
-                
-                // Verificar que la sesión tenga los datos mínimos necesarios
-                if (!session || (!session.userId && !session.username)) {
-                    console.warn('Sesión inválida detectada, limpiando...');
-                    localStorage.removeItem('ecomarket_session');
-                    return null;
+
+                // Verificar expiración si existe; no eliminar la clave automáticamente aquí
+                if (session.expiresAt) {
+                    const exp = new Date(session.expiresAt);
+                    if (!isNaN(exp) && exp < new Date()) {
+                        console.warn('Sesión encontrada pero expirada');
+                        return null;
+                    }
                 }
-                
-                // Verificar si la sesión ha expirado (si tiene expiresAt)
-                if (session.expiresAt && new Date(session.expiresAt) < new Date()) {
-                    console.warn('Sesión expirada, limpiando...');
-                    localStorage.removeItem('ecomarket_session');
-                    return null;
-                }
-                
+
                 return session;
             } catch (error) {
                 console.error('Error al leer sesión:', error);
-                localStorage.removeItem('ecomarket_session'); // Limpiar sesión corrupta
+                // No borrar la sesión aquí a menos que estemos seguros; devolver null para forzar login
                 return null;
             }
         }
