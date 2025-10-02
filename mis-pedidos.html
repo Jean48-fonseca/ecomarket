@@ -452,53 +452,11 @@
             setupFilters();
         });
 
+        // asegurar que session.js esté disponible
+        (function(){ if (typeof EcoSession === 'undefined') { const s=document.createElement('script'); s.src='session.js'; document.head.appendChild(s); } })();
+
         function getSession() {
-            // Versión más tolerante de lectura de sesión.
-            // Acepta: JSON string, objeto ya parseado, y distintos nombres de campo (userId / username).
-            try {
-                let raw = localStorage.getItem('ecomarket_session');
-                if (!raw || raw === 'null') return null;
-
-                // Si ya es un objeto (algunas páginas podrían escribirlo así), usarlo directamente
-                let session = null;
-                if (typeof raw === 'object') {
-                    session = raw;
-                } else {
-                    try {
-                        session = JSON.parse(raw);
-                    } catch (err) {
-                        // No es JSON válido: puede ser un string con solo el username
-                        session = { username: String(raw) };
-                    }
-                }
-
-                // Normalizar campos comunes
-                if (!session) return null;
-                // algunos flows usan 'userId', otros 'id' o 'user_id'
-                session.userId = session.userId || session.id || session.user_id || null;
-                session.username = session.username || session.user || (session.userId ? String(session.userId) : null) || null;
-
-                // Si faltan ambos identificadores, no hay sesión válida
-                if (!session.userId && !session.username) {
-                    console.warn('Sesion presente pero sin identificador (userId/username)');
-                    return null;
-                }
-
-                // Verificar expiración si existe; no eliminar la clave automáticamente aquí
-                if (session.expiresAt) {
-                    const exp = new Date(session.expiresAt);
-                    if (!isNaN(exp) && exp < new Date()) {
-                        console.warn('Sesión encontrada pero expirada');
-                        return null;
-                    }
-                }
-
-                return session;
-            } catch (error) {
-                console.error('Error al leer sesión:', error);
-                // No borrar la sesión aquí a menos que estemos seguros; devolver null para forzar login
-                return null;
-            }
+            return (typeof EcoSession !== 'undefined') ? EcoSession.getSession() : (function(){ try { return JSON.parse(localStorage.getItem('ecomarket_session')||'null'); } catch { return null; } })();
         }
 
         function loadOrders() {

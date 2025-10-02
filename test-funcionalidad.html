@@ -137,14 +137,15 @@
                 expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
                 createdAt: new Date().toISOString()
             };
-
-            localStorage.setItem('ecomarket_session', JSON.stringify(testSession));
+            if (typeof EcoSession !== 'undefined') { EcoSession.saveSession(testSession); }
+            else { localStorage.setItem('ecomarket_session', JSON.stringify(testSession)); }
             log('Sesión de prueba creada', 'success');
             checkSession();
         }
 
         function clearSession() {
-            localStorage.removeItem('ecomarket_session');
+            if (typeof EcoSession !== 'undefined') { EcoSession.clearSession(); }
+            else { localStorage.removeItem('ecomarket_session'); }
             log('Sesión eliminada', 'info');
             checkSession();
         }
@@ -227,7 +228,7 @@
         }
 
         function generateTestOrders() {
-            const session = JSON.parse(localStorage.getItem('ecomarket_session') || 'null');
+            const session = (typeof EcoSession !== 'undefined') ? EcoSession.getSession() : JSON.parse(localStorage.getItem('ecomarket_session') || 'null');
             if (!session) {
                 log('No hay sesión activa para generar pedidos', 'error');
                 return;

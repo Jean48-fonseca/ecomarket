@@ -927,16 +927,13 @@
     function renewSession() { return (typeof EcoSession !== 'undefined') ? EcoSession.renewSession() : false; }
     
     function clearSession(){
-      localStorage.removeItem('ecomarket_session');
+      if (typeof EcoSession !== 'undefined') { EcoSession.clearSession(); } else { localStorage.removeItem('ecomarket_session'); }
       state.cartCount = 0;
       if(cartBadge){ cartBadge.hidden = true; cartBadge.textContent = '0'; }
       if(cartLive){ cartLive.textContent = 'Carrito vacío'; }
     }
     function getCartKey(){
-      const s = getSession();
-      if(!s) return null;
-      const uid = s.userId || s.username || 'anon';
-      return 'ecomarket_cart_'+ encodeURIComponent(uid);
+      return (typeof EcoSession !== 'undefined') ? EcoSession.getSessionKeyForCart() : (function(){ const s=getSession(); if(!s) return null; const uid=s.userId||s.username||'anon'; return 'ecomarket_cart_'+encodeURIComponent(uid); })();
     }
     function migrateLegacyCartIfNeeded(){
       const key = getCartKey();
