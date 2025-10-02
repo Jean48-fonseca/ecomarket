@@ -728,10 +728,46 @@
 
         function getSession() {
             try {
-                return JSON.parse(localStorage.getItem('ecomarket_session') || 'null');
-            } catch {
+                const sessionData = localStorage.getItem('ecomarket_session');
+                if (!sessionData || sessionData === 'null') {
+                    return null;
+                }
+                
+                const session = JSON.parse(sessionData);
+                
+                // Verificar que la sesión tenga los datos mínimos necesarios
+                if (!session || (!session.userId && !session.username)) {
+                    console.warn('Sesión inválida detectada, limpiando...');
+                    localStorage.removeItem('ecomarket_session');
+                    return null;
+                }
+                
+                // Verificar si la sesión ha expirado (si tiene expiresAt)
+                if (session.expiresAt && new Date(session.expiresAt) < new Date()) {
+                    console.warn('Sesión expirada, limpiando...');
+                    localStorage.removeItem('ecomarket_session');
+                    return null;
+                }
+                
+                return session;
+            } catch (error) {
+                console.error('Error al leer sesión:', error);
+                localStorage.removeItem('ecomarket_session'); // Limpiar sesión corrupta
                 return null;
             }
+        }
+
+        function renewSession() {
+            const session = getSession();
+            if (session) {
+                // Renovar la sesión por 24 horas más
+                session.lastActivity = new Date().toISOString();
+                session.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+                localStorage.setItem('ecomarket_session', JSON.stringify(session));
+                console.log('Sesión renovada automáticamente');
+                return true;
+            }
+            return false;
         }
 
         function getCartKey() {
@@ -744,10 +780,19 @@
         function loadCart() {
             const session = getSession();
             if (!session) {
+                console.warn('No hay sesión activa para el carrito');
                 showAlert('error', '⚠️ Debes iniciar sesión para ver tu carrito');
+                
+                // Mostrar carrito vacío en lugar de redirigir inmediatamente
+                document.getElementById('cart-content').style.display = 'none';
+                document.getElementById('empty-cart').style.display = 'block';
+                
+                // Solo redirigir si el usuario intenta hacer algo
                 setTimeout(() => {
-                    window.location.href = 'login.html?return=' + encodeURIComponent(window.location.href);
-                }, 2000);
+                    if (!getSession()) { // Verificar nuevamente después de un tiempo
+                        window.location.href = 'login.html?return=' + encodeURIComponent(window.location.href);
+                    }
+                }, 3000); // Dar más tiempo antes de redirigir
                 return;
             }
 
@@ -895,6 +940,15 @@
             const cartKey = getCartKey();
             if (!cartKey) return;
 
+            // Renovar sesión al iniciar proceso de pago
+            if (!renewSession()) {
+                showAlert('error', '❌ Tu sesión ha expirado. Redirigiendo al login...');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            }
+
             let cart = [];
             try {
                 cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
@@ -957,6 +1011,15 @@
         function confirmPayment() {
             if (!selectedPaymentMethod || !currentOrderData) {
                 showAlert('error', '❌ Por favor selecciona un método de pago');
+                return;
+            }
+
+            // Renovar sesión antes de procesar el pago
+            if (!renewSession()) {
+                showAlert('error', '❌ Tu sesión ha expirado. Redirigiendo al login...');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
                 return;
             }
 
@@ -1051,11 +1114,34 @@
 
         function continueShopping() {
             document.getElementById('successModal').style.display = 'none';
-            window.location.href = 'Untitled-1.html';
+            
+            // Verificar que la sesión sigue activa antes de redirigir
+            const session = getSession();
+            if (!session) {
+                showAlert('error', '⚠️ Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+                setTimeout(() => {
+                    window.location.href = 'login.html?return=' + encodeURIComponent('Untitled-1.html');
+                }, 2000);
+                return;
+            }
+            
+            // Redirigir con parámetro para indicar compra exitosa
+            window.location.href = 'Untitled-1.html?compra=exitosa';
         }
 
         function viewMyOrders() {
             document.getElementById('successModal').style.display = 'none';
+            
+            // Verificar que la sesión sigue activa antes de redirigir
+            const session = getSession();
+            if (!session) {
+                showAlert('error', '⚠️ Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+                setTimeout(() => {
+                    window.location.href = 'login.html?return=' + encodeURIComponent('mis-pedidos.html');
+                }, 2000);
+                return;
+            }
+            
             window.location.href = 'mis-pedidos.html';
         }
 
