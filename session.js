@@ -60,6 +60,58 @@
     return 'ecomarket_cart_' + encodeURIComponent(uid);
   }
 
+  // Migrar carrito de invitado (anon) al carrito del usuario al iniciar sesión.
+  // Combina items sumando cantidades si ya existen.
+  function migrateGuestCartToUser(targetUid) {
+    try {
+      if (!targetUid) return false;
+      const userKey = 'ecomarket_cart_' + encodeURIComponent(String(targetUid));
+      const anonKey = 'ecomarket_cart_anon';
+      // legacy key
+      const legacyKey = 'ecomarket_cart';
+
+      let anon = null;
+      try { anon = JSON.parse(localStorage.getItem(anonKey) || 'null'); } catch { anon = null; }
+      if (!anon || !Array.isArray(anon) || anon.length === 0) {
+        // try legacy
+        try { anon = JSON.parse(localStorage.getItem(legacyKey) || 'null'); } catch { anon = null; }
+      }
+
+      if (!anon || !Array.isArray(anon) || anon.length === 0) return false;
+
+      let userCart = [];
+      try { userCart = JSON.parse(localStorage.getItem(userKey) || '[]'); } catch { userCart = []; }
+
+      const map = new Map();
+      // add existing user cart
+      for (const item of userCart) {
+        if (!item || !item.id) continue;
+        map.set(item.id, Object.assign({}, item));
+      }
+      // merge anon
+      for (const item of anon) {
+        if (!item || !item.id) continue;
+        if (map.has(item.id)) {
+          const existing = map.get(item.id);
+          existing.qty = (Number(existing.qty) || 0) + (Number(item.qty) || 0);
+          map.set(item.id, existing);
+        } else {
+          map.set(item.id, Object.assign({}, item));
+        }
+      }
+
+      const merged = Array.from(map.values());
+      localStorage.setItem(userKey, JSON.stringify(merged));
+      // cleanup anon keys
+      try { localStorage.removeItem(anonKey); } catch {}
+      try { localStorage.removeItem(legacyKey); } catch {}
+      return true;
+    } catch (err) {
+      console.error('migrateGuestCartToUser error', err);
+      return false;
+    }
+  }
+
   global.EcoSession = {
     getSession,
     saveSession,

@@ -330,6 +330,7 @@
         };
         if (typeof EcoSession !== 'undefined') {
           EcoSession.saveSession(sessionObj);
+          try{ EcoSession.migrateGuestCartToUser(sessionObj.userId); }catch{}
         } else {
           localStorage.setItem('ecomarket_session', JSON.stringify(sessionObj));
         }
@@ -398,6 +399,7 @@
         };
         if (typeof EcoSession !== 'undefined') {
           EcoSession.saveSession(sessionObj2);
+          try{ EcoSession.migrateGuestCartToUser(sessionObj2.userId); }catch{}
         } else {
           localStorage.setItem('ecomarket_session', JSON.stringify(sessionObj2));
         }
@@ -467,6 +469,7 @@
         };
         if (typeof EcoSession !== 'undefined') {
           EcoSession.saveSession(sessionObj3);
+          try{ EcoSession.migrateGuestCartToUser(sessionObj3.userId); }catch{}
         } else {
           localStorage.setItem('ecomarket_session', JSON.stringify(sessionObj3));
         }
