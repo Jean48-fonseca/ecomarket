@@ -1641,6 +1641,30 @@
     }
     if(e.key === 'ecomarket_reclamos_last_update'){
       refreshReclamosPendingBadge();
+      // Mostrar notificación si el usuario es gerente/administrador
+      (async ()=>{
+        try{
+          const s = getSession();
+          if(!s || !s.userId) return;
+          if(!window.EcoDB || typeof EcoDB.findWorkerByUserId !== 'function') return;
+          const worker = await EcoDB.findWorkerByUserId(s.userId);
+          if(worker && Number(worker.is_admin)===1){
+            // Crear contenedor de toast si no existe
+            let container = document.getElementById('globalToast');
+            if(!container){
+              container = document.createElement('div');
+              container.id = 'globalToast';
+              container.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;';
+              document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.style.cssText = 'background:#0f8b5f;color:#fff;padding:10px 14px;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,0.12);max-width:320px';
+            toast.textContent = 'Nuevo reclamo registrado. Revisa el panel de reclamos.';
+            container.appendChild(toast);
+            setTimeout(()=>{ try{ toast.remove(); }catch{} }, 7000);
+          }
+        }catch{}
+      })();
     }
   });
   render(products);
