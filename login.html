@@ -311,11 +311,15 @@
         }
         
         // Login exitoso
-        sessionStorage.setItem('ecomarket_user', JSON.stringify({
-          id: user.id,
+        localStorage.setItem('ecomarket_session', JSON.stringify({
+          userId: user.id,
           username: user.username,
           name: user.first_name + ' ' + user.last_name,
-          type: 'cliente'
+          email: user.email,
+          type: 'cliente',
+          lastActivity: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          createdAt: new Date().toISOString()
         }));
         
         // Redireccionar
@@ -370,11 +374,15 @@
         });
         
         // Login automático
-        sessionStorage.setItem('ecomarket_user', JSON.stringify({
-          id: userId,
+        localStorage.setItem('ecomarket_session', JSON.stringify({
+          userId: userId,
           username,
           name: firstName + ' ' + lastName,
-          type: 'cliente'
+          email: email,
+          type: 'cliente',
+          lastActivity: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          createdAt: new Date().toISOString()
         }));
         
         // Redireccionar
@@ -427,14 +435,18 @@
         }
         
         // Login exitoso
-        sessionStorage.setItem('ecomarket_user', JSON.stringify({
-          id: user.id,
+        localStorage.setItem('ecomarket_session', JSON.stringify({
+          userId: user.id,
           username: user.username,
           name: user.first_name + ' ' + user.last_name,
+          email: user.email,
           type: 'empleado',
           department: worker.department,
           position: worker.position,
-          employeeCode: worker.employeeCode
+          employeeCode: worker.employeeCode,
+          lastActivity: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          createdAt: new Date().toISOString()
         }));
         
         // Redireccionar

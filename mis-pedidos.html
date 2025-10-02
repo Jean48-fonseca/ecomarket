@@ -454,8 +454,31 @@
 
         function getSession() {
             try {
-                return JSON.parse(localStorage.getItem('ecomarket_session') || 'null');
-            } catch {
+                const sessionData = localStorage.getItem('ecomarket_session');
+                if (!sessionData || sessionData === 'null') {
+                    return null;
+                }
+                
+                const session = JSON.parse(sessionData);
+                
+                // Verificar que la sesión tenga los datos mínimos necesarios
+                if (!session || (!session.userId && !session.username)) {
+                    console.warn('Sesión inválida detectada, limpiando...');
+                    localStorage.removeItem('ecomarket_session');
+                    return null;
+                }
+                
+                // Verificar si la sesión ha expirado (si tiene expiresAt)
+                if (session.expiresAt && new Date(session.expiresAt) < new Date()) {
+                    console.warn('Sesión expirada, limpiando...');
+                    localStorage.removeItem('ecomarket_session');
+                    return null;
+                }
+                
+                return session;
+            } catch (error) {
+                console.error('Error al leer sesión:', error);
+                localStorage.removeItem('ecomarket_session'); // Limpiar sesión corrupta
                 return null;
             }
         }

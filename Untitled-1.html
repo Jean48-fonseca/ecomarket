@@ -915,8 +915,48 @@
     let reclamosBadgeTimer = null;
 
     function getSession(){
-      try{ return JSON.parse(localStorage.getItem('ecomarket_session')||'null'); }catch{ return null; }
+      try {
+        const sessionData = localStorage.getItem('ecomarket_session');
+        if (!sessionData || sessionData === 'null') {
+          return null;
+        }
+        
+        const session = JSON.parse(sessionData);
+        
+        // Verificar que la sesión tenga los datos mínimos necesarios
+        if (!session || (!session.userId && !session.username)) {
+          console.warn('Sesión inválida detectada, limpiando...');
+          localStorage.removeItem('ecomarket_session');
+          return null;
+        }
+        
+        // Verificar si la sesión ha expirado (si tiene expiresAt)
+        if (session.expiresAt && new Date(session.expiresAt) < new Date()) {
+          console.warn('Sesión expirada, limpiando...');
+          localStorage.removeItem('ecomarket_session');
+          return null;
+        }
+        
+        return session;
+      } catch (error) {
+        console.error('Error al leer sesión:', error);
+        localStorage.removeItem('ecomarket_session'); // Limpiar sesión corrupta
+        return null;
+      }
     }
+    function renewSession() {
+      const session = getSession();
+      if (session) {
+        // Renovar la sesión por 24 horas más
+        session.lastActivity = new Date().toISOString();
+        session.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        localStorage.setItem('ecomarket_session', JSON.stringify(session));
+        console.log('Sesión renovada automáticamente');
+        return true;
+      }
+      return false;
+    }
+    
     function clearSession(){
       localStorage.removeItem('ecomarket_session');
       state.cartCount = 0;
