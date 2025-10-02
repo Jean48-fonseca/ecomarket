@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Base de Datos - EcoMarket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #60e1f5, #e0eafc);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        .warning { background: #fff3cd; border-color: #ffeaa7; }
+        
+        button {
+            background: #4ec8c2;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover { background: #3db8b3; }
+        button.danger { background: #dc3545; }
+        button.danger:hover { background: #c82333; }
+        button.warning { background: #ffc107; color: #212529; }
+        button.warning:hover { background: #e0a800; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th { background: #f8f9fa; font-weight: bold; }
+        tr:nth-child(even) { background: #f8f9fa; }
+        
+        .user-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .user-form input, .user-form select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .credentials {
+            background: #e7f3ff;
+            border: 1px solid #b3d7ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .credentials h4 {
+            margin-top: 0;
+            color: #004085;
+        }
+        .credential-item {
+            margin: 8px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ Gestión de Base de Datos - EcoMarket</h1>
+        
+        <div class="credentials">
+            <h4>👤 Usuarios Predeterminados</h4>
+            <div class="credential-item"><strong>Cliente:</strong> cliente1 / cliente123</div>
+            <div class="credential-item"><strong>Administrador:</strong> admin / admin123</div>
+            <div class="credential-item"><strong>Empleado:</strong> empleado1 / emp123</div>
+            <div class="credential-item"><strong>Gerente:</strong> gerente / gerente123</div>
+        </div>
+
+        <div class="section info">
+            <h3>🔧 Control de Base de Datos</h3>
+            <button onclick="initDB()">Inicializar Base de Datos</button>
+            <button onclick="resetDB()" class="danger">Resetear Base de Datos</button>
+            <button onclick="createDefaultUsers()">Crear Usuarios Predeterminados</button>
+            <button onclick="checkDBStatus()">Verificar Estado</button>
+            <div id="db-status" style="margin-top: 10px;"></div>
+        </div>
+
+        <div class="section">
+            <h3>👥 Lista de Usuarios</h3>
+            <button onclick="loadUsers()">Cargar Usuarios</button>
+            <button onclick="exportUsers()">Exportar Usuarios</button>
+            <div id="users-list"></div>
+        </div>
+
+        <div class="section">
+            <h3>➕ Crear Usuario</h3>
+            <div class="user-form">
+                <input type="text" id="new-username" placeholder="Nombre de usuario">
+                <input type="password" id="new-password" placeholder="Contraseña">
+                <input type="text" id="new-firstname" placeholder="Nombre">
+                <input type="text" id="new-lastname" placeholder="Apellido">
+                <input type="email" id="new-email" placeholder="Email">
+                <select id="new-role">
+                    <option value="cliente">Cliente</option>
+                    <option value="empleado">Empleado</option>
+                    <option value="admin">Administrador</option>
+                </select>
+            </div>
+            <button onclick="createUser()">Crear Usuario</button>
+            <div id="create-result"></div>
+        </div>
+
+        <div class="section">
+            <h3>🔐 Probar Login</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="test-username" placeholder="Usuario">
+                <input type="password" id="test-password" placeholder="Contraseña">
+                <button onclick="testLogin()">Probar Login</button>
+            </div>
+            <div id="login-result" style="margin-top: 10px;"></div>
+        </div>
+
+        <div class="section">
+            <h3>👷 Empleados</h3>
+            <button onclick="loadWorkers()">Cargar Empleados</button>
+            <div id="workers-list"></div>
+        </div>
+
+        <div class="section">
+            <h3>📋 Registros de Actividad</h3>
+            <div id="activity-log" style="max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 5px;"></div>
+            <button onclick="clearLog()">Limpiar Log</button>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script>
+        let activityLog = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            activityLog.push(logEntry);
+            
+            const logDiv = document.getElementById('activity-log');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            logDiv.innerHTML += `<div class="${className}" style="margin: 2px 0; padding: 3px;">${logEntry}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('activity-log').innerHTML = '';
+            activityLog = [];
+        }
+
+        async function initDB() {
+            try {
+                const statusDiv = document.getElementById('db-status');
+                statusDiv.innerHTML = '⏳ Inicializando base de datos...';
+                
+                await EcoDB.dbOpen();
+                log('Base de datos inicializada correctamente', 'success');
+                statusDiv.innerHTML = '<div class="success">✅ Base de datos inicializada</div>';
+                
+                await checkDBStatus();
+            } catch (error) {
+                log('Error inicializando BD: ' + error.message, 'error');
+                document.getElementById('db-status').innerHTML = '<div class="error">❌ Error al inicializar</div>';
+            }
+        }
+
+        async function resetDB() {
+            if (!confirm('¿ADVERTENCIA! Esto eliminará TODOS los datos de la base de datos. ¿Continuar?')) {
+                return;
+            }
+            
+            try {
+                // Cerrar conexiones existentes
+                const databases = await indexedDB.databases();
+                for (const db of databases) {
+                    if (db.name === 'ecomarket_browser_db') {
+                        indexedDB.deleteDatabase(db.name);
+                    }
+                }
+                
+                log('Base de datos eliminada', 'warning');
+                
+                // Reinicializar
+                setTimeout(async () => {
+                    await initDB();
+                    await createDefaultUsers();
+                }, 1000);
+                
+            } catch (error) {
+                log('Error reseteando BD: ' + error.message, 'error');
+            }
+        }
+
+        async function createDefaultUsers() {
+            try {
+                const statusDiv = document.getElementById('db-status');
+                statusDiv.innerHTML = '⏳ Creando usuarios predeterminados...';
+                
+                await EcoDB.initializeDefaultUsers();
+                log('Usuarios predeterminados creados', 'success');
+                statusDiv.innerHTML = '<div class="success">✅ Usuarios predeterminados creados</div>';
+                
+                await loadUsers();
+                await loadWorkers();
+            } catch (error) {
+                log('Error creando usuarios: ' + error.message, 'error');
+                document.getElementById('db-status').innerHTML = '<div class="error">❌ Error creando usuarios</div>';
+            }
+        }
+
+        async function checkDBStatus() {
+            try {
+                const users = await EcoDB.listUsers();
+                const workers = await EcoDB.listWorkers();
+                const reclamos = await EcoDB.listarReclamos();
+                
+                const statusDiv = document.getElementById('db-status');
+                statusDiv.innerHTML = `
+                    <div class="info">
+                        📊 <strong>Estado de la Base de Datos:</strong><br>
+                        👥 Usuarios: ${users.length}<br>
+                        👷 Empleados: ${workers.length}<br>
+                        📋 Reclamos: ${reclamos.length}
+                    </div>
+                `;
+                
+                log(`BD Status - Usuarios: ${users.length}, Empleados: ${workers.length}, Reclamos: ${reclamos.length}`, 'info');
+            } catch (error) {
+                log('Error verificando estado: ' + error.message, 'error');
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const users = await EcoDB.listUsers();
+                const usersDiv = document.getElementById('users-list');
+                
+                if (users.length === 0) {
+                    usersDiv.innerHTML = '<div class="warning">No hay usuarios en la base de datos</div>';
+                    return;
+                }
+
+                let html = `
+                    <table>
+                        <tr>
+                            <th>ID</th>
+                            <th>Usuario</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Creado</th>
+                            <th>Acciones</th>
+                        </tr>
+                `;
+
+                users.forEach(user => {
+                    html += `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td><strong>${user.username}</strong></td>
+                            <td>${user.first_name} ${user.last_name}</td>
+                            <td>${user.email}</td>
+                            <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                            <td>
+                                <button onclick="testUserLogin('${user.username}')" style="font-size: 12px;">Test Login</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += '</table>';
+                usersDiv.innerHTML = html;
+                log(`Cargados ${users.length} usuarios`, 'info');
+            } catch (error) {
+                log('Error cargando usuarios: ' + error.message, 'error');
+            }
+        }
+
+        async function loadWorkers() {
+            try {
+                const workers = await EcoDB.listWorkers();
+                const workersDiv = document.getElementById('workers-list');
+                
+                if (workers.length === 0) {
+                    workersDiv.innerHTML = '<div class="warning">No hay empleados en la base de datos</div>';
+                    return;
+                }
+
+                let html = `
+                    <table>
+                        <tr>
+                            <th>ID</th>
+                            <th>Código</th>
+                            <th>User ID</th>
+                            <th>Posición</th>
+                            <th>Admin</th>
+                        </tr>
+                `;
+
+                workers.forEach(worker => {
+                    html += `
+                        <tr>
+                            <td>${worker.id}</td>
+                            <td><strong>${worker.employeeCode}</strong></td>
+                            <td>${worker.userId}</td>
+                            <td>${worker.position}</td>
+                            <td>${worker.is_admin ? '✅' : '❌'}</td>
+                        </tr>
+                    `;
+                });
+
+                html += '</table>';
+                workersDiv.innerHTML = html;
+                log(`Cargados ${workers.length} empleados`, 'info');
+            } catch (error) {
+                log('Error cargando empleados: ' + error.message, 'error');
+            }
+        }
+
+        async function createUser() {
+            try {
+                const username = document.getElementById('new-username').value.trim();
+                const password = document.getElementById('new-password').value;
+                const firstName = document.getElementById('new-firstname').value.trim();
+                const lastName = document.getElementById('new-lastname').value.trim();
+                const email = document.getElementById('new-email').value.trim();
+                const role = document.getElementById('new-role').value;
+
+                if (!username || !password || !firstName || !lastName || !email) {
+                    throw new Error('Todos los campos son obligatorios');
+                }
+
+                const userId = await EcoDB.addUser({
+                    username, password, firstName, lastName, email
+                });
+
+                if (role === 'empleado' || role === 'admin') {
+                    const empCode = 'EMP-' + Date.now();
+                    await EcoDB.addWorker({
+                        userId: userId,
+                        employeeCode: empCode,
+                        position: role === 'admin' ? 'Administrador' : 'Empleado',
+                        isAdmin: role === 'admin' ? 1 : 0
+                    });
+                }
+
+                document.getElementById('create-result').innerHTML = '<div class="success">✅ Usuario creado exitosamente</div>';
+                log(`Usuario creado: ${username} (${role})`, 'success');
+                
+                // Limpiar formulario
+                document.getElementById('new-username').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('new-firstname').value = '';
+                document.getElementById('new-lastname').value = '';
+                document.getElementById('new-email').value = '';
+                
+                await loadUsers();
+                if (role !== 'cliente') await loadWorkers();
+                
+            } catch (error) {
+                document.getElementById('create-result').innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+                log('Error creando usuario: ' + error.message, 'error');
+            }
+        }
+
+        async function testLogin() {
+            const username = document.getElementById('test-username').value.trim();
+            const password = document.getElementById('test-password').value;
+            const resultDiv = document.getElementById('login-result');
+
+            if (!username || !password) {
+                resultDiv.innerHTML = '<div class="error">❌ Ingrese usuario y contraseña</div>';
+                return;
+            }
+
+            try {
+                const result = await EcoDB.validateLogin(username, password);
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Login exitoso<br>
+                            <strong>Usuario:</strong> ${result.user.username}<br>
+                            <strong>Nombre:</strong> ${result.user.first_name} ${result.user.last_name}<br>
+                            <strong>Email:</strong> ${result.user.email}
+                        </div>
+                    `;
+                    log(`Login exitoso: ${username}`, 'success');
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ ${result.error}</div>`;
+                    log(`Login fallido: ${username} - ${result.error}`, 'error');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error del sistema: ${error.message}</div>`;
+                log('Error en test login: ' + error.message, 'error');
+            }
+        }
+
+        async function testUserLogin(username) {
+            // Intentar con contraseñas comunes
+            const commonPasswords = ['cliente123', 'admin123', 'emp123', 'gerente123'];
+            
+            for (const password of commonPasswords) {
+                try {
+                    const result = await EcoDB.validateLogin(username, password);
+                    if (result.success) {
+                        alert(`✅ Credenciales encontradas!\nUsuario: ${username}\nContraseña: ${password}`);
+                        return;
+                    }
+                } catch (error) {
+                    // Continuar con la siguiente contraseña
+                }
+            }
+            
+            alert(`❌ No se pudieron encontrar las credenciales para ${username}`);
+        }
+
+        function exportUsers() {
+            EcoDB.listUsers().then(users => {
+                const data = JSON.stringify(users, null, 2);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ecomarket_users.json';
+                a.click();
+                log('Usuarios exportados', 'info');
+            }).catch(error => {
+                log('Error exportando: ' + error.message, 'error');
+            });
+        }
+
+        // Inicializar al cargar la página
+        document.addEventListener('DOMContentLoaded', async function() {
+            log('Panel de administración de BD cargado', 'info');
+            await initDB();
+            
+            // Si no hay usuarios, crear los predeterminados
+            const users = await EcoDB.listUsers().catch(() => []);
+            if (users.length === 0) {
+                log('No se encontraron usuarios, creando predeterminados...', 'warning');
+                await createDefaultUsers();
+            } else {
+                await loadUsers();
+                await loadWorkers();
+            }
+        });
+    </script>
+</body>
+</html>

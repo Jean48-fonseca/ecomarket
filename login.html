@@ -240,12 +240,21 @@
         '</div>';
         throw new Error('EcoDB no está disponible');
       }
-      // Forzar seed de usuarios de prueba si la base está vacía
-      if(typeof EcoDB.listUsers==='function' && typeof EcoDB.seedSample==='function'){
+      
+      // Inicializar base de datos
+      await EcoDB.dbOpen();
+      
+      // Crear usuarios predeterminados si no existen
+      if(typeof EcoDB.listUsers==='function' && typeof EcoDB.initializeDefaultUsers==='function'){
         const users = await EcoDB.listUsers().catch(()=>[]);
         if(!users || users.length===0){
-          await EcoDB.seedSample();
-          console.log('Usuarios de prueba insertados.');
+          await EcoDB.initializeDefaultUsers();
+          console.log('Usuarios predeterminados creados.');
+          console.log('Credenciales disponibles:');
+          console.log('- cliente1 / cliente123');
+          console.log('- admin / admin123');
+          console.log('- empleado1 / emp123');
+          console.log('- gerente / gerente123');
         }
       }
     }
@@ -298,17 +307,15 @@
 
       try {
         await checkEcoDB();
-        const user = await EcoDB.findUserByUsername(username);
-        if(!user){
-          errorDiv.textContent = 'Usuario no encontrado.';
+        
+        // Usar la nueva función de validación
+        const result = await EcoDB.validateLogin(username, password);
+        if (!result.success) {
+          errorDiv.textContent = result.error;
           return;
         }
         
-        const isValid = await EcoDB.verifyPassword(password, user.password_salt, user.password_hash);
-        if(!isValid){
-          errorDiv.textContent = 'Contraseña incorrecta.';
-          return;
-        }
+        const user = result.user;
         
         // Login exitoso
         localStorage.setItem('ecomarket_session', JSON.stringify({

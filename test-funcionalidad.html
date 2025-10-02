@@ -78,6 +78,7 @@
             <button onclick="goToOrders()">Ir a Mis Pedidos</button>
             <button onclick="goToComplaints()">Ir a Libro de Reclamaciones</button>
             <button onclick="goToHome()">Ir a Inicio</button>
+            <button onclick="goToDBAdmin()" style="background: #28a745;">Panel de BD</button>
         </div>
 
         <div class="test-section">
@@ -160,13 +161,30 @@
                 const users = await EcoDB.listUsers();
                 log(`Usuarios en DB: ${users.length}`, 'info');
                 
+                // Si no hay usuarios, crear los predeterminados
+                if (users.length === 0) {
+                    log('No hay usuarios, creando predeterminados...', 'info');
+                    await EcoDB.initializeDefaultUsers();
+                    const newUsers = await EcoDB.listUsers();
+                    log(`Usuarios creados: ${newUsers.length}`, 'success');
+                }
+                
                 const reclamos = await EcoDB.listarReclamos();
                 log(`Reclamos en DB: ${reclamos.length}`, 'info');
+                
+                const workers = await EcoDB.listWorkers();
+                log(`Empleados en DB: ${workers.length}`, 'info');
                 
                 statusDiv.innerHTML = `
                     <div class="success">✅ Base de datos funcionando</div>
                     <p>Usuarios: ${users.length}</p>
+                    <p>Empleados: ${workers.length}</p>
                     <p>Reclamos: ${reclamos.length}</p>
+                    <p><strong>Credenciales disponibles:</strong></p>
+                    <p>• cliente1 / cliente123</p>
+                    <p>• admin / admin123</p>
+                    <p>• empleado1 / emp123</p>
+                    <p>• gerente / gerente123</p>
                 `;
             } catch (error) {
                 log('Error en base de datos: ' + error.message, 'error');
@@ -266,6 +284,10 @@
 
         function goToHome() {
             window.location.href = 'Untitled-1.html';
+        }
+
+        function goToDBAdmin() {
+            window.location.href = 'admin-database.html';
         }
 
         // Inicializar al cargar
