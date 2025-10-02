@@ -28,6 +28,7 @@
       .grid{grid-template-columns:1fr!important;}
       .img-col img{max-height:220px;}
     }
+    @media (max-width:780px){.grid{grid-template-columns:1fr}}
     .col{padding:18px}
     h2{margin:0 0 10px}
     form{display:grid;gap:10px}
@@ -45,7 +46,6 @@
 </head>
 <body>
   <script src="db.js"></script>
-  <script src="session.js"></script>
   <div class="wrap">
     <div class="card" role="dialog" aria-labelledby="title" aria-modal="true">
       <header>
@@ -60,7 +60,7 @@
       </header>
       <div class="grid">
         <div class="img-col">
-          <img src="./images/Gemini_Generated_Image_s2xc0ks2xc0ks2xc.png" alt="Familia en EcoMarket" loading="lazy" onerror="this.onerror=null;this.src='./images/login-family.svg'" />
+          <img src="Gemini_Generated_Image_s2xc0ks2xc0ks2xc.png" alt="Familia en Ecomarket" />
         </div>
         <section class="col" id="panelCliente" role="tabpanel" aria-labelledby="tabCliente">
           <h2 id="title">Cliente</h2>
@@ -123,13 +123,7 @@
       const target = ret ? decodeURIComponent(ret) : 'Untitled-1.html';
       location.href = target;
     }
-    const saveSession = (typeof EcoSession !== 'undefined' && EcoSession.saveSession) ? EcoSession.saveSession : ((s)=>{
-      try{ localStorage.setItem('ecomarket_session', JSON.stringify(s)); }catch(e){}
-      // Dispatch storage-like event for same-window listeners
-      try{
-        window.dispatchEvent(new CustomEvent('ecomarket_session_changed', {detail: s}));
-      }catch(e){}
-    });
+    const saveSession = EcoDB.saveSession;
 
     // Tabs
     const tabCliente = document.getElementById('tabCliente');
@@ -171,47 +165,21 @@
 
     loginClienteForm.addEventListener('submit', async (e)=>{
       e.preventDefault(); cError.textContent='';
-      try{
-        const result = (window.EcoDB && typeof EcoDB.validateLogin === 'function') ? await EcoDB.validateLogin(cUser.value.trim(), cPass.value) : null;
-        if(result && !result.success){ cError.textContent = result.error || 'Credenciales inválidas'; return; }
-        if(result && result.user){ 
-          const user = result.user;
-          // Si este usuario también tiene registro de worker (empleado/gerente), añadir info al objeto de sesión
-          let workerInfo = null;
-          if(window.EcoDB && typeof EcoDB.findWorkerByUserId === 'function'){
-            try{ workerInfo = await EcoDB.findWorkerByUserId(user.id); }catch{}
-          }
-          const sessionObj = {type:'client', userId:user.id, username:user.username};
-          if(workerInfo){
-            sessionObj.employeeCode = workerInfo.employeeCode;
-            sessionObj.position = workerInfo.position;
-            sessionObj.isAdmin = !!workerInfo.is_admin;
-            sessionObj.type = sessionObj.type === 'client' ? 'employee' : sessionObj.type;
-          }
-          saveSession(sessionObj);
-          try{ if (typeof EcoSession !== 'undefined' && EcoSession.migrateGuestCartToUser) EcoSession.migrateGuestCartToUser(sessionObj.userId); }catch{}
-          goBack();
-          return; 
-        }
-        // Fallback simple: attempt to find user via EcoDB.findUserByUsername or localStorage
-        if(window.EcoDB && typeof EcoDB.findUserByUsername === 'function'){
-          const user = await EcoDB.findUserByUsername(cUser.value.trim());
-          if(!user){ cError.textContent='Usuario no encontrado.'; return; }
-          const verified = await EcoDB.verifyPassword(cPass.value, user.password_salt, user.password_hash).catch(()=>false);
-          if(!verified){ cError.textContent='Contraseña incorrecta.'; return; }
-          saveSession({type:'client', userId:user.id, username:user.username}); goBack(); return;
-        }
-        cError.textContent = 'No se puede validar credenciales: EcoDB no disponible';
-      }catch(err){ console.error(err); cError.textContent = 'Error del sistema.'; }
+      const user = await EcoDB.findUserByUsername(cUser.value.trim());
+      if(!user){ cError.textContent='Usuario no encontrado.'; return; }
+      const {hash} = await EcoDB.hashPasswordPBKDF2(cPass.value, user.password_salt);
+      if(hash !== user.password_hash){ cError.textContent='Contraseña incorrecta.'; return; }
+      saveSession({type:'client', userId:user.id, username:user.username});
+      goBack();
     });
 
   registerClienteForm.addEventListener('submit', async (e)=>{
       e.preventDefault(); rcError.textContent='';
       try{
-        const id = (window.EcoDB && typeof EcoDB.addUser === 'function') ? await EcoDB.addUser({username:rcUser.value.trim(), password:rcPass.value, firstName:rcName.value.trim(), lastName:rcLast.value.trim(), email:rcEmail.value.trim()}) : Date.now();
+    const id = await EcoDB.addUser({username:rcUser.value.trim(), password:rcPass.value, firstName:rcName.value.trim(), lastName:rcLast.value.trim(), email:rcEmail.value.trim()});
         saveSession({type:'client', userId:id, username:rcUser.value.trim()});
         goBack();
-      }catch(err){ console.error(err); rcError.textContent = 'No se pudo registrar: ' + (err && err.message ? err.message : 'Error'); }
+      }catch(err){ rcError.textContent = 'No se pudo registrar: ' + (err && err.message ? err.message : 'Error'); }
     });
 
     // Empleado
@@ -221,25 +189,17 @@
     const eCode = document.getElementById('eCode');
     const eError = document.getElementById('eError');
 
-    loginEmpleadoForm.addEventListener('submit', async (ev)=>{
-      ev.preventDefault(); eError.textContent='';
-      try{
-        if(window.EcoDB && typeof EcoDB.findUserByUsername === 'function'){
-          const user = await EcoDB.findUserByUsername(eUser.value.trim());
-          if(!user){ eError.textContent='Usuario no encontrado.'; return; }
-          const verified = await EcoDB.verifyPassword(ePass.value, user.password_salt, user.password_hash).catch(()=>false);
-          if(!verified){ eError.textContent='Contraseña incorrecta.'; return; }
-          const worker = await (typeof EcoDB.findWorkerByUserId === 'function' ? EcoDB.findWorkerByUserId(user.id) : null);
-          if(!worker){ eError.textContent='Este usuario no es empleado.'; return; }
-          if(worker.employeeCode !== eCode.value.trim()){ eError.textContent='Código de empleado inválido.'; return; }
-          const sess = {type:'employee', userId:user.id, username:user.username, employeeCode:worker.employeeCode, isAdmin: !!worker.is_admin};
-          saveSession(sess);
-          try{ if (typeof EcoSession !== 'undefined' && EcoSession.migrateGuestCartToUser) EcoSession.migrateGuestCartToUser(sess.userId); }catch{}
-          window.location.href = './Untitled-1.html';
-          return;
-        }
-        eError.textContent = 'EcoDB no disponible';
-      }catch(err){ console.error(err); eError.textContent = 'Error del sistema.'; }
+    loginEmpleadoForm.addEventListener('submit', async (e)=>{
+      e.preventDefault(); eError.textContent='';
+      const user = await EcoDB.findUserByUsername(eUser.value.trim());
+      if(!user){ eError.textContent='Usuario no encontrado.'; return; }
+      const {hash} = await EcoDB.hashPasswordPBKDF2(ePass.value, user.password_salt);
+      if(hash !== user.password_hash){ eError.textContent='Contraseña incorrecta.'; return; }
+      const worker = await EcoDB.findWorkerByUserId(user.id);
+      if(!worker){ eError.textContent='Este usuario no es empleado.'; return; }
+      if(worker.employeeCode !== eCode.value.trim()){ eError.textContent='Código de empleado inválido.'; return; }
+      saveSession({type:'employee', userId:user.id, username:user.username, employeeCode:worker.employeeCode, isAdmin: !!worker.is_admin});
+      goBack();
     });
 
     // Autofocus

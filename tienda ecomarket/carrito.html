@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Carrito de compras - EcoMarket</title>
+  <style>
+    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(135deg,#60e1f5,#e0eafc);min-height:100vh;}
+    .wrap{max-width:700px;margin:32px auto;background:#fff;border-radius:16px;box-shadow:0 6px 24px #0001;padding:24px;}
+    h1{margin-top:0;color:#4ec8c2;}
+  table{width:100%;border-collapse:collapse;margin-bottom:18px;}
+  th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #e9ecef;vertical-align:middle;}
+  th{background:#f4f9fb;color:#394046;}
+  .prod-img{width:48px;height:48px;object-fit:cover;border-radius:8px;box-shadow:0 2px 8px #0001;margin-right:8px;}
+    .subtotal{font-size:1.2em;font-weight:600;text-align:right;color:#2d3436;}
+    .empty{color:#888;text-align:center;padding:40px 0;}
+  .btn{background:#4ec8c2;color:#fff;padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:1em;}
+  .btn:hover{background:#38b6b2;}
+  .btn-del{background:#e74c3c;color:#fff;padding:6px 10px;font-size:1.1em;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .btn-del:hover{background:#c0392b;}
+  .qty{display:inline-flex;align-items:center;gap:6px}
+  .qty-btn{background:#f4f6f8;border:1px solid #e0e0e0;border-radius:8px;width:28px;height:28px;cursor:pointer}
+  .qty input{width:60px;text-align:center;padding:6px 8px;border:1px solid #e0e0e0;border-radius:8px}
+  .top-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .pay-box{margin-top:12px;border:1px solid #e9ecef;border-radius:12px;padding:12px;overflow:hidden}
+  .pay-title{font-weight:700;margin:0 0 8px;color:#394046}
+  .pay-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .pm-option{display:flex;align-items:center;gap:10px;border:1px solid #e9ecef;border-radius:10px;padding:10px;cursor:pointer;line-height:1.2}
+  .pm-option{white-space:normal;box-sizing:border-box}
+  .pm-option input{margin:0}
+  .pm-logo{width:36px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;background:#f4f6f8;border:1px solid #e9ecef;font-weight:700;font-size:12px;color:#333}
+  .pm-yape{background:#7b2cbf;color:#fff}
+  .pm-plin{background:#00b4d8;color:#fff}
+  .pm-card{background:#2d3436;color:#fff}
+  .pm-bank{background:#264653;color:#fff}
+  .pm-cash{background:#198754;color:#fff}
+  .pm-detail{margin-top:8px;background:#f8f9fa;border:1px dashed #e0e0e0;border-radius:10px;padding:10px}
+  .pm-row{display:grid;gap:8px}
+  @media(min-width:720px){.pm-row{grid-template-columns:1fr 1fr 1fr}}
+  .pm-field{display:flex;flex-direction:column}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Carrito de compras</h1>
+    <div class="top-actions">
+      <button class="btn" onclick="window.location.href='Untitled-1.html'">Seguir comprando</button>
+      <button class="btn warn" id="btnVaciar" type="button" title="Vaciar todo el carrito">Vaciar carrito</button>
+      <button class="btn" id="btnComprar" type="button" title="Finalizar compra">Realizar compra</button>
+    </div>
+    <div id="cartContent"></div>
+  </div>
+  <script>
+    // Sesión y manejo de carrito por usuario
+    function getSession(){ try{return JSON.parse(localStorage.getItem('ecomarket_session')||'null');}catch{return null} }
+    function getCartKey(){
+      const s = getSession();
+      if(!s) return null;
+      const uid = s.userId || s.username || 'anon';
+      return 'ecomarket_cart_'+ encodeURIComponent(uid);
+    }
+    function migrateLegacyCartIfNeeded(){
+      const key = getCartKey();
+      if(!key) return;
+      const legacy = localStorage.getItem('ecomarket_cart');
+      if(legacy && !localStorage.getItem(key)){
+        try{ localStorage.setItem(key, legacy); localStorage.removeItem('ecomarket_cart'); }catch{}
+      }
+    }
+    function getCart(){
+      const key = getCartKey();
+      if(!key) return [];
+      try{return JSON.parse(localStorage.getItem(key)||'[]');}catch{return []}
+    }
+    function renderCart(){
+      const sess = getSession();
+      if(!sess){
+        const ret = encodeURIComponent('carrito.html');
+        alert('Debes iniciar sesión para ver tu carrito.');
+        window.location.href = `login.html?return=${ret}`;
+        return;
+      }
+      migrateLegacyCartIfNeeded();
+      const cart = getCart();
+      const cont = document.getElementById('cartContent');
+      if(!cart.length){
+        cont.innerHTML = '<div class="empty">Tu carrito está vacío.</div>';
+        return;
+      }
+      let subtotal = 0;
+      const rows = cart.map((item,i)=>{
+        const qty = item.qty || 1;
+        const price = Number(item.price)||0;
+        subtotal += price * qty;
+        const imgUrl = item.img ? item.img : 'https://via.placeholder.com/48x48?text=Sin+img';
+        return '<tr>'+
+          '<td><img class="prod-img" referrerpolicy="no-referrer" src="'+imgUrl+'" alt="'+(item.name||'Producto')+'" onerror="this.onerror=null;this.src=\'https://placehold.co/48x48?text=Sin+img\';" />'+(item.name||'')+'</td>'+
+          '<td><div class="qty">'+
+              '<button class="qty-btn" onclick="updateQty('+i+',-1)" title="Restar">-</button>'+
+              '<input type="number" min="1" value="'+qty+'" onchange="onQtyChange('+i+', this.value)" />'+
+              '<button class="qty-btn" onclick="updateQty('+i+',1)" title="Sumar">+</button>'+
+            '</div></td>'+
+          '<td>$'+price.toFixed(2)+'</td>'+
+          '<td>$'+(price*qty).toFixed(2)+'</td>'+
+          '<td><button class="btn-del" onclick="removeFromCart('+i+')" title="Eliminar">'+
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
+              '<polyline points="3 6 5 6 21 6" />'+
+              '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />'+
+              '<line x1="10" y1="11" x2="10" y2="17" />'+
+              '<line x1="14" y1="11" x2="14" y2="17" />'+
+            '</svg>'+
+          '</button></td>'+
+        '</tr>';
+      }).join('');
+      const pay = getPayMethod();
+      const methodsHtml = `
+        <div class="pay-box">
+          <div class="pay-title">Método de pago</div>
+          <div class="pay-grid">
+            <label class="pm-option"><input type="radio" name="pm" value="Tarjeta" ${pay==='Tarjeta'?'checked':''} />
+              <span class="pm-logo pm-card">CARD</span> Tarjeta (Visa/Mastercard)
+            </label>
+            <label class="pm-option"><input type="radio" name="pm" value="Yape" ${pay==='Yape'?'checked':''} />
+              <span class="pm-logo pm-yape">Yape</span> Yape
+            </label>
+            <label class="pm-option"><input type="radio" name="pm" value="Plin" ${pay==='Plin'?'checked':''} />
+              <span class="pm-logo pm-plin">Plin</span> Plin
+            </label>
+            <label class="pm-option"><input type="radio" name="pm" value="Transferencia" ${pay==='Transferencia'?'checked':''} />
+              <span class="pm-logo pm-bank">BANK</span> Transferencia bancaria (BCP/BBVA/Interbank)
+            </label>
+            <label class="pm-option"><input type="radio" name="pm" value="Contraentrega" ${pay==='Contraentrega'?'checked':''} />
+              <span class="pm-logo pm-cash">Cash</span> Contraentrega (efectivo)
+            </label>
+          </div>
+          <div class="pm-detail" id="pmDetail"></div>
+        </div>`;
+      cont.innerHTML = `
+        <table>
+          <thead><tr><th>Producto</th><th>Cantidad</th><th>Precio unitario</th><th>Total</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="subtotal">Subtotal: $${subtotal.toFixed(2)}</div>
+        ${methodsHtml}
+      `;
+      // Guardar método al cambiar
+      cont.querySelectorAll('input[name="pm"]').forEach(r=>{
+        r.addEventListener('change', ()=> { savePayMethod(r.value); renderPayDetail(); });
+      });
+      renderPayDetail();
+    }
+    function renderPayDetail(){
+      const box = document.getElementById('pmDetail'); if(!box) return;
+      const method = getPayMethod();
+      if(method==='Yape' || method==='Plin'){
+        const ref = 'ECOM-'+Date.now().toString().slice(-6);
+        box.innerHTML = `
+          <div class="pm-row">
+            <div class="pm-field"><label>Monto a pagar</label><input type="text" value="$${calcTotal().toFixed(2)}" readonly></div>
+            <div class="pm-field"><label>Referencia</label><input type="text" value="${ref}" readonly></div>
+            <div class="pm-field"><label>Número receptor</label><input type="text" value="999-999-999" readonly></div>
+          </div>
+          <div class="help" style="margin-top:8px">Escanea el QR en tu app ${method} y usa la referencia para identificar tu pago.</div>`;
+      } else if(method==='Tarjeta'){
+        box.innerHTML = `
+          <div class="pm-row">
+            <div class="pm-field"><label>Número de tarjeta</label><input id="ccNum" type="text" placeholder="4111 1111 1111 1111" oninput="this.value=this.value.replace(/[^\d ]/g,'')"></div>
+            <div class="pm-field"><label>Vencimiento (MM/AA)</label><input id="ccExp" type="text" placeholder="MM/AA" maxlength="5"></div>
+            <div class="pm-field"><label>CVV</label><input id="ccCvv" type="password" maxlength="4"></div>
+          </div>
+          <div class="help" style="margin-top:8px">Validación básica local (no se procesa pago real).</div>`;
+      } else if(method==='Transferencia'){
+        box.innerHTML = `<div class="pm-row"><div class="pm-field"><label>Cuenta BCP</label><input type="text" value="CCI 002-9999999999999999-99" readonly></div></div>`;
+      } else {
+        box.innerHTML = `<div class="help">Pagarás al momento de la entrega.</div>`;
+      }
+    }
+    function calcTotal(){
+      const cart = getCart();
+      return cart.reduce((sum,i)=>sum + (Number(i.price)||0)*(i.qty||1), 0);
+    }
+    function setCart(cart){
+      const key=getCartKey();
+      if(key){
+        try{ localStorage.setItem(key, JSON.stringify(cart)); }catch{}
+      }
+    }
+    function getPayKey(){ const s=getSession(); if(!s) return null; const uid=s.userId||s.username||'anon'; return 'ecomarket_pay_'+encodeURIComponent(uid); }
+    function getPayMethod(){ const k=getPayKey(); if(!k) return 'Tarjeta'; try{ return JSON.parse(localStorage.getItem(k)||'"Tarjeta"'); }catch{ return 'Tarjeta'; } }
+    function savePayMethod(v){ const k=getPayKey(); if(k){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} } }
+    window.updateQty = function(idx, delta){
+      const key = getCartKey(); if(!key) return;
+      const cart = getCart();
+      if(idx<0 || idx>=cart.length) return;
+      const newQty = (cart[idx].qty||1) + delta;
+      if(newQty <= 0){ cart.splice(idx,1); } else { cart[idx].qty = newQty; }
+      setCart(cart); renderCart();
+    }
+    window.onQtyChange = function(idx, val){
+      const key = getCartKey(); if(!key) return;
+      let qty = parseInt(val,10);
+      if(isNaN(qty) || qty < 1) qty = 1;
+      const cart = getCart();
+      if(idx<0 || idx>=cart.length) return;
+      cart[idx].qty = qty;
+      setCart(cart); renderCart();
+    }
+    window.removeFromCart = function(idx){
+      const key = getCartKey();
+      let cart = getCart();
+      cart.splice(idx,1);
+      if(key) localStorage.setItem(key, JSON.stringify(cart));
+      renderCart();
+    }
+    document.getElementById('btnVaciar').addEventListener('click', ()=>{
+      const key = getCartKey();
+      if(!key) return;
+      if(confirm('¿Vaciar todo el carrito?')){
+        try{ localStorage.setItem(key, '[]'); }catch{}
+        renderCart();
+      }
+    });
+    function saveOrder(order){
+      const s = getSession(); if(!s) return;
+      const key = 'orders_'+ encodeURIComponent(s.userId || s.username || 'anon');
+      let list = [];
+      try{ list = JSON.parse(localStorage.getItem(key)||'[]'); }catch{ list = []; }
+      list.push(order);
+      try{ localStorage.setItem(key, JSON.stringify(list)); }catch{}
+    }
+    document.getElementById('btnComprar').addEventListener('click', ()=>{
+      const s = getSession(); if(!s) { alert('Inicia sesión.'); return; }
+      const cart = getCart(); if(!cart.length){ alert('Tu carrito está vacío.'); return; }
+      const total = calcTotal();
+      const payMethod = getPayMethod();
+      if(payMethod==='Tarjeta'){
+        // Validación mínima
+        const num = (document.getElementById('ccNum')||{}).value||'';
+        const exp = (document.getElementById('ccExp')||{}).value||'';
+        const cvv = (document.getElementById('ccCvv')||{}).value||'';
+        const errs = [];
+        if(num.replace(/\s/g,'').length < 13) errs.push('Número de tarjeta inválido.');
+        if(!/^\d{2}\/\d{2}$/.test(exp)) errs.push('Vencimiento inválido.');
+        if(cvv.length < 3) errs.push('CVV inválido.');
+        if(errs.length){ alert(errs.join('\n')); return; }
+      }
+      const order = {
+        id: 'ORD-'+Date.now().toString(36).toUpperCase(),
+        user: s.username || s.userId,
+        items: cart,
+        total,
+        created_at: new Date().toISOString(),
+        status: 'Creada',
+        payment: { method: payMethod }
+      };
+      saveOrder(order);
+      // Limpiar carrito del usuario
+      setCart([]);
+      alert('Compra registrada: '+order.id+'\nTotal: $'+total.toFixed(2));
+      renderCart();
+    });
+    renderCart();
+  </script>
+</body>
+</html>

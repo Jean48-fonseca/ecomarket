@@ -922,9 +922,10 @@
     })();
 
     function getSession(){
-      return (typeof EcoSession !== 'undefined') ? EcoSession.getSession() : null;
+      if (typeof EcoSession !== 'undefined') return EcoSession.getSession();
+      try { return JSON.parse(localStorage.getItem('ecomarket_session') || 'null'); } catch { return null; }
     }
-    function renewSession() { return (typeof EcoSession !== 'undefined') ? EcoSession.renewSession() : false; }
+    function renewSession() { if (typeof EcoSession !== 'undefined') return EcoSession.renewSession(); try{ const s = getSession(); if(!s) return false; s._lastRenew = Date.now(); localStorage.setItem('ecomarket_session', JSON.stringify(s)); return true; }catch{ return false; } }
     
     function clearSession(){
       if (typeof EcoSession !== 'undefined') { EcoSession.clearSession(); } else { localStorage.removeItem('ecomarket_session'); }
@@ -958,18 +959,31 @@
     async function renderSession(){
       const s = getSession();
       if(!s){ sessionInfo.innerHTML = '<span>No has iniciado sesión</span>'; return; }
-      let nombre = s.username;
+      // Normalizar posibles formas de sesión cuando EcoSession no está disponible
+      let sessionObj = s;
+      if(typeof s === 'string') sessionObj = { username: s };
+      if(typeof s === 'object' && !s.username){
+        sessionObj.username = s.user || s.user_name || s.name || (s.userId ? String(s.userId) : null) || s.id || null;
+      }
+      const nombreFallback = sessionObj.username || (sessionObj.userId ? String(sessionObj.userId) : null) || 'Usuario';
+      let nombre = nombreFallback;
       if (window.EcoDB && s.userId) {
-        const user = await EcoDB.findUserByUsername(s.username);
-        if(user && user.first_name && user.last_name){
-          nombre = user.first_name + ' ' + user.last_name;
-        }
+        try{
+          const user = await EcoDB.findUserByUsername(sessionObj.username);
+          if(user && user.first_name && user.last_name){
+            nombre = user.first_name + ' ' + user.last_name;
+          } else {
+            // try by id
+            const u2 = await EcoDB.findUserById(sessionObj.userId);
+            if(u2 && u2.first_name && u2.last_name) nombre = u2.first_name + ' ' + u2.last_name;
+          }
+        }catch{}
       }
       let adminLink = '';
-      if(window.EcoDB && s.userId){
+      if(window.EcoDB && sessionObj.userId){
         try{
-          const worker = await EcoDB.findWorkerByUserId(s.userId);
-          if(worker && worker.is_admin===1){
+          const worker = await EcoDB.findWorkerByUserId(sessionObj.userId);
+          if(worker && Number(worker.is_admin)===1){
             let pendingBadge = '';
             try{
               const reclamos = await EcoDB.listarReclamos();
@@ -1672,6 +1686,15 @@
   // Inicializar carrito
   migrateLegacyCartIfNeeded();
   updateCartBadge();
+  // Escuchar cambios de sesión en la misma pestaña (evento custom) y entre pestañas (storage)
+  window.addEventListener('ecomarket_session_changed', (e)=>{
+    try{ renderSession(); updateCartBadge(); }catch{};
+  });
+  window.addEventListener('storage', (ev)=>{
+    if(ev.key === 'ecomarket_session'){
+      try{ renderSession(); updateCartBadge(); }catch{};
+    }
+  });
   // Si es gerente, iniciar refresco periódico del badge de reclamos
   startReclamosBadgeAutoUpdate();
 

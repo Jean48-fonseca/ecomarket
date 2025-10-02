@@ -11,6 +11,11 @@
   function normalize(session) {
     if (!session) return null;
     session.userId = session.userId || session.id || session.user_id || null;
+    // Coerce numeric-looking ids to Number to ease comparisons
+    if (session.userId != null && session.userId !== '') {
+      const maybeNum = Number(session.userId);
+      if (!Number.isNaN(maybeNum)) session.userId = maybeNum;
+    }
     session.username = session.username || session.user || (session.userId ? String(session.userId) : null) || null;
     return session;
   }
@@ -37,6 +42,8 @@
     try {
       if (!session) return;
       localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      // Dispatch custom event so same-window listeners can react immediately
+      try{ window.dispatchEvent(new CustomEvent('ecomarket_session_changed', {detail: session})); }catch(e){}
     } catch (err) { console.error('session.js saveSession error', err); }
   }
 

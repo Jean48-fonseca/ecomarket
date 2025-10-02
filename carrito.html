@@ -738,15 +738,33 @@
         })();
 
         function getSession() {
-            return (typeof EcoSession !== 'undefined') ? EcoSession.getSession() : null;
+            try {
+                if (typeof EcoSession !== 'undefined' && typeof EcoSession.getSession === 'function') return EcoSession.getSession();
+                const s = localStorage.getItem('ecomarket_session');
+                return s ? JSON.parse(s) : null;
+            } catch (e) { return null; }
         }
 
         function renewSession() {
-            return (typeof EcoSession !== 'undefined') ? EcoSession.renewSession() : false;
+            try {
+                if (typeof EcoSession !== 'undefined' && typeof EcoSession.renewSession === 'function') return EcoSession.renewSession();
+                // Fallback: if there's a local session, refresh lastActivity timestamp
+                const s = getSession();
+                if (!s) return false;
+                s.lastActivity = new Date().toISOString();
+                try { localStorage.setItem('ecomarket_session', JSON.stringify(s)); } catch (e) {}
+                return true;
+            } catch (e) { return false; }
         }
 
         function getCartKey() {
-            return (typeof EcoSession !== 'undefined') ? EcoSession.getSessionKeyForCart() : null;
+            try {
+                if (typeof EcoSession !== 'undefined' && typeof EcoSession.getSessionKeyForCart === 'function') return EcoSession.getSessionKeyForCart();
+                const s = getSession();
+                if (!s) return null;
+                const uid = s.userId || s.username || 'anon';
+                return 'ecomarket_cart_' + encodeURIComponent(uid);
+            } catch (e) { return null; }
         }
 
         function loadCart() {
@@ -841,7 +859,7 @@
                         🚀 Proceder al Pago
                     </button>
                     <small style="display: block; margin-top: 10px; text-align: center; color: #6c757d;">
-                        � Acepta Yape, transferencias bancarias y más
+                        Acepta Yape, transferencias bancarias y más
                     </small>
                 </div>
             `;

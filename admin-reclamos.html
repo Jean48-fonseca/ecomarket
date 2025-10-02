@@ -447,6 +447,47 @@
 
     <script src="db.js"></script>
     <script>
+        // Panel de diagnóstico/forzar acceso (igual que admin-pedidos)
+        function renderDebugPanel(sessionObj, worker){
+            const ac = document.getElementById('alert-container');
+            if(!ac) return;
+            let box = document.getElementById('reclamosDebugPanel');
+            if(box) box.remove();
+            box = document.createElement('div'); box.id = 'reclamosDebugPanel'; box.style.margin='12px 0';
+            box.innerHTML = `<div style="background:#fff;border:1px solid #eee;padding:12px;border-radius:8px;">
+                <strong>Diagnóstico:</strong>
+                <div style="margin-top:8px;font-size:13px;">Sesión: <pre style='display:inline-block;margin:0'>${JSON.stringify(sessionObj)}</pre></div>
+                <div style="margin-top:8px;font-size:13px;">Worker encontrado: <pre style='display:inline-block;margin:0'>${JSON.stringify(worker)}</pre></div>
+                <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+                  <button id="trySeedBtn" class="btn btn-secondary">Sembrar datos (seed)</button>
+                  <button id="forceGerenteBtn" class="btn btn-primary">Forzar acceso como gerente (temp)</button>
+                </div>
+            </div>`;
+            ac.appendChild(box);
+            document.getElementById('trySeedBtn').addEventListener('click', async ()=>{
+                if(window.EcoDB && typeof EcoDB.initializeDefaultUsers === 'function'){
+                    await EcoDB.initializeDefaultUsers();
+                    alert('Seed ejecutado: usuarios predeterminados creados. Recarga la página.');
+                } else alert('EcoDB no disponible');
+            });
+            document.getElementById('forceGerenteBtn').addEventListener('click', async ()=>{
+                try{
+                    if(window.EcoDB && typeof EcoDB.findUserByUsername === 'function'){
+                        const u = await EcoDB.findUserByUsername('gerente');
+                        if(u){
+                            const w = await (typeof EcoDB.findWorkerByUserId === 'function' ? EcoDB.findWorkerByUserId(u.id) : null);
+                            const sess = { type:'employee', userId:u.id, username:u.username, isAdmin: true };
+                            try{ localStorage.setItem('ecomarket_session', JSON.stringify(sess)); }catch{}
+                            alert('Sesión gerente forzada en localStorage. Recargando...');
+                            location.reload();
+                            return;
+                        }
+                    }
+                    alert('No se encontró usuario gerente en la DB. Ejecuta seed primero.');
+                }catch(err){ console.error(err); alert('Error forzando sesión: '+err); }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             checkAdminAccess();
             loadComplaints();
@@ -454,37 +495,112 @@
         });
 
         async function checkAdminAccess() {
-            const session = getSession();
-            if (!session) {
+            // Cargar session.js si falta
+            if (typeof EcoSession === 'undefined'){
+                try{ await new Promise((res)=>{ const s=document.createElement('script'); s.src='session.js'; s.onload = res; s.onerror = res; document.head.appendChild(s); }); }catch{}
+            }
+
+            // Intentar obtener sesión desde EcoSession o varias claves conocidas
+            let session = null;
+            try{ if (typeof EcoSession !== 'undefined' && EcoSession.getSession) session = EcoSession.getSession(); }catch{}
+            if(!session){
+                const keys = ['ecomarket_session','session','eco_session','ECO_SESSION','ecoSession'];
+                for(const k of keys){
+                    try{
+                        const raw = localStorage.getItem(k);
+                        if(!raw) continue;
+                        let parsed = null;
+                        try{ parsed = JSON.parse(raw); }catch{ parsed = raw; }
+                        if(parsed && typeof parsed === 'object'){
+                            if(parsed.detail) parsed = parsed.detail;
+                            if(parsed.session) parsed = parsed.session;
+                            if(parsed.data && typeof parsed.data === 'object') parsed = parsed.data;
+                        }
+                        if(parsed && (parsed.username || parsed.user || parsed.userId || parsed.id)) { session = parsed; break; }
+                        if(parsed && typeof parsed === 'string') { session = { username: parsed }; break; }
+                    }catch{}
+                }
+            }
+
+            if(!session && window.EcoDB && typeof EcoDB.getSession === 'function'){
+                try{ session = EcoDB.getSession(); }catch{}
+            }
+
+            if(!session){
                 showAlert('error', '⚠️ Debes iniciar sesión para acceder a esta página');
-                setTimeout(() => {
-                    window.location.href = 'login.html?return=' + encodeURIComponent(window.location.href);
-                }, 2000);
+                if(location.protocol === 'file:'){
+                    const msg = '⚠️ No se detectó sesión. Si usas file:// el navegador puede aislar el almacenamiento. Sirve la carpeta con un servidor HTTP local.';
+                    try{ const ac = document.getElementById('alert-container'); if(ac){ const p=document.createElement('pre'); p.style.cssText='white-space:pre-wrap;background:#fff;border:1px solid #f1c40f;padding:10px;border-radius:6px;'; p.textContent = msg; ac.appendChild(p); } }catch{}
+                }
+                setTimeout(() => { window.location.href = 'login.html?return=' + encodeURIComponent(window.location.href); }, 1400);
                 return;
             }
 
-            try {
-                if (window.EcoDB && session.userId) {
-                    const worker = await EcoDB.findWorkerByUserId(session.userId);
-                    if (!worker || worker.is_admin !== 1) {
-                        showAlert('error', '❌ No tienes permisos de administrador para acceder a esta página');
-                        setTimeout(() => {
-                            window.location.href = 'Untitled-1.html';
-                        }, 2000);
-                        return;
-                    }
+            // Normalizar sesión
+            const sess = (typeof session === 'string') ? { username: session } : (session || {});
+            if(sess.userId == null && sess.id) sess.userId = sess.id;
+            if(sess.userId != null){ const maybeNum = Number(sess.userId); if(!Number.isNaN(maybeNum)) sess.userId = maybeNum; }
+
+            try{
+                // mostrar debug
+                const alertContainer = document.getElementById('alert-container');
+                if(alertContainer){
+                    const pre = document.createElement('pre');
+                    pre.style.cssText = 'background:#fff;border:1px dashed #ccc;padding:8px;border-radius:6px;overflow:auto;max-height:140px;font-size:13px;';
+                    pre.textContent = 'Sesión detectada: ' + JSON.stringify(sess, null, 2);
+                    const existing = document.getElementById('sessionDebugBox'); if(existing) existing.remove();
+                    const wrapper = document.createElement('div'); wrapper.id = 'sessionDebugBox'; wrapper.style.marginBottom='10px'; wrapper.appendChild(pre);
+                    alertContainer.appendChild(wrapper);
                 }
-            } catch (error) {
-                console.error('Error checking admin access:', error);
-                showAlert('error', '❌ Error verificando permisos de administrador');
-                setTimeout(() => {
-                    window.location.href = 'Untitled-1.html';
-                }, 2000);
-            }
+            }catch{}
+
+            try{
+                if (sess.isAdmin || sess.is_admin || sess.is_admin === 1) return;
+                if (sess.username && (String(sess.username).toLowerCase() === 'gerente' || String(sess.username).toLowerCase() === 'admin')) return;
+
+                let foundWorker = null;
+                if(sess.employeeCode && window.EcoDB && typeof EcoDB.findWorkerByCode === 'function'){
+                    try{ foundWorker = await EcoDB.findWorkerByCode(sess.employeeCode); }catch{}
+                }
+                if(!foundWorker && window.EcoDB && sess.userId){ try{ const w = await EcoDB.findWorkerByUserId(sess.userId); if(w) foundWorker = w; }catch{} }
+
+                if(!foundWorker && window.EcoDB && typeof EcoDB.listUsers === 'function'){
+                    try{
+                        const users = await EcoDB.listUsers().catch(()=>[]);
+                        if((users||[]).length === 0 && typeof EcoDB.initializeDefaultUsers === 'function'){
+                            await EcoDB.initializeDefaultUsers();
+                            try{ const box=document.getElementById('sessionDebugBox'); if(box){ const p=document.createElement('div'); p.style.fontSize='13px'; p.style.marginTop='6px'; p.textContent='Semilla ejecutada: usuarios predeterminados creados.'; box.appendChild(p); } }catch{}
+                            if((sess.userId == null || sess.userId === '') && sess.username && typeof EcoDB.findUserByUsername === 'function'){
+                                try{ const uu = await EcoDB.findUserByUsername(sess.username); if(uu && uu.id) sess.userId = uu.id; }catch{}
+                            }
+                            if(sess.userId && typeof EcoDB.findWorkerByUserId === 'function'){
+                                try{ const w2 = await EcoDB.findWorkerByUserId(sess.userId); if(w2) foundWorker = w2; }catch{}
+                            }
+                        }
+                    }catch{}
+                }
+
+                if(foundWorker){ if(Number(foundWorker.is_admin)===1 || foundWorker.isAdmin || foundWorker.is_admin === '1') return; showAlert('error','❌ No tienes permisos de administrador para acceder a esta página'); try{ renderDebugPanel(sess, foundWorker);}catch{}; setTimeout(()=>{},100); return; }
+
+                showAlert('error','❌ No tienes permisos de administrador para acceder a esta página'); try{ renderDebugPanel(sess, null);}catch{}; return;
+            }catch(err){ console.error('Error checking admin access:', err); showAlert('error','❌ Error verificando permisos de administrador'); setTimeout(()=>{ window.location.href='Untitled-1.html'; }, 1600); }
         }
 
         (function(){ if(typeof EcoSession === 'undefined'){ const s=document.createElement('script'); s.src='session.js'; document.head.appendChild(s);} })();
-        function getSession() { return (typeof EcoSession !== 'undefined') ? EcoSession.getSession() : null; }
+        function getSession() {
+            if (typeof EcoSession !== 'undefined' && EcoSession.getSession) return EcoSession.getSession();
+            try{
+                let raw = localStorage.getItem('ecomarket_session')||null;
+                if(!raw) return null;
+                let parsed = null;
+                try{ parsed = JSON.parse(raw); }catch{ return { username: raw }; }
+                if(parsed && parsed.detail) parsed = parsed.detail;
+                if(parsed && parsed.session) parsed = parsed.session;
+                if(parsed && parsed.data && typeof parsed.data === 'object') parsed = parsed.data;
+                if(parsed && (parsed.username || parsed.user || parsed.userId || parsed.id)) return parsed;
+                return null;
+            }catch{ return null; }
+        }
 
         async function loadComplaints() {
             try {

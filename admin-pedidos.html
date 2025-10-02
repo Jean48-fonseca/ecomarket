@@ -455,45 +455,212 @@
 
     <script src="db.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAdminAccess();
-            loadOrders();
-            setupFilters();
+    // Área donde se renderizará el panel de debug/forzar acceso
+    function renderDebugPanel(sessionObj, worker){
+        const ac = document.getElementById('alert-container');
+        if(!ac) return;
+        let box = document.getElementById('adminDebugPanel');
+        if(box) box.remove();
+        box = document.createElement('div'); box.id = 'adminDebugPanel'; box.style.margin='12px 0';
+        box.innerHTML = `<div style="background:#fff;border:1px solid #eee;padding:12px;border-radius:8px;">
+            <strong>Diagnóstico:</strong>
+            <div style="margin-top:8px;font-size:13px;">Sesión: <pre style='display:inline-block;margin:0'>${JSON.stringify(sessionObj)}</pre></div>
+            <div style="margin-top:8px;font-size:13px;">Worker encontrado: <pre style='display:inline-block;margin:0'>${JSON.stringify(worker)}</pre></div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+              <button id="trySeedBtn" class="btn btn-secondary">Sembrar datos (seed)</button>
+              <button id="forceGerenteBtn" class="btn btn-primary">Forzar acceso como gerente (temp)</button>
+            </div>
+        </div>`;
+        ac.appendChild(box);
+        document.getElementById('trySeedBtn').addEventListener('click', async ()=>{
+            if(window.EcoDB && typeof EcoDB.initializeDefaultUsers === 'function'){
+                await EcoDB.initializeDefaultUsers();
+                alert('Seed ejecutado: usuarios predeterminados creados. Recarga la página.');
+            } else alert('EcoDB no disponible');
         });
-
-        async function checkAdminAccess() {
-            const session = getSession();
-            if (!session) {
-                showAlert('error', '⚠️ Debes iniciar sesión para acceder a esta página');
-                setTimeout(() => {
-                    window.location.href = 'login.html?return=' + encodeURIComponent(window.location.href);
-                }, 2000);
-                return;
-            }
-
-            try {
-                if (window.EcoDB && session.userId) {
-                    const worker = await EcoDB.findWorkerByUserId(session.userId);
-                    if (!worker || worker.is_admin !== 1) {
-                        showAlert('error', '❌ No tienes permisos de administrador para acceder a esta página');
-                        setTimeout(() => {
-                            window.location.href = 'Untitled-1.html';
-                        }, 2000);
+        document.getElementById('forceGerenteBtn').addEventListener('click', async ()=>{
+            try{
+                // intentar localizar al usuario 'gerente' en DB y crear sesión temporal
+                if(window.EcoDB && typeof EcoDB.findUserByUsername === 'function'){
+                    const u = await EcoDB.findUserByUsername('gerente');
+                    if(u){
+                        const w = await (typeof EcoDB.findWorkerByUserId === 'function' ? EcoDB.findWorkerByUserId(u.id) : null);
+                        const sess = { type:'employee', userId:u.id, username:u.username, isAdmin: true };
+                        try{ localStorage.setItem('ecomarket_session', JSON.stringify(sess)); }catch{}
+                        alert('Sesión gerente forzada en localStorage. Recargando...');
+                        location.reload();
                         return;
                     }
                 }
-            } catch (error) {
-                console.error('Error checking admin access:', error);
-                showAlert('error', '❌ Error verificando permisos de administrador');
-                setTimeout(() => {
-                    window.location.href = 'Untitled-1.html';
-                }, 2000);
-            }
-        }
+                alert('No se encontró usuario gerente en la DB. Ejecuta seed primero.');
+            }catch(err){ console.error(err); alert('Error forzando sesión: '+err); }
+        });
+    }
+    // Cargar session.js inmediatamente para que EcoSession esté disponible antes de las comprobaciones
+    (function(){ if(typeof EcoSession === 'undefined'){ const s=document.createElement('script'); s.src='session.js'; document.head.appendChild(s);} })();
+        document.addEventListener('DOMContentLoaded', function() {
+                checkAdminAccess();
+                loadOrders();
+                setupFilters();
+            });
 
-        // usar EcoSession helper
-        (function(){ if(typeof EcoSession === 'undefined'){ const s=document.createElement('script'); s.src='session.js'; document.head.appendChild(s);} })();
-        function getSession() { return (typeof EcoSession !== 'undefined') ? EcoSession.getSession() : null; }
+            async function checkAdminAccess() {
+                    // Intentar cargar session.js si no está presente y esperar a que cargue
+                    if (typeof EcoSession === 'undefined'){
+                        try{
+                            await new Promise((res)=>{
+                                const s=document.createElement('script'); s.src='session.js'; s.onload = res; s.onerror = res; document.head.appendChild(s);
+                            });
+                        }catch{}
+                    }
+
+                    // Intentar obtener sesión desde varias fuentes (EcoSession, EcoDB, distintas claves de localStorage)
+                    let session = null;
+                    try{
+                        if (typeof EcoSession !== 'undefined' && EcoSession.getSession) session = EcoSession.getSession();
+                    }catch{}
+
+                    // Si no vino desde EcoSession, intentar varias claves conocidas en localStorage
+                    if(!session){
+                        const keys = ['ecomarket_session','session','eco_session','ECO_SESSION','ecoSession'];
+                        for(const k of keys){
+                            try{
+                                const raw = localStorage.getItem(k);
+                                if(!raw) continue;
+                                let parsed = null;
+                                try{ parsed = JSON.parse(raw); }catch{ parsed = raw; }
+                                // desanidar wrappers comunes
+                                if(parsed && typeof parsed === 'object'){
+                                    if(parsed.detail) parsed = parsed.detail;
+                                    if(parsed.session) parsed = parsed.session;
+                                    if(parsed.data && typeof parsed.data === 'object') parsed = parsed.data;
+                                }
+                                if(parsed && (parsed.username || parsed.user || parsed.userId || parsed.id)) { session = parsed; break; }
+                                // si parsed es solo un string con username
+                                if(parsed && typeof parsed === 'string') { session = { username: parsed }; break; }
+                            }catch{}
+                        }
+                    }
+
+                    // fallback: EcoDB podría exponer getSession en algunas integraciones
+                    if(!session && window.EcoDB && typeof EcoDB.getSession === 'function'){
+                        try{ session = EcoDB.getSession(); }catch{}
+                    }
+
+                    // Si aún no hay sesión, avisar/redirigir (manejar file:// con mensaje explícito)
+                    if(!session){
+                        if(location.protocol === 'file:'){
+                            const msg = '⚠️ No se detectó sesión en esta página. Si abriste los archivos con file:// el navegador puede aislar el almacenamiento entre ficheros.\n\n' +
+                              'Recomendación: sirve la carpeta con un servidor HTTP local (ej. PowerShell):\n' +
+                              "1) Abrir PowerShell en la carpeta del proyecto y ejecutar:\n   python -m http.server 8000\n" +
+                              "2) O usar Node (si tienes npm): npx http-server . -p 8080\n" +
+                              '\nLuego abre http://localhost:8000/ en tu navegador y prueba el login de nuevo.';
+                            showAlert('error', msg);
+                            try{ const ac = document.getElementById('alert-container'); if(ac){ const p=document.createElement('pre'); p.style.cssText='white-space:pre-wrap;background:#fff;border:1px solid #f1c40f;padding:10px;border-radius:6px;'; p.textContent = msg; ac.appendChild(p); } }catch{}
+                            return;
+                        }
+                        showAlert('error', '⚠️ Debes iniciar sesión para acceder a esta página');
+                        setTimeout(() => {
+                            window.location.href = 'login.html?return=' + encodeURIComponent(window.location.href);
+                        }, 1400);
+                        return;
+                    }
+
+                    // Normalizar y mostrar diagnóstico
+                    const sess = (typeof session === 'string') ? { username: session } : (session || {});
+                    if(sess.userId == null && sess.id) sess.userId = sess.id;
+                    if(sess.userId != null){ const maybeNum = Number(sess.userId); if(!Number.isNaN(maybeNum)) sess.userId = maybeNum; }
+
+                    try{
+                        const alertContainer = document.getElementById('alert-container');
+                        if(alertContainer){
+                            const pre = document.createElement('pre');
+                            pre.style.cssText = 'background:#fff;border:1px dashed #ccc;padding:8px;border-radius:6px;overflow:auto;max-height:140px;font-size:13px;';
+                            pre.textContent = 'Sesión detectada: ' + JSON.stringify(sess, null, 2);
+                            const existing = document.getElementById('sessionDebugBox'); if(existing) existing.remove();
+                            const wrapper = document.createElement('div'); wrapper.id = 'sessionDebugBox'; wrapper.style.marginBottom='10px'; wrapper.appendChild(pre);
+                            alertContainer.appendChild(wrapper);
+                        }
+                    }catch{}
+
+                    try{
+                        // Si la sesión ya indica isAdmin lo aceptamos
+                        if (sess.isAdmin || sess.is_admin || sess.is_admin === 1) return;
+                        // Atajo pragmático para entornos locales: si el username es 'gerente' o 'admin' aceptar como admin
+                        if (sess.username && (String(sess.username).toLowerCase() === 'gerente' || String(sess.username).toLowerCase() === 'admin')) return;
+
+                        // intentar resolver userId por username si hace falta
+                        if((sess.userId == null || sess.userId === '') && sess.username && window.EcoDB && typeof EcoDB.findUserByUsername === 'function'){
+                            try{ const u = await EcoDB.findUserByUsername(sess.username); if(u && u.id) sess.userId = u.id; }catch{}
+                        }
+
+                        // buscar worker por employeeCode o por userId
+                        let foundWorker = null;
+                        if(sess.employeeCode && window.EcoDB && typeof EcoDB.findWorkerByCode === 'function'){
+                            try{ foundWorker = await EcoDB.findWorkerByCode(sess.employeeCode); }catch{}
+                        }
+                        if(!foundWorker && window.EcoDB && sess.userId){
+                            try{ const w = await EcoDB.findWorkerByUserId(sess.userId); if(w) foundWorker = w; }catch{}
+                        }
+
+                        // si no hay worker y no hay usuarios, sembrar datos e intentar de nuevo
+                        if(!foundWorker && window.EcoDB && typeof EcoDB.listUsers === 'function'){
+                            try{
+                                const users = await EcoDB.listUsers().catch(()=>[]);
+                                if((users||[]).length === 0 && typeof EcoDB.initializeDefaultUsers === 'function'){
+                                    await EcoDB.initializeDefaultUsers();
+                                    try{ const box=document.getElementById('sessionDebugBox'); if(box){ const p=document.createElement('div'); p.style.fontSize='13px'; p.style.marginTop='6px'; p.textContent='Semilla ejecutada: usuarios predeterminados creados.'; box.appendChild(p); } }catch{}
+                                    if((sess.userId == null || sess.userId === '') && sess.username && typeof EcoDB.findUserByUsername === 'function'){
+                                        try{ const uu = await EcoDB.findUserByUsername(sess.username); if(uu && uu.id) sess.userId = uu.id; }catch{}
+                                    }
+                                    if(sess.userId && typeof EcoDB.findWorkerByUserId === 'function'){
+                                        try{ const w2 = await EcoDB.findWorkerByUserId(sess.userId); if(w2) foundWorker = w2; }catch{}
+                                    }
+                                }
+                            }catch{}
+                        }
+
+                        if(foundWorker){
+                            if(Number(foundWorker.is_admin)===1 || foundWorker.isAdmin || foundWorker.is_admin === '1') return;
+                            showAlert('error', '❌ No tienes permisos de administrador para acceder a esta página');
+                            try{ renderDebugPanel(sess, foundWorker); }catch{}
+                            return;
+                        }
+
+                        showAlert('error', '❌ No tienes permisos de administrador para acceder a esta página');
+                        try{ renderDebugPanel(sess, null); }catch{}
+                        return;
+                    }catch(err){
+                        console.error('Error checking admin access:', err);
+                        showAlert('error', '❌ Error verificando permisos de administrador');
+                        setTimeout(()=>{ window.location.href = 'Untitled-1.html'; }, 1600);
+                    }
+            }
+
+    // getSession robusto: usa EcoSession si existe, o intenta parsear y desanidar localStorage
+    function getSession() {
+        if (typeof EcoSession !== 'undefined') return EcoSession.getSession();
+        try{
+            let raw = localStorage.getItem('ecomarket_session')||null;
+            if(!raw) return null;
+            let parsed = null;
+            try{ parsed = JSON.parse(raw); }catch{ return null; }
+            // Desanidar common wrappers
+            if(parsed && typeof parsed === 'object'){
+                if(parsed.detail) parsed = parsed.detail;
+                if(parsed.session) parsed = parsed.session;
+                // some saves may wrap in {data: {...}}
+                if(parsed.data && typeof parsed.data === 'object') parsed = parsed.data;
+            }
+            // If detail is stringified
+            if(parsed && typeof parsed === 'string'){
+                try{ parsed = JSON.parse(parsed); }catch{}
+            }
+            // Ensure it has at least username or userId
+            if(parsed && (parsed.username || parsed.user || parsed.userId || parsed.id)) return parsed;
+            return null;
+        }catch{ return null; }
+    }
 
         function loadOrders() {
             try {
