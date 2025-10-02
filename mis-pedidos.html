@@ -773,5 +773,97 @@
             return iconMap[status] || '📋';
         }
     </script>
+
+    <!-- Diagnostics / self-test: runtime checks and error capture -->
+    <script>
+        (function(){
+            const diagnostics = [];
+            function add(level, msg){ diagnostics.push({level, msg}); }
+
+            // Global error capture
+            window.addEventListener('error', function(e){
+                try { add('error', `${e.message} at ${e.filename || ''}:${e.lineno || 0}`); showDiagnostics(); } catch(_){}
+            });
+
+            // Promise rejection capture
+            window.addEventListener('unhandledrejection', function(ev){
+                try { add('error', 'UnhandledRejection: ' + (ev.reason && ev.reason.message ? ev.reason.message : String(ev.reason))); showDiagnostics(); } catch(_){}
+            });
+
+            // Small helper to render diagnostics panel
+            function showDiagnostics(){
+                try{
+                    let panel = document.getElementById('diag-panel');
+                    if(!panel){
+                        panel = document.createElement('div');
+                        panel.id = 'diag-panel';
+                        panel.style.position = 'fixed';
+                        panel.style.right = '12px';
+                        panel.style.bottom = '12px';
+                        panel.style.zIndex = 99999;
+                        panel.style.maxWidth = '360px';
+                        panel.style.maxHeight = '240px';
+                        panel.style.overflow = 'auto';
+                        panel.style.background = 'rgba(255,255,255,0.95)';
+                        panel.style.border = '1px solid rgba(0,0,0,0.08)';
+                        panel.style.boxShadow = '0 6px 18px rgba(0,0,0,0.08)';
+                        panel.style.padding = '10px';
+                        panel.style.fontSize = '13px';
+                        panel.style.borderRadius = '8px';
+                        panel.style.color = '#163';
+                        panel.style.fontFamily = 'Arial, Helvetica, sans-serif';
+                        document.body.appendChild(panel);
+                    }
+
+                    const lines = diagnostics.map(d => {
+                        const color = d.level === 'error' ? '#b10' : (d.level === 'warn' ? '#b85' : '#166');
+                        return `<li style="margin-bottom:6px;color:${color}"><strong>${d.level.toUpperCase()}:</strong> ${escapeHtml(d.msg)}</li>`;
+                    });
+
+                    panel.innerHTML = `<div style="font-weight:700;margin-bottom:8px;color:#0b6">Diagnóstico de página</div><ul style="list-style:none;padding:0;margin:0">${lines.join('')}</ul>`;
+                }catch(e){}
+            }
+
+            function escapeHtml(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]; }); }
+
+            // Run a set of sanity checks after a short delay to allow page scripts to initialize
+            setTimeout(function(){
+                try{
+                    // DOM checks
+                    if(!document.getElementById('orders-container')) add('error', 'Elemento #orders-container no encontrado');
+                    if(!document.getElementById('loading')) add('warn', 'Elemento #loading no encontrado');
+
+                    // Function availability
+                    if(typeof loadOrders !== 'function') add('error', 'Función loadOrders() no definida');
+                    if(typeof displayOrders !== 'function') add('warn', 'Función displayOrders() no definida');
+
+                    // Try executing loadOrders() in a safe way (it already runs at DOMContentLoaded), but catch sync errors
+                    try{
+                        if(typeof loadOrders === 'function'){
+                            // call but avoid duplicate generation if it already ran: wrap in try/catch
+                            loadOrders();
+                            add('info', 'Invocación de loadOrders() ejecutada sin excepción sincronica');
+                        }
+                    }catch(err){ add('error','loadOrders() lanzó excepción: ' + (err && err.message ? err.message : String(err))); }
+
+                    // Media query support checks
+                    try{
+                        const mq1024 = window.matchMedia && window.matchMedia('(max-width:1024px)').matches;
+                        const mq480 = window.matchMedia && window.matchMedia('(max-width:480px)').matches;
+                        add('info', `matchMedia: <=1024=${mq1024}, <=480=${mq480}`);
+                    }catch(e){ add('warn', 'matchMedia no soportado o falló'); }
+
+                    // Basic CSS sanity: check that .orders-grid exists and has a computed display
+                    try{
+                        const g = document.querySelector('.orders-grid');
+                        if(g){ const cs = getComputedStyle(g); add('info', `.orders-grid display=${cs.display}`); }
+                        else add('warn','.orders-grid no encontrada');
+                    }catch(e){ add('warn','Error al inspeccionar CSS de .orders-grid'); }
+
+                }catch(e){ add('error','Error en diagnósticos: ' + (e && e.message ? e.message : String(e))); }
+                showDiagnostics();
+            }, 1200);
+        })();
+    </script>
 </body>
 </html>
