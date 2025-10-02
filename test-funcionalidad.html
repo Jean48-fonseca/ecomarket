@@ -89,6 +89,7 @@
     </div>
 
     <script src="db.js"></script>
+    <script src="session.js"></script>
     <script>
         function log(message, type = 'info') {
             const logDiv = document.getElementById('log');
@@ -106,21 +107,19 @@
 
         function checkSession() {
             try {
-                const session = localStorage.getItem('ecomarket_session');
                 const statusDiv = document.getElementById('session-status');
-                
-                if (!session || session === 'null') {
+                const sessionData = (typeof EcoSession !== 'undefined') ? EcoSession.getSession() : JSON.parse(localStorage.getItem('ecomarket_session') || 'null');
+                if (!sessionData) {
                     statusDiv.innerHTML = '<div class="error">❌ No hay sesión activa</div>';
                     log('No hay sesión activa', 'error');
                     return;
                 }
 
-                const sessionData = JSON.parse(session);
                 statusDiv.innerHTML = `
                     <div class="success">✅ Sesión activa</div>
                     <pre>${JSON.stringify(sessionData, null, 2)}</pre>
                 `;
-                log('Sesión encontrada: ' + sessionData.username, 'success');
+                log('Sesión encontrada: ' + (sessionData.username || sessionData.user || sessionData.userId), 'success');
             } catch (error) {
                 log('Error al leer sesión: ' + error.message, 'error');
                 document.getElementById('session-status').innerHTML = '<div class="error">❌ Error al leer sesión</div>';

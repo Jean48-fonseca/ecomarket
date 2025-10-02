@@ -483,13 +483,8 @@
             }
         }
 
-        function getSession() {
-            try {
-                return JSON.parse(localStorage.getItem('ecomarket_session') || 'null');
-            } catch {
-                return null;
-            }
-        }
+        (function(){ if(typeof EcoSession === 'undefined'){ const s=document.createElement('script'); s.src='session.js'; document.head.appendChild(s);} })();
+        function getSession() { return (typeof EcoSession !== 'undefined') ? EcoSession.getSession() : null; }
 
         async function loadComplaints() {
             try {

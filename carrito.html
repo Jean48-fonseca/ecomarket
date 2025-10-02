@@ -726,55 +726,27 @@
             loadCart();
         });
 
-        function getSession() {
-            try {
-                const sessionData = localStorage.getItem('ecomarket_session');
-                if (!sessionData || sessionData === 'null') {
-                    return null;
-                }
-                
-                const session = JSON.parse(sessionData);
-                
-                // Verificar que la sesión tenga los datos mínimos necesarios
-                if (!session || (!session.userId && !session.username)) {
-                    console.warn('Sesión inválida detectada, limpiando...');
-                    localStorage.removeItem('ecomarket_session');
-                    return null;
-                }
-                
-                // Verificar si la sesión ha expirado (si tiene expiresAt)
-                if (session.expiresAt && new Date(session.expiresAt) < new Date()) {
-                    console.warn('Sesión expirada, limpiando...');
-                    localStorage.removeItem('ecomarket_session');
-                    return null;
-                }
-                
-                return session;
-            } catch (error) {
-                console.error('Error al leer sesión:', error);
-                localStorage.removeItem('ecomarket_session'); // Limpiar sesión corrupta
-                return null;
+        // usar helper centralizado de sesión
+        // carga session.js si no está ya incluido
+        (function(){
+            if (typeof EcoSession === 'undefined') {
+                const s = document.createElement('script');
+                s.src = 'session.js';
+                s.onload = () => console.log('session.js cargado');
+                document.head.appendChild(s);
             }
+        })();
+
+        function getSession() {
+            return (typeof EcoSession !== 'undefined') ? EcoSession.getSession() : null;
         }
 
         function renewSession() {
-            const session = getSession();
-            if (session) {
-                // Renovar la sesión por 24 horas más
-                session.lastActivity = new Date().toISOString();
-                session.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-                localStorage.setItem('ecomarket_session', JSON.stringify(session));
-                console.log('Sesión renovada automáticamente');
-                return true;
-            }
-            return false;
+            return (typeof EcoSession !== 'undefined') ? EcoSession.renewSession() : false;
         }
 
         function getCartKey() {
-            const s = getSession();
-            if (!s) return null;
-            const uid = s.userId || s.username || 'anon';
-            return 'ecomarket_cart_' + encodeURIComponent(uid);
+            return (typeof EcoSession !== 'undefined') ? EcoSession.getSessionKeyForCart() : null;
         }
 
         function loadCart() {
