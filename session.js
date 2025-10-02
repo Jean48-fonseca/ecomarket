@@ -118,6 +118,7 @@
     clearSession,
     renewSession,
     getSessionKeyForCart,
+    migrateGuestCartToUser,
     SESSION_KEY
   };
 })(window);
